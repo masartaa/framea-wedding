@@ -8,9 +8,11 @@ import {
   type SiteConfig,
 } from "@/lib/config-schema";
 import { isVercelBlobUrl } from "@/lib/media-utils";
+import { GuestsManager } from "./GuestsManager";
 import { InvitationPreview } from "./InvitationPreview";
 import { MediaManager } from "./MediaManager";
 import { ThemeEditor } from "./ThemeEditor";
+import { WishesModerator } from "./WishesModerator";
 
 type ActiveTab =
   | "umum"
@@ -18,6 +20,8 @@ type ActiveTab =
   | "media"
   | "section"
   | "tema"
+  | "tamu"
+  | "ucapan"
   | "pratinjau";
 
 interface ContentManagerProps {
@@ -38,8 +42,10 @@ const TABS: ReadonlyArray<{ id: ActiveTab; label: string }> = [
   { id: "umum", label: "Umum" },
   { id: "mempelai", label: "Mempelai" },
   { id: "media", label: "Media" },
-  { id: "section", label: "Section" },
   { id: "tema", label: "Tema" },
+  { id: "section", label: "Section" },
+  { id: "tamu", label: "Tamu" },
+  { id: "ucapan", label: "Ucapan" },
   { id: "pratinjau", label: "Pratinjau" },
 ];
 
@@ -118,6 +124,7 @@ export function ContentManager({
   const isDirty = JSON.stringify(draft) !== JSON.stringify(savedConfig);
   const formattedUpdated = formatUpdatedAt(updatedAt);
   const activeSectionCount = draft.sections.filter((s) => s.enabled).length;
+  const isDirectActionTab = activeTab === "tamu" || activeTab === "ucapan";
 
   const clearFieldError = (key: string) => {
     setFieldErrors((prev) => {
@@ -335,7 +342,7 @@ export function ContentManager({
               Pengelolaan Undangan
             </p>
             <h1 className="font-heading mt-1 text-2xl font-semibold">
-              Konten, Media &amp; Tema
+              Dashboard Framea
             </h1>
           </div>
 
@@ -362,7 +369,7 @@ export function ContentManager({
         <div
           role="tablist"
           aria-label="Menu pengaturan undangan"
-          className="mt-5 grid grid-cols-2 gap-2 rounded-2xl p-1.5 sm:grid-cols-3 lg:grid-cols-6"
+          className="mt-5 grid grid-cols-2 gap-2 rounded-2xl p-1.5 sm:grid-cols-4 lg:grid-cols-8"
           style={{
             backgroundColor: "var(--color-secondary)",
           }}
@@ -376,7 +383,7 @@ export function ContentManager({
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => setActiveTab(tab.id)}
-                className="min-h-11 cursor-pointer rounded-xl px-3 text-sm font-medium transition-colors"
+                className="min-h-11 cursor-pointer rounded-xl px-2.5 text-sm font-medium transition-colors"
                 style={{
                   backgroundColor: isActive
                     ? "var(--color-primary)"
@@ -393,7 +400,7 @@ export function ContentManager({
         </div>
       </section>
 
-      {statusBanner ? (
+      {statusBanner && !isDirectActionTab ? (
         <div
           role={statusBanner.type === "error" ? "alert" : "status"}
           className="rounded-2xl border px-4 py-3.5 text-sm font-medium"
@@ -1046,98 +1053,118 @@ export function ContentManager({
         />
       ) : null}
 
+      {activeTab === "tamu" ? <GuestsManager config={savedConfig} /> : null}
+
+      {activeTab === "ucapan" ? <WishesModerator /> : null}
+
       {activeTab === "pratinjau" ? <InvitationPreview config={draft} /> : null}
 
-      <section
-        className="rounded-3xl border px-5 py-4 sm:px-6"
-        style={{
-          backgroundColor: "var(--color-background)",
-          borderColor:
-            "color-mix(in srgb, var(--color-primary) 40%, transparent)",
-        }}
-      >
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-sm">
-            {isDirty ? (
-              <p className="font-medium" style={{ color: "var(--color-accent)" }}>
-                Ada perubahan yang belum disimpan.
-              </p>
-            ) : (
-              <p className="opacity-75">Semua perubahan sudah tersimpan.</p>
-            )}
-          </div>
+      {!isDirectActionTab ? (
+        <section
+          className="rounded-3xl border px-5 py-4 sm:px-6"
+          style={{
+            backgroundColor: "var(--color-background)",
+            borderColor:
+              "color-mix(in srgb, var(--color-primary) 40%, transparent)",
+          }}
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-sm">
+              {isDirty ? (
+                <p
+                  className="font-medium"
+                  style={{ color: "var(--color-accent)" }}
+                >
+                  Ada perubahan yang belum disimpan.
+                </p>
+              ) : (
+                <p className="opacity-75">Semua perubahan sudah tersimpan.</p>
+              )}
+            </div>
 
-          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
-            <button
-              type="button"
-              disabled={isSaving}
-              onClick={() => setShowResetConfirm((prev) => !prev)}
-              className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-5 text-sm font-medium transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
-              style={{
-                backgroundColor: "var(--color-background)",
-                borderColor:
-                  "color-mix(in srgb, var(--color-primary) 55%, transparent)",
-                color: "var(--color-text)",
-              }}
-            >
-              Reset ke default
-            </button>
-
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full px-7 text-sm font-semibold transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
-              style={{
-                backgroundColor: "var(--color-primary)",
-                color: "var(--color-background)",
-              }}
-            >
-              {isSaving ? "Menyimpan..." : "Simpan & Publikasikan"}
-            </button>
-          </div>
-        </div>
-
-        {showResetConfirm ? (
-          <div
-            className="mt-4 flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between"
-            style={{
-              backgroundColor: "var(--color-secondary)",
-              borderColor: "var(--color-primary)",
-            }}
-          >
-            <p className="text-sm leading-relaxed">
-              Yakin ingin mengembalikan seluruh konten, media, urutan section,
-              dan tema ke pengaturan default (Putih &amp; Emas)?
-            </p>
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
               <button
                 type="button"
                 disabled={isSaving}
-                onClick={() => setShowResetConfirm(false)}
-                className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-4 text-sm font-medium"
+                onClick={() => setShowResetConfirm((prev) => !prev)}
+                className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-5 text-sm font-medium transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
                 style={{
                   backgroundColor: "var(--color-background)",
-                  borderColor: "var(--color-primary)",
+                  borderColor:
+                    "color-mix(in srgb, var(--color-primary) 55%, transparent)",
+                  color: "var(--color-text)",
                 }}
               >
-                Batal
+                Reset ke default
               </button>
+
               <button
-                type="button"
+                type="submit"
                 disabled={isSaving}
-                onClick={handleConfirmReset}
-                className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full px-4 text-sm font-semibold"
+                className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full px-7 text-sm font-semibold transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
                 style={{
-                  backgroundColor: "var(--color-accent)",
+                  backgroundColor: "var(--color-primary)",
                   color: "var(--color-background)",
                 }}
               >
-                {isSaving ? "Mereset..." : "Ya, Reset"}
+                {isSaving ? "Menyimpan..." : "Simpan & Publikasikan"}
               </button>
             </div>
           </div>
-        ) : null}
-      </section>
+
+          {showResetConfirm ? (
+            <div
+              className="mt-4 flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between"
+              style={{
+                backgroundColor: "var(--color-secondary)",
+                borderColor: "var(--color-primary)",
+              }}
+            >
+              <p className="text-sm leading-relaxed">
+                Yakin ingin mengembalikan seluruh konten, media, urutan section,
+                dan tema ke pengaturan default (Putih &amp; Emas)?
+              </p>
+              <div className="flex shrink-0 items-center gap-2">
+                <button
+                  type="button"
+                  disabled={isSaving}
+                  onClick={() => setShowResetConfirm(false)}
+                  className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-4 text-sm font-medium"
+                  style={{
+                    backgroundColor: "var(--color-background)",
+                    borderColor: "var(--color-primary)",
+                  }}
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  disabled={isSaving}
+                  onClick={handleConfirmReset}
+                  className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full px-4 text-sm font-semibold"
+                  style={{
+                    backgroundColor: "var(--color-accent)",
+                    color: "var(--color-background)",
+                  }}
+                >
+                  {isSaving ? "Mereset..." : "Ya, Reset"}
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </section>
+      ) : isDirty ? (
+        <div
+          className="rounded-2xl border px-4 py-3 text-xs font-medium"
+          style={{
+            backgroundColor: "var(--color-secondary)",
+            borderColor: "var(--color-primary)",
+          }}
+        >
+          Pengingat: Anda masih memiliki perubahan konten/tema yang belum
+          disimpan di tab lain.
+        </div>
+      ) : null}
     </form>
   );
 }

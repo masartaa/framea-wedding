@@ -7,15 +7,19 @@ const LOGIN_WINDOW_MS = 15 * 60 * 1000; // 15 menit
 const MAX_FAILED_ATTEMPTS = 5;
 const FAILED_LOGIN_DELAY_MS = 800;
 
-const failedAttemptsByIp = new Map<string, AttemptRecord>();
+const WISH_WINDOW_MS = 10 * 60 * 1000; // 10 menit
+const MAX_WISHES_PER_WINDOW = 3;
 
-function cleanupExpired(now: number): void {
-  if (failedAttemptsByIp.size < 200) {
+const failedAttemptsByIp = new Map<string, AttemptRecord>();
+const wishSubmissionsByIp = new Map<string, AttemptRecord>();
+
+function cleanupExpired(store: Map<string, AttemptRecord>, now: number): void {
+  if (store.size < 200) {
     return;
   }
-  for (const [key, record] of failedAttemptsByIp.entries()) {
+  for (const [key, record] of store.entries()) {
     if (record.resetAt <= now) {
-      failedAttemptsByIp.delete(key);
+      store.delete(key);
     }
   }
 }
@@ -42,7 +46,7 @@ export function checkLoginRateLimit(ip: string): {
   retryAfterSeconds: number;
 } {
   const now = Date.now();
-  cleanupExpired(now);
+  cleanupExpired(failedAttemptsByIp, now);
 
   const record = failedAttemptsByIp.get(ip);
   if (!record) {
@@ -93,4 +97,47 @@ export function delayFailedLogin(): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, FAILED_LOGIN_DELAY_MS);
   });
+}
+
+export function checkWishRateLimit(ip: string): {
+  allowed: boolean;
+  retryAfterSeconds: number;
+} {
+  const now = Date.now();
+  cleanupExpired(wishSubmissionsByIp, now);
+
+  const record = wishSubmissionsByIp.get(ip);
+  if (!record) {
+    return { allowed: true, retryAfterSeconds: 0 };
+  }
+
+  if (record.resetAt <= now) {
+    wishSubmissionsByIp.delete(ip);
+    return { allowed: true, retryAfterSeconds: 0 };
+  }
+
+  if (record.count >= MAX_WISHES_PER_WINDOW) {
+    const retryAfterSeconds = Math.max(
+      1,
+      Math.ceil((record.resetAt - now) / 1000)
+    );
+    return { allowed: false, retryAfterSeconds };
+  }
+
+  return { allowed: true, retryAfterSeconds: 0 };
+}
+
+export function recordWishSubmission(ip: string): void {
+  const now = Date.now();
+  const existing = wishSubmissionsByIp.get(ip);
+
+  if (!existing || existing.resetAt <= now) {
+    wishSubmissionsByIp.set(ip, {
+      count: 1,
+      resetAt: now + WISH_WINDOW_MS,
+    });
+    return;
+  }
+
+  existing.count += 1;
 }

@@ -17,6 +17,7 @@ import { GallerySection } from "./GallerySection";
 import { MusicPlayer, type MusicPlayerHandle } from "./MusicPlayer";
 import { Ornament } from "./Ornament";
 import { Reveal } from "./Reveal";
+import { WishesSection } from "./WishesSection";
 
 interface InvitationShellProps {
   config: SiteConfig;
@@ -96,9 +97,10 @@ export function InvitationShell({
         );
       case "ucapan":
         return (
-          <WishesPlaceholderSection
+          <WishesSection
             key="ucapan"
             ornaments={config.theme.ornaments}
+            previewMode={previewMode}
           />
         );
     }
@@ -480,54 +482,6 @@ function EventSection({ config, fullDate }: EventSectionProps) {
               <span>Buka Google Maps</span>
             </a>
           ) : null}
-        </div>
-      </Reveal>
-    </section>
-  );
-}
-
-interface WishesPlaceholderSectionProps {
-  ornaments: boolean;
-}
-
-function WishesPlaceholderSection({
-  ornaments,
-}: WishesPlaceholderSectionProps) {
-  return (
-    <section
-      id="ucapan"
-      aria-labelledby="judul-ucapan"
-      className="px-5 py-14 text-center"
-      style={{
-        backgroundColor:
-          "color-mix(in srgb, var(--color-secondary) 45%, var(--color-background))",
-      }}
-    >
-      <Reveal>
-        <p
-          className="text-xs font-medium tracking-[0.2em] uppercase"
-          style={{ color: "var(--color-accent)" }}
-        >
-          Doa &amp; Harapan
-        </p>
-        <h2
-          id="judul-ucapan"
-          className="font-heading mt-2 text-2xl font-semibold sm:text-3xl"
-        >
-          Ucapan Tamu
-        </h2>
-        <Ornament enabled={ornaments} className="my-4" />
-
-        <div
-          className="mt-6 rounded-2xl border border-dashed px-6 py-8 text-sm opacity-80"
-          style={{
-            backgroundColor: "var(--color-background)",
-            borderColor:
-              "color-mix(in srgb, var(--color-primary) 45%, transparent)",
-          }}
-        >
-          Kolom kirim ucapan dan daftar doa restu tamu akan diaktifkan pada
-          tahap berikutnya.
         </div>
       </Reveal>
     </section>
