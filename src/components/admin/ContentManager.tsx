@@ -7,10 +7,18 @@ import {
   siteConfigSchema,
   type SiteConfig,
 } from "@/lib/config-schema";
+import { isVercelBlobUrl } from "@/lib/media-utils";
 import { InvitationPreview } from "./InvitationPreview";
+import { MediaManager } from "./MediaManager";
 import { ThemeEditor } from "./ThemeEditor";
 
-type ActiveTab = "umum" | "mempelai" | "section" | "tema" | "pratinjau";
+type ActiveTab =
+  | "umum"
+  | "mempelai"
+  | "media"
+  | "section"
+  | "tema"
+  | "pratinjau";
 
 interface ContentManagerProps {
   initialConfig: SiteConfig;
@@ -29,6 +37,7 @@ interface SaveResponseBody {
 const TABS: ReadonlyArray<{ id: ActiveTab; label: string }> = [
   { id: "umum", label: "Umum" },
   { id: "mempelai", label: "Mempelai" },
+  { id: "media", label: "Media" },
   { id: "section", label: "Section" },
   { id: "tema", label: "Tema" },
   { id: "pratinjau", label: "Pratinjau" },
@@ -57,6 +66,9 @@ function formatUpdatedAt(isoString: string | null): string | null {
 }
 
 function getTabForFieldPath(path: string): ActiveTab {
+  if (path.startsWith("media") || path.endsWith(".photoUrl")) {
+    return "media";
+  }
   if (path.startsWith("theme")) {
     return "tema";
   }
@@ -72,6 +84,17 @@ function getTabForFieldPath(path: string): ActiveTab {
     return "mempelai";
   }
   return "umum";
+}
+
+function collectBlobUrls(config: SiteConfig): Set<string> {
+  const urls = [
+    config.media.heroPhotoUrl,
+    config.media.musicUrl,
+    config.couple.groom.photoUrl,
+    config.couple.bride.photoUrl,
+    ...config.media.galleryPhotoUrls,
+  ];
+  return new Set(urls.filter((url) => isVercelBlobUrl(url)));
 }
 
 export function ContentManager({
@@ -181,6 +204,21 @@ export function ContentManager({
     });
   };
 
+  const cleanupRemovedBlobs = (previous: SiteConfig, next: SiteConfig) => {
+    const prevUrls = collectBlobUrls(previous);
+    const nextUrls = collectBlobUrls(next);
+
+    for (const url of prevUrls) {
+      if (!nextUrls.has(url)) {
+        void fetch("/api/admin/upload", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        }).catch(() => undefined);
+      }
+    }
+  };
+
   const persistConfig = async (
     payload: SiteConfig,
     successMessage: string
@@ -233,6 +271,8 @@ export function ContentManager({
         });
         return;
       }
+
+      cleanupRemovedBlobs(savedConfig, data.config);
 
       setDraft(data.config);
       setSavedConfig(data.config);
@@ -295,7 +335,7 @@ export function ContentManager({
               Pengelolaan Undangan
             </p>
             <h1 className="font-heading mt-1 text-2xl font-semibold">
-              Konten, Tema &amp; Pratinjau
+              Konten, Media &amp; Tema
             </h1>
           </div>
 
@@ -322,7 +362,7 @@ export function ContentManager({
         <div
           role="tablist"
           aria-label="Menu pengaturan undangan"
-          className="mt-5 grid grid-cols-2 gap-2 rounded-2xl p-1.5 sm:grid-cols-5"
+          className="mt-5 grid grid-cols-2 gap-2 rounded-2xl p-1.5 sm:grid-cols-3 lg:grid-cols-6"
           style={{
             backgroundColor: "var(--color-secondary)",
           }}
@@ -687,8 +727,8 @@ export function ContentManager({
               Data Kedua Mempelai
             </h2>
             <p className="mt-0.5 text-sm opacity-75">
-              Mengatur teks pengantar, nama lengkap, dan nama orang tua. Unggah
-              foto mempelai akan tersedia di menu Media (Fase 6).
+              Mengatur teks pengantar, nama lengkap, dan nama orang tua. Untuk
+              mengunggah foto mempelai, buka tab <strong>Media</strong>.
             </p>
           </div>
 
@@ -841,6 +881,31 @@ export function ContentManager({
             })}
           </div>
         </section>
+      ) : null}
+
+      {activeTab === "media" ? (
+        <MediaManager
+          config={draft}
+          onChangeHeroPhoto={(url) =>
+            setDraft((prev) => ({
+              ...prev,
+              media: { ...prev.media, heroPhotoUrl: url },
+            }))
+          }
+          onChangeCouplePhoto={(who, url) => updatePerson(who, "photoUrl", url)}
+          onChangeGallery={(urls) =>
+            setDraft((prev) => ({
+              ...prev,
+              media: { ...prev.media, galleryPhotoUrls: urls },
+            }))
+          }
+          onChangeMusic={(musicUrl, musicPreset) =>
+            setDraft((prev) => ({
+              ...prev,
+              media: { ...prev.media, musicUrl, musicPreset },
+            }))
+          }
+        />
       ) : null}
 
       {activeTab === "section" ? (
@@ -1041,8 +1106,8 @@ export function ContentManager({
             }}
           >
             <p className="text-sm leading-relaxed">
-              Yakin ingin mengembalikan seluruh konten, urutan section, dan tema
-              ke pengaturan default (Putih &amp; Emas)?
+              Yakin ingin mengembalikan seluruh konten, media, urutan section,
+              dan tema ke pengaturan default (Putih &amp; Emas)?
             </p>
             <div className="flex shrink-0 items-center gap-2">
               <button

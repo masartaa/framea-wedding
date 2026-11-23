@@ -1,0 +1,377 @@
+import { del, put } from "@vercel/blob";
+import { eq } from "drizzle-orm";
+import { NextResponse, type NextRequest } from "next/server";
+import { z } from "zod";
+import { getDb } from "@/db";
+import { media } from "@/db/schema";
+import { requireAdminSession } from "@/lib/auth";
+import {
+  ALLOWED_AUDIO_MIME_TYPES,
+  ALLOWED_IMAGE_MIME_TYPES,
+  isVercelBlobUrl,
+  MAX_AUDIO_BYTES,
+  MAX_IMAGE_BYTES,
+} from "@/lib/media-utils";
+
+const mediaKindSchema = z.enum(["hero", "mempelai", "galeri", "musik"]);
+
+const deleteBodySchema = z.object({
+  url: z.string().url("URL media tidak valid."),
+});
+
+const MIME_TO_EXTENSION: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "audio/mpeg": "mp3",
+  "audio/mp3": "mp3",
+  "audio/mp4": "m4a",
+  "audio/x-m4a": "m4a",
+  "audio/ogg": "ogg",
+};
+
+function hasValidImageSignature(bytes: Uint8Array, mime: string): boolean {
+  if (bytes.length < 12) {
+    return false;
+  }
+
+  if (mime === "image/jpeg") {
+    return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  }
+
+  if (mime === "image/png") {
+    return (
+      bytes[0] === 0x89 &&
+      bytes[1] === 0x50 &&
+      bytes[2] === 0x4e &&
+      bytes[3] === 0x47
+    );
+  }
+
+  if (mime === "image/webp") {
+    return (
+      bytes[0] === 0x52 &&
+      bytes[1] === 0x49 &&
+      bytes[2] === 0x46 &&
+      bytes[3] === 0x46 &&
+      bytes[8] === 0x57 &&
+      bytes[9] === 0x45 &&
+      bytes[10] === 0x42 &&
+      bytes[11] === 0x50
+    );
+  }
+
+  return false;
+}
+
+function hasValidAudioSignature(bytes: Uint8Array, mime: string): boolean {
+  if (bytes.length < 12) {
+    return false;
+  }
+
+  if (mime === "audio/mpeg" || mime === "audio/mp3") {
+    const hasId3 =
+      bytes[0] === 0x49 && bytes[1] === 0x44 && bytes[2] === 0x33;
+    const hasFrameSync = bytes[0] === 0xff && (bytes[1] & 0xe0) === 0xe0;
+    return hasId3 || hasFrameSync;
+  }
+
+  if (mime === "audio/mp4" || mime === "audio/x-m4a") {
+    return (
+      bytes[4] === 0x66 &&
+      bytes[5] === 0x74 &&
+      bytes[6] === 0x79 &&
+      bytes[7] === 0x70
+    );
+  }
+
+  if (mime === "audio/ogg") {
+    return (
+      bytes[0] === 0x4f &&
+      bytes[1] === 0x67 &&
+      bytes[2] === 0x67 &&
+      bytes[3] === 0x53
+    );
+  }
+
+  return false;
+}
+
+function sanitizeBaseName(filename: string): string {
+  const withoutExt = filename.replace(/\.[^/.]+$/, "");
+  const slug = withoutExt
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+
+  return slug || "media";
+}
+
+export async function POST(request: NextRequest) {
+  const auth = await requireAdminSession();
+  if (!auth.ok) {
+    return auth.response;
+  }
+
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    return NextResponse.json(
+      {
+        error:
+          "Penyimpanan media belum dikonfigurasi. Pastikan BLOB_READ_WRITE_TOKEN sudah diatur di Vercel atau .env.local.",
+      },
+      {
+        status: 503,
+        headers: { "Cache-Control": "no-store" },
+      }
+    );
+  }
+
+  let formData: FormData;
+  try {
+    formData = await request.formData();
+  } catch {
+    return NextResponse.json(
+      { error: "Format unggahan tidak valid (harus multipart/form-data)." },
+      {
+        status: 400,
+        headers: { "Cache-Control": "no-store" },
+      }
+    );
+  }
+
+  const kindParsed = mediaKindSchema.safeParse(formData.get("kind"));
+  if (!kindParsed.success) {
+    return NextResponse.json(
+      { error: "Jenis media tidak valid." },
+      {
+        status: 400,
+        headers: { "Cache-Control": "no-store" },
+      }
+    );
+  }
+
+  const rawSortOrder = Number(formData.get("sortOrder") ?? 0);
+  const sortOrder =
+    Number.isInteger(rawSortOrder) && rawSortOrder >= 0 ? rawSortOrder : 0;
+
+  const fileEntry = formData.get("file");
+  if (!(fileEntry instanceof File) || fileEntry.size <= 0) {
+    return NextResponse.json(
+      { error: "Berkas tidak ditemukan atau kosong." },
+      {
+        status: 400,
+        headers: { "Cache-Control": "no-store" },
+      }
+    );
+  }
+
+  const kind = kindParsed.data;
+  const isAudio = kind === "musik";
+  const mime = fileEntry.type.toLowerCase();
+
+  if (isAudio) {
+    if (
+      !ALLOWED_AUDIO_MIME_TYPES.includes(
+        mime as (typeof ALLOWED_AUDIO_MIME_TYPES)[number]
+      )
+    ) {
+      return NextResponse.json(
+        { error: "Format musik harus MP3, M4A, atau OGG." },
+        {
+          status: 400,
+          headers: { "Cache-Control": "no-store" },
+        }
+      );
+    }
+
+    if (fileEntry.size > MAX_AUDIO_BYTES) {
+      return NextResponse.json(
+        { error: "Ukuran berkas musik maksimal 4 MB." },
+        {
+          status: 400,
+          headers: { "Cache-Control": "no-store" },
+        }
+      );
+    }
+  } else {
+    if (
+      !ALLOWED_IMAGE_MIME_TYPES.includes(
+        mime as (typeof ALLOWED_IMAGE_MIME_TYPES)[number]
+      )
+    ) {
+      return NextResponse.json(
+        { error: "Format foto harus JPG, PNG, atau WebP." },
+        {
+          status: 400,
+          headers: { "Cache-Control": "no-store" },
+        }
+      );
+    }
+
+    if (fileEntry.size > MAX_IMAGE_BYTES) {
+      return NextResponse.json(
+        { error: "Ukuran berkas foto maksimal 2 MB." },
+        {
+          status: 400,
+          headers: { "Cache-Control": "no-store" },
+        }
+      );
+    }
+  }
+
+  const arrayBuffer = await fileEntry.arrayBuffer();
+  const headerBytes = new Uint8Array(arrayBuffer.slice(0, 16));
+
+  const validSignature = isAudio
+    ? hasValidAudioSignature(headerBytes, mime)
+    : hasValidImageSignature(headerBytes, mime);
+
+  if (!validSignature) {
+    return NextResponse.json(
+      {
+        error:
+          "Isi berkas tidak sesuai dengan format yang diizinkan. Mohon pilih berkas yang valid.",
+      },
+      {
+        status: 400,
+        headers: { "Cache-Control": "no-store" },
+      }
+    );
+  }
+
+  const extension = MIME_TO_EXTENSION[mime] ?? (isAudio ? "mp3" : "webp");
+  const baseName = sanitizeBaseName(fileEntry.name);
+  const pathname = `framea/${kind}/${baseName}.${extension}`;
+  const normalizedContentType = mime === "audio/mp3" ? "audio/mpeg" : mime;
+
+  try {
+    const blob = await put(pathname, arrayBuffer, {
+      access: "public",
+      contentType: normalizedContentType,
+      addRandomSuffix: true,
+    });
+
+    let insertedId: number | null = null;
+    if (process.env.DATABASE_URL) {
+      try {
+        const db = getDb();
+        const [inserted] = await db
+          .insert(media)
+          .values({
+            kind,
+            url: blob.url,
+            sortOrder,
+          })
+          .returning({ id: media.id });
+        insertedId = inserted?.id ?? null;
+      } catch (dbError: unknown) {
+        const message =
+          dbError instanceof Error ? dbError.message : "DB error";
+        console.warn(`Gagal mencatat metadata media ke DB: ${message}`);
+      }
+    }
+
+    return NextResponse.json(
+      {
+        ok: true,
+        id: insertedId,
+        kind,
+        url: blob.url,
+      },
+      {
+        status: 200,
+        headers: { "Cache-Control": "no-store" },
+      }
+    );
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Gagal mengunggah ke Blob.";
+    console.error(`Gagal unggah media ke Vercel Blob: ${message}`);
+    return NextResponse.json(
+      { error: "Gagal mengunggah berkas ke penyimpanan. Silakan coba lagi." },
+      {
+        status: 500,
+        headers: { "Cache-Control": "no-store" },
+      }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  const auth = await requireAdminSession();
+  if (!auth.ok) {
+    return auth.response;
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Format permintaan tidak valid." },
+      {
+        status: 400,
+        headers: { "Cache-Control": "no-store" },
+      }
+    );
+  }
+
+  const parsed = deleteBodySchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "URL tidak valid." },
+      {
+        status: 400,
+        headers: { "Cache-Control": "no-store" },
+      }
+    );
+  }
+
+  const { url } = parsed.data;
+  if (!isVercelBlobUrl(url)) {
+    return NextResponse.json(
+      { error: "Hanya berkas milik Vercel Blob yang dapat dihapus." },
+      {
+        status: 400,
+        headers: { "Cache-Control": "no-store" },
+      }
+    );
+  }
+
+  try {
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      await del(url);
+    }
+
+    if (process.env.DATABASE_URL) {
+      try {
+        const db = getDb();
+        await db.delete(media).where(eq(media.url, url));
+      } catch (dbError: unknown) {
+        const message =
+          dbError instanceof Error ? dbError.message : "DB error";
+        console.warn(`Gagal menghapus catatan media di DB: ${message}`);
+      }
+    }
+
+    return NextResponse.json(
+      { ok: true },
+      {
+        status: 200,
+        headers: { "Cache-Control": "no-store" },
+      }
+    );
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Gagal menghapus berkas.";
+    console.error(`Gagal menghapus berkas di Vercel Blob: ${message}`);
+    return NextResponse.json(
+      { error: "Gagal menghapus berkas dari penyimpanan." },
+      {
+        status: 500,
+        headers: { "Cache-Control": "no-store" },
+      }
+    );
+  }
+}

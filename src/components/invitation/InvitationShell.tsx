@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import type { SectionItem, SiteConfig } from "@/lib/config-schema";
 import {
@@ -14,6 +14,7 @@ import {
 import { Countdown } from "./Countdown";
 import { Cover } from "./Cover";
 import { GallerySection } from "./GallerySection";
+import { MusicPlayer, type MusicPlayerHandle } from "./MusicPlayer";
 import { Ornament } from "./Ornament";
 import { Reveal } from "./Reveal";
 
@@ -31,6 +32,7 @@ export function InvitationShell({
   onPreviewOpen,
 }: InvitationShellProps) {
   const [isOpened, setIsOpened] = useState(false);
+  const musicPlayerRef = useRef<MusicPlayerHandle | null>(null);
 
   useEffect(() => {
     if (previewMode) {
@@ -54,6 +56,7 @@ export function InvitationShell({
       return;
     }
     setIsOpened(true);
+    musicPlayerRef.current?.start();
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -143,6 +146,13 @@ export function InvitationShell({
 
             <ClosingSection config={config} />
           </main>
+
+          <MusicPlayer
+            ref={musicPlayerRef}
+            musicUrl={config.media.musicUrl}
+            musicPreset={config.media.musicPreset}
+            isOpened={isOpened}
+          />
         </>
       )}
     </div>
