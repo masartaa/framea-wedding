@@ -108,17 +108,41 @@ function sanitizeBaseName(filename: string): string {
   return slug || "media";
 }
 
+function isBlobConfigured(): boolean {
+  return Boolean(
+    process.env.BLOB_READ_WRITE_TOKEN ||
+      process.env.BLOB_STORE_ID ||
+      process.env.VERCEL_OIDC_TOKEN
+  );
+}
+
+function getFriendlyBlobError(error: unknown): string {
+  const raw = error instanceof Error ? error.message.toLowerCase() : "";
+  if (raw.includes("private")) {
+    return "Blob Store berstatus Private. Gunakan Blob Store dengan akses Public agar media dapat ditampilkan di undangan.";
+  }
+  if (
+    raw.includes("token") ||
+    raw.includes("access") ||
+    raw.includes("oidc") ||
+    raw.includes("unauthorized")
+  ) {
+    return "Autentikasi Vercel Blob gagal. Pastikan Blob Store Public terhubung ke proyek Vercel ini lalu Redeploy.";
+  }
+  return "Gagal mengunggah berkas ke penyimpanan. Silakan coba lagi.";
+}
+
 export async function POST(request: NextRequest) {
   const auth = await requireAdminSession();
   if (!auth.ok) {
     return auth.response;
   }
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+  if (!isBlobConfigured()) {
     return NextResponse.json(
       {
         error:
-          "Penyimpanan media belum dikonfigurasi. Pastikan BLOB_READ_WRITE_TOKEN sudah diatur di Vercel atau .env.local.",
+          "Penyimpanan media belum dikonfigurasi. Hubungkan Vercel Blob Store (BLOB_STORE_ID / BLOB_READ_WRITE_TOKEN) di Vercel atau .env.local.",
       },
       {
         status: 503,
@@ -246,7 +270,7 @@ export async function POST(request: NextRequest) {
   const normalizedContentType = mime === "audio/mp3" ? "audio/mpeg" : mime;
 
   try {
-    const blob = await put(pathname, arrayBuffer, {
+    const blob = await put(pathname, Buffer.from(arrayBuffer), {
       access: "public",
       contentType: normalizedContentType,
       addRandomSuffix: true,
@@ -289,7 +313,7 @@ export async function POST(request: NextRequest) {
       error instanceof Error ? error.message : "Gagal mengunggah ke Blob.";
     console.error(`Gagal unggah media ke Vercel Blob: ${message}`);
     return NextResponse.json(
-      { error: "Gagal mengunggah berkas ke penyimpanan. Silakan coba lagi." },
+      { error: getFriendlyBlobError(error) },
       {
         status: 500,
         headers: { "Cache-Control": "no-store" },
@@ -340,7 +364,7 @@ export async function DELETE(request: NextRequest) {
   }
 
   try {
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
+    if (isBlobConfigured()) {
       await del(url);
     }
 
