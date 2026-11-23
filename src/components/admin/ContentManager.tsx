@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 import {
   DEFAULT_SITE_CONFIG,
   getInvitationEvents,
@@ -348,6 +348,70 @@ export function ContentManager({
       DEFAULT_SITE_CONFIG,
       "Konfigurasi berhasil dikembalikan ke pengaturan default (Putih & Emas)."
     );
+  };
+
+  const handleExportConfigJson = () => {
+    const dateStamp = new Date().toISOString().slice(0, 10);
+    const blob = new Blob([JSON.stringify(savedConfig, null, 2)], {
+      type: "application/json;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `framea-config-${dateStamp}.json`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportConfigJson = async (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) {
+      return;
+    }
+
+    setStatusBanner(null);
+    try {
+      const text = await file.text();
+      const raw: unknown = JSON.parse(text);
+      const candidate =
+        typeof raw === "object" &&
+        raw !== null &&
+        "siteConfig" in raw &&
+        typeof (raw as { siteConfig?: unknown }).siteConfig === "object"
+          ? (raw as { siteConfig: unknown }).siteConfig
+          : raw;
+
+      const parsed = siteConfigSchema.safeParse(candidate);
+      if (!parsed.success) {
+        const firstIssue =
+          parsed.error.issues[0]?.message ?? "Struktur JSON tidak sesuai.";
+        setStatusBanner({
+          type: "error",
+          message: `Berkas cadangan tidak valid: ${firstIssue}`,
+        });
+        return;
+      }
+
+      const normalized = normalizeConfigWithEvents(parsed.data);
+      setDraft(normalized);
+      setFieldErrors({});
+      setStatusBanner({
+        type: "success",
+        message:
+          'Konfigurasi dari berkas JSON berhasil dimuat ke draft. Periksa di tab Pratinjau lalu klik "Simpan & Publikasikan" untuk menerapkannya.',
+      });
+    } catch {
+      setStatusBanner({
+        type: "error",
+        message:
+          "Berkas tidak dapat dibaca. Pastikan Anda memilih file cadangan JSON yang valid.",
+      });
+    }
   };
 
   const inputClassName =
@@ -1058,6 +1122,69 @@ export function ContentManager({
               </div>
             </div>
           ) : null}
+
+          <div
+            className="mt-4 flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between"
+            style={{
+              borderColor:
+                "color-mix(in srgb, var(--color-primary) 25%, transparent)",
+            }}
+          >
+            <div>
+              <p className="text-xs font-semibold">
+                Cadangan &amp; Pulihkan Data (JSON)
+              </p>
+              <p className="text-[11px] opacity-70">
+                Simpan salinan cadangan sebelum menyebar undangan atau pulihkan
+                konfigurasi dari berkas JSON.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <a
+                href="/api/admin/backup"
+                download
+                className="inline-flex min-h-11 items-center justify-center rounded-full border px-4 text-xs font-medium"
+                style={{
+                  backgroundColor: "var(--color-secondary)",
+                  borderColor:
+                    "color-mix(in srgb, var(--color-primary) 45%, transparent)",
+                }}
+              >
+                Cadangan Lengkap
+              </a>
+
+              <button
+                type="button"
+                onClick={handleExportConfigJson}
+                className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-4 text-xs font-medium"
+                style={{
+                  backgroundColor: "var(--color-background)",
+                  borderColor:
+                    "color-mix(in srgb, var(--color-primary) 45%, transparent)",
+                }}
+              >
+                Ekspor Config
+              </button>
+
+              <label
+                className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-4 text-xs font-medium"
+                style={{
+                  backgroundColor: "var(--color-background)",
+                  borderColor:
+                    "color-mix(in srgb, var(--color-primary) 45%, transparent)",
+                }}
+              >
+                <span>Impor Config</span>
+                <input
+                  type="file"
+                  accept="application/json,.json"
+                  onChange={(event) => void handleImportConfigJson(event)}
+                  className="sr-only"
+                />
+              </label>
+            </div>
+          </div>
         </section>
       ) : isDirty ? (
         <div

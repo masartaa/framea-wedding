@@ -1,9 +1,30 @@
 import type { CSSProperties } from "react";
-import type { SiteConfig } from "@/lib/config-schema";
+import type { EventItem, SiteConfig } from "@/lib/config-schema";
 import {
   BODY_FONT_CSS_MAP,
   HEADING_FONT_CSS_MAP,
 } from "@/lib/font-variables";
+
+export function getInvitationEvents(config: SiteConfig): EventItem[] {
+  if (Array.isArray(config.events) && config.events.length > 0) {
+    return config.events;
+  }
+
+  return [
+    {
+      id: "acara-utama",
+      title: config.general.eventTitle,
+      date: config.general.eventDate,
+      timeStart: config.general.eventTimeStart,
+      timeEnd: config.general.eventTimeEnd,
+      timezone: config.general.eventTimezone,
+      venueName: config.general.venueName,
+      venueAddress: config.general.venueAddress,
+      mapsUrl: config.general.mapsUrl,
+      isPrimary: true,
+    },
+  ];
+}
 
 export const DEFAULT_GUEST_LABEL = "Bapak/Ibu/Saudara/i";
 export const MAX_GUEST_NAME_LENGTH = 60;

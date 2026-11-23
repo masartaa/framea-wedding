@@ -2,10 +2,7 @@
 
 import { useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
 import { isValidMusicPreset } from "@/lib/media-utils";
-import {
-  createPresetSynth,
-  type PresetSynthController,
-} from "@/lib/preset-synth";
+import type { PresetSynthController } from "@/lib/preset-synth";
 
 export interface MusicPlayerHandle {
   start: () => void;
@@ -74,12 +71,25 @@ export function MusicPlayer({
     }
 
     if (validPreset) {
-      if (!synthRef.current) {
-        synthRef.current = createPresetSynth(validPreset);
+      if (synthRef.current) {
+        void synthRef.current.start().then((started) => {
+          setIsPlaying(started);
+        });
+        return;
       }
-      void synthRef.current.start().then((started) => {
-        setIsPlaying(started);
-      });
+
+      void import("@/lib/preset-synth")
+        .then(({ createPresetSynth }) => {
+          const controller = createPresetSynth(validPreset);
+          synthRef.current = controller;
+          return controller.start();
+        })
+        .then((started) => {
+          setIsPlaying(started);
+        })
+        .catch(() => {
+          setIsPlaying(false);
+        });
     }
   };
 

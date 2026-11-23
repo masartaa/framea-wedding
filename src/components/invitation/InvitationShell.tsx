@@ -2,17 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import {
-  getInvitationEvents,
-  type SectionItem,
-  type SiteConfig,
-} from "@/lib/config-schema";
+import type { SectionItem, SiteConfig } from "@/lib/config-schema";
 import {
   createThemeVariables,
   formatEventDateFull,
   formatEventDateShort,
   getEventTargetTimestamp,
   getInitials,
+  getInvitationEvents,
   isSafeExternalUrl,
 } from "@/lib/format";
 import { Countdown } from "./Countdown";
