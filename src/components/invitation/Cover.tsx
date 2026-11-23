@@ -13,6 +13,7 @@ interface CoverProps {
   config: SiteConfig;
   isOpened: boolean;
   onOpen: () => void;
+  previewMode?: boolean;
 }
 
 function subscribeToLocation(callback: () => void): () => void {
@@ -29,12 +30,18 @@ function getServerGuestName(): string {
   return DEFAULT_GUEST_LABEL;
 }
 
-export function Cover({ config, isOpened, onOpen }: CoverProps) {
-  const guestName = useSyncExternalStore(
+export function Cover({
+  config,
+  isOpened,
+  onOpen,
+  previewMode = false,
+}: CoverProps) {
+  const urlGuestName = useSyncExternalStore(
     subscribeToLocation,
     getGuestNameFromUrl,
     getServerGuestName
   );
+  const guestName = previewMode ? "Budi Santoso" : urlGuestName;
 
   const layout = config.theme.layout.cover;
   const formattedDate = formatEventDateShort(config.general.eventDate);
@@ -46,15 +53,19 @@ export function Cover({ config, isOpened, onOpen }: CoverProps) {
         ? "px-4 py-8"
         : "border px-6 py-10 shadow-sm";
 
-  return (
-    <section
-      aria-label="Sampul Undangan"
-      aria-hidden={isOpened}
-      className={`fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-5 py-10 transition-all duration-500 ${
+  const positionClass = previewMode
+    ? "relative min-h-[620px] w-full"
+    : `fixed inset-0 z-50 transition-all duration-500 ${
         isOpened
           ? "pointer-events-none -translate-y-4 opacity-0"
           : "translate-y-0 opacity-100"
-      }`}
+      }`;
+
+  return (
+    <section
+      aria-label="Sampul Undangan"
+      aria-hidden={!previewMode && isOpened}
+      className={`flex items-center justify-center overflow-y-auto px-5 py-10 ${positionClass}`}
       style={{
         backgroundColor: "var(--color-background)",
         backgroundImage:
@@ -115,7 +126,7 @@ export function Cover({ config, isOpened, onOpen }: CoverProps) {
         <button
           type="button"
           onClick={onOpen}
-          disabled={isOpened}
+          disabled={!previewMode && isOpened}
           className="mt-8 inline-flex min-h-11 min-w-44 cursor-pointer items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-medium tracking-wide transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
           style={{
             backgroundColor: "var(--color-primary)",

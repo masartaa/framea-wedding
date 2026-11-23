@@ -7,8 +7,10 @@ import {
   siteConfigSchema,
   type SiteConfig,
 } from "@/lib/config-schema";
+import { InvitationPreview } from "./InvitationPreview";
+import { ThemeEditor } from "./ThemeEditor";
 
-type ActiveTab = "umum" | "mempelai" | "section";
+type ActiveTab = "umum" | "mempelai" | "section" | "tema" | "pratinjau";
 
 interface ContentManagerProps {
   initialConfig: SiteConfig;
@@ -28,6 +30,8 @@ const TABS: ReadonlyArray<{ id: ActiveTab; label: string }> = [
   { id: "umum", label: "Umum" },
   { id: "mempelai", label: "Mempelai" },
   { id: "section", label: "Section" },
+  { id: "tema", label: "Tema" },
+  { id: "pratinjau", label: "Pratinjau" },
 ];
 
 const TIMEZONE_OPTIONS = ["WIB", "WITA", "WIT"] as const;
@@ -53,6 +57,9 @@ function formatUpdatedAt(isoString: string | null): string | null {
 }
 
 function getTabForFieldPath(path: string): ActiveTab {
+  if (path.startsWith("theme")) {
+    return "tema";
+  }
   if (path.startsWith("sections")) {
     return "section";
   }
@@ -285,10 +292,10 @@ export function ContentManager({
               className="text-xs font-medium tracking-[0.18em] uppercase"
               style={{ color: "var(--color-accent)" }}
             >
-              Konten Undangan
+              Pengelolaan Undangan
             </p>
             <h1 className="font-heading mt-1 text-2xl font-semibold">
-              Pengaturan Isi &amp; Section
+              Konten, Tema &amp; Pratinjau
             </h1>
           </div>
 
@@ -314,8 +321,8 @@ export function ContentManager({
 
         <div
           role="tablist"
-          aria-label="Menu konten undangan"
-          className="mt-5 grid grid-cols-3 gap-2 rounded-2xl p-1.5"
+          aria-label="Menu pengaturan undangan"
+          className="mt-5 grid grid-cols-2 gap-2 rounded-2xl p-1.5 sm:grid-cols-5"
           style={{
             backgroundColor: "var(--color-secondary)",
           }}
@@ -962,6 +969,19 @@ export function ContentManager({
           </div>
         </section>
       ) : null}
+
+      {activeTab === "tema" ? (
+        <ThemeEditor
+          theme={draft.theme}
+          fieldErrors={fieldErrors}
+          onChange={(nextTheme) =>
+            setDraft((prev) => ({ ...prev, theme: nextTheme }))
+          }
+          onClearError={clearFieldError}
+        />
+      ) : null}
+
+      {activeTab === "pratinjau" ? <InvitationPreview config={draft} /> : null}
 
       <section
         className="rounded-3xl border px-5 py-4 sm:px-6"

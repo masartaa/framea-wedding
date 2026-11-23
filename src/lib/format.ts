@@ -1,5 +1,9 @@
 import type { CSSProperties } from "react";
-import type { ThemeColors } from "@/lib/config-schema";
+import type { SiteConfig } from "@/lib/config-schema";
+import {
+  BODY_FONT_CSS_MAP,
+  HEADING_FONT_CSS_MAP,
+} from "@/lib/font-variables";
 
 export const DEFAULT_GUEST_LABEL = "Bapak/Ibu/Saudara/i";
 export const MAX_GUEST_NAME_LENGTH = 60;
@@ -78,13 +82,17 @@ export function getInitials(name: string): string {
   return words[0].charAt(0).toUpperCase();
 }
 
-export function createThemeVariables(colors: ThemeColors): CSSProperties {
+export function createThemeVariables(
+  theme: SiteConfig["theme"]
+): CSSProperties {
   return {
-    "--color-primary": colors.primary,
-    "--color-secondary": colors.secondary,
-    "--color-background": colors.background,
-    "--color-text": colors.text,
-    "--color-accent": colors.accent,
+    "--color-primary": theme.colors.primary,
+    "--color-secondary": theme.colors.secondary,
+    "--color-background": theme.colors.background,
+    "--color-text": theme.colors.text,
+    "--color-accent": theme.colors.accent,
+    "--font-heading": HEADING_FONT_CSS_MAP[theme.fonts.heading],
+    "--font-body": BODY_FONT_CSS_MAP[theme.fonts.body],
   } as CSSProperties;
 }
 

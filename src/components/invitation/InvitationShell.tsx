@@ -19,12 +19,24 @@ import { Reveal } from "./Reveal";
 
 interface InvitationShellProps {
   config: SiteConfig;
+  previewMode?: boolean;
+  previewView?: "cover" | "content";
+  onPreviewOpen?: () => void;
 }
 
-export function InvitationShell({ config }: InvitationShellProps) {
+export function InvitationShell({
+  config,
+  previewMode = false,
+  previewView = "content",
+  onPreviewOpen,
+}: InvitationShellProps) {
   const [isOpened, setIsOpened] = useState(false);
 
   useEffect(() => {
+    if (previewMode) {
+      return undefined;
+    }
+
     if (!isOpened) {
       document.body.style.overflow = "hidden";
       return () => {
@@ -34,9 +46,13 @@ export function InvitationShell({ config }: InvitationShellProps) {
 
     document.body.style.overflow = "";
     return undefined;
-  }, [isOpened]);
+  }, [isOpened, previewMode]);
 
   const handleOpen = () => {
+    if (previewMode) {
+      onPreviewOpen?.();
+      return;
+    }
     setIsOpened(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -85,26 +101,50 @@ export function InvitationShell({ config }: InvitationShellProps) {
     }
   };
 
+  const themeVars = createThemeVariables(config.theme);
+
   return (
     <div
-      className="min-h-dvh w-full"
+      className={previewMode ? "w-full" : "min-h-dvh w-full"}
       style={{
-        ...createThemeVariables(config.theme.colors),
+        ...themeVars,
         backgroundColor:
           "color-mix(in srgb, var(--color-secondary) 45%, var(--color-background))",
         color: "var(--color-text)",
+        fontFamily: "var(--font-body)",
       }}
     >
-      <Cover config={config} isOpened={isOpened} onOpen={handleOpen} />
+      {previewMode ? (
+        previewView === "cover" ? (
+          <Cover
+            config={config}
+            isOpened={false}
+            onOpen={handleOpen}
+            previewMode
+          />
+        ) : (
+          <div
+            className="mx-auto w-full max-w-lg shadow-sm"
+            style={{ backgroundColor: "var(--color-background)" }}
+          >
+            {enabledSections.map((section) => renderSection(section))}
+            <ClosingSection config={config} />
+          </div>
+        )
+      ) : (
+        <>
+          <Cover config={config} isOpened={isOpened} onOpen={handleOpen} />
 
-      <main
-        className="mx-auto min-h-dvh w-full max-w-lg shadow-sm"
-        style={{ backgroundColor: "var(--color-background)" }}
-      >
-        {enabledSections.map((section) => renderSection(section))}
+          <main
+            className="mx-auto min-h-dvh w-full max-w-lg shadow-sm"
+            style={{ backgroundColor: "var(--color-background)" }}
+          >
+            {enabledSections.map((section) => renderSection(section))}
 
-        <ClosingSection config={config} />
-      </main>
+            <ClosingSection config={config} />
+          </main>
+        </>
+      )}
     </div>
   );
 }

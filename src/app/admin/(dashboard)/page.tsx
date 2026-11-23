@@ -3,13 +3,9 @@ import { getSiteConfigFresh } from "@/lib/site-config";
 
 const UPCOMING_MENUS = [
   {
-    name: "Tema & Pratinjau",
-    description: "Preset palet warna, font, varian layout, ornamen, dan pratinjau HP/desktop.",
-    phase: "Fase 5",
-  },
-  {
     name: "Media",
-    description: "Unggah foto hero, foto mempelai, galeri maksimal 6 foto, dan musik latar.",
+    description:
+      "Unggah foto hero, foto mempelai, galeri maksimal 6 foto, dan musik latar.",
     phase: "Fase 6",
   },
   {
@@ -37,7 +33,7 @@ export default async function AdminDashboardPage() {
         >
           Menu Tahap Berikutnya
         </h2>
-        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           {UPCOMING_MENUS.map((menu) => (
             <div
               key={menu.name}
