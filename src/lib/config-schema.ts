@@ -53,49 +53,100 @@ export const sectionIdSchema = z.enum([
 ]);
 
 export const personSchema = z.object({
-  nickname: z.string().trim().min(1).max(40),
-  fullName: z.string().trim().min(1).max(120),
-  fatherName: z.string().trim().max(120),
-  motherName: z.string().trim().max(120),
+  nickname: z
+    .string()
+    .trim()
+    .min(1, "Nama panggilan wajib diisi.")
+    .max(40, "Nama panggilan maksimal 40 karakter."),
+  fullName: z
+    .string()
+    .trim()
+    .min(1, "Nama lengkap wajib diisi.")
+    .max(120, "Nama lengkap maksimal 120 karakter."),
+  fatherName: z
+    .string()
+    .trim()
+    .max(120, "Nama ayah maksimal 120 karakter."),
+  motherName: z
+    .string()
+    .trim()
+    .max(120, "Nama ibu maksimal 120 karakter."),
   photoUrl: optionalUrlSchema,
 });
 
 export const siteConfigSchema = z.object({
   general: z.object({
-    eventTitle: z.string().trim().min(1).max(80),
+    eventTitle: z
+      .string()
+      .trim()
+      .min(1, "Judul acara wajib diisi.")
+      .max(80, "Judul acara maksimal 80 karakter."),
     eventDate: z
       .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, "Format tanggal harus YYYY-MM-DD"),
-    eventTimeStart: z.string().trim().min(1).max(20),
-    eventTimeEnd: z.string().trim().min(1).max(20),
-    eventTimezone: z.string().trim().min(1).max(10),
-    venueName: z.string().trim().min(1).max(120),
-    venueAddress: z.string().trim().min(1).max(300),
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Format tanggal harus YYYY-MM-DD."),
+    eventTimeStart: z
+      .string()
+      .trim()
+      .min(1, "Jam mulai wajib diisi.")
+      .max(20, "Jam mulai maksimal 20 karakter."),
+    eventTimeEnd: z
+      .string()
+      .trim()
+      .min(1, "Jam selesai wajib diisi.")
+      .max(20, "Jam selesai maksimal 20 karakter."),
+    eventTimezone: z
+      .string()
+      .trim()
+      .min(1, "Zona waktu wajib diisi.")
+      .max(10, "Zona waktu maksimal 10 karakter."),
+    venueName: z
+      .string()
+      .trim()
+      .min(1, "Nama tempat wajib diisi.")
+      .max(120, "Nama tempat maksimal 120 karakter."),
+    venueAddress: z
+      .string()
+      .trim()
+      .min(1, "Alamat lengkap wajib diisi.")
+      .max(300, "Alamat maksimal 300 karakter."),
     mapsUrl: optionalUrlSchema,
-    openingText: z.string().trim().max(500),
-    closingText: z.string().trim().max(500),
+    openingText: z
+      .string()
+      .trim()
+      .max(500, "Kalimat pembuka maksimal 500 karakter."),
+    closingText: z
+      .string()
+      .trim()
+      .max(500, "Kalimat penutup maksimal 500 karakter."),
   }),
   couple: z.object({
-    introText: z.string().trim().max(300),
+    introText: z
+      .string()
+      .trim()
+      .max(300, "Teks pengantar mempelai maksimal 300 karakter."),
     groom: personSchema,
     bride: personSchema,
   }),
   media: z.object({
     heroPhotoUrl: optionalUrlSchema,
-    galleryPhotoUrls: z.array(optionalUrlSchema).max(6),
+    galleryPhotoUrls: z
+      .array(optionalUrlSchema)
+      .max(6, "Galeri maksimal 6 foto."),
     musicUrl: optionalUrlSchema,
     musicPreset: z.string().trim().max(60),
   }),
   theme: z.object({
     preset: themePresetIdSchema,
     colors: z.object({
-      primary: z.string().regex(hexColorRegex, "Format warna hex tidak valid"),
-      secondary: z.string().regex(hexColorRegex, "Format warna hex tidak valid"),
+      primary: z.string().regex(hexColorRegex, "Format warna hex tidak valid."),
+      secondary: z
+        .string()
+        .regex(hexColorRegex, "Format warna hex tidak valid."),
       background: z
         .string()
-        .regex(hexColorRegex, "Format warna hex tidak valid"),
-      text: z.string().regex(hexColorRegex, "Format warna hex tidak valid"),
-      accent: z.string().regex(hexColorRegex, "Format warna hex tidak valid"),
+        .regex(hexColorRegex, "Format warna hex tidak valid."),
+      text: z.string().regex(hexColorRegex, "Format warna hex tidak valid."),
+      accent: z.string().regex(hexColorRegex, "Format warna hex tidak valid."),
     }),
     fonts: z.object({
       heading: headingFontSchema,
@@ -114,12 +165,47 @@ export const siteConfigSchema = z.object({
         enabled: z.boolean(),
       })
     )
-    .min(1),
+    .min(1, "Minimal harus ada 1 section.")
+    .refine(
+      (items) => new Set(items.map((item) => item.id)).size === items.length,
+      "Urutan section tidak boleh memiliki ID duplikat."
+    )
+    .refine(
+      (items) => items.some((item) => item.enabled),
+      "Minimal 1 section harus dalam keadaan aktif."
+    ),
 });
 
 export type SiteConfig = z.infer<typeof siteConfigSchema>;
 export type ThemeColors = SiteConfig["theme"]["colors"];
 export type SectionItem = SiteConfig["sections"][number];
+export type SectionId = SectionItem["id"];
+
+export const SECTION_LABELS: Record<
+  SectionId,
+  { label: string; description: string }
+> = {
+  hero: {
+    label: "Hero & Hitung Mundur",
+    description: "Foto utama, nama panggilan mempelai, kalimat pembuka, dan hitung mundur.",
+  },
+  mempelai: {
+    label: "Profil Mempelai",
+    description: "Teks pengantar, foto, nama lengkap, dan nama orang tua kedua mempelai.",
+  },
+  acara: {
+    label: "Detail Acara & Peta",
+    description: "Hari, tanggal, jam, lokasi resepsi, alamat, dan tombol Google Maps.",
+  },
+  galeri: {
+    label: "Galeri Foto",
+    description: "Koleksi maksimal 6 foto dengan tampilan lightbox.",
+  },
+  ucapan: {
+    label: "Ucapan Tamu",
+    description: "Kolom doa dan daftar ucapan dari tamu undangan.",
+  },
+};
 
 export const SITE_CONFIG_ROW_ID = 1;
 

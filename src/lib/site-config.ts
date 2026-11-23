@@ -86,3 +86,44 @@ export async function getSiteConfig(): Promise<SiteConfigResult> {
 
   return getCachedSiteConfig();
 }
+
+export async function getSiteConfigFresh(): Promise<SiteConfigResult> {
+  if (!process.env.DATABASE_URL) {
+    return {
+      config: DEFAULT_SITE_CONFIG,
+      source: "default",
+      updatedAt: null,
+    };
+  }
+
+  return fetchSiteConfigFromDb();
+}
+
+export async function saveSiteConfig(
+  input: SiteConfig
+): Promise<{ config: SiteConfig; updatedAt: string }> {
+  const validated = siteConfigSchema.parse(input);
+  const db = getDb();
+  const now = new Date();
+
+  const [saved] = await db
+    .insert(siteConfig)
+    .values({
+      id: SITE_CONFIG_ROW_ID,
+      data: validated,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: siteConfig.id,
+      set: {
+        data: validated,
+        updatedAt: now,
+      },
+    })
+    .returning({ updatedAt: siteConfig.updatedAt });
+
+  return {
+    config: validated,
+    updatedAt: (saved?.updatedAt ?? now).toISOString(),
+  };
+}

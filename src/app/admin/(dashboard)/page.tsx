@@ -1,98 +1,57 @@
-import { getAdminSession } from "@/lib/auth";
+import { ContentManager } from "@/components/admin/ContentManager";
+import { getSiteConfigFresh } from "@/lib/site-config";
 
-const PLANNED_MENUS = [
-  {
-    name: "Umum",
-    description: "Nama mempelai, tanggal, jam, tempat, alamat, dan teks acara.",
-    phase: "Fase 4",
-  },
-  {
-    name: "Mempelai",
-    description: "Nama lengkap, foto, dan nama orang tua kedua mempelai.",
-    phase: "Fase 4",
-  },
-  {
-    name: "Section",
-    description: "Aktif/nonaktif dan urutan section halaman undangan.",
-    phase: "Fase 4",
-  },
+const UPCOMING_MENUS = [
   {
     name: "Tema & Pratinjau",
-    description: "Preset palet warna, font, varian layout, dan ornamen.",
+    description: "Preset palet warna, font, varian layout, ornamen, dan pratinjau HP/desktop.",
     phase: "Fase 5",
   },
   {
     name: "Media",
-    description: "Foto hero, foto mempelai, galeri maksimal 6 foto, dan musik.",
+    description: "Unggah foto hero, foto mempelai, galeri maksimal 6 foto, dan musik latar.",
     phase: "Fase 6",
   },
   {
     name: "Tamu & Ucapan",
-    description: "Generator tautan personal WhatsApp dan moderasi ucapan.",
+    description: "Generator tautan personal WhatsApp dan moderasi ucapan tamu.",
     phase: "Fase 7",
   },
 ] as const;
 
 export default async function AdminDashboardPage() {
-  const session = await getAdminSession();
-  const formattedExpiry = session
-    ? new Intl.DateTimeFormat("id-ID", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZone: "Asia/Jakarta",
-      }).format(new Date(session.expiresAt))
-    : "-";
+  const { config, source, updatedAt } = await getSiteConfigFresh();
 
   return (
     <div className="space-y-6">
-      <section
-        className="rounded-3xl border px-5 py-6 sm:px-6"
-        style={{
-          backgroundColor: "var(--color-background)",
-          borderColor:
-            "color-mix(in srgb, var(--color-primary) 40%, transparent)",
-        }}
-      >
-        <p
-          className="text-xs font-medium tracking-[0.18em] uppercase"
-          style={{ color: "var(--color-accent)" }}
-        >
-          Sesi Aktif
-        </p>
-        <h1 className="font-heading mt-1.5 text-2xl font-semibold">
-          Selamat datang di Dashboard Admin
-        </h1>
-        <p className="mt-2 text-sm leading-relaxed opacity-80">
-          Autentikasi dan proteksi route admin sudah aktif. Sesi ini berlaku
-          hingga <span className="font-medium">{formattedExpiry} WIB</span>.
-        </p>
-      </section>
+      <ContentManager
+        initialConfig={config}
+        initialSource={source}
+        initialUpdatedAt={updatedAt}
+      />
 
-      <section aria-labelledby="judul-menu-admin">
+      <section aria-labelledby="judul-menu-berikutnya">
         <h2
-          id="judul-menu-admin"
-          className="font-heading text-xl font-semibold"
+          id="judul-menu-berikutnya"
+          className="font-heading text-lg font-semibold"
         >
-          Menu Pengelolaan
+          Menu Tahap Berikutnya
         </h2>
-        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {PLANNED_MENUS.map((menu) => (
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {UPCOMING_MENUS.map((menu) => (
             <div
               key={menu.name}
-              className="rounded-2xl border px-5 py-4"
+              className="rounded-2xl border px-4 py-3.5"
               style={{
                 backgroundColor: "var(--color-background)",
                 borderColor:
-                  "color-mix(in srgb, var(--color-primary) 30%, transparent)",
+                  "color-mix(in srgb, var(--color-primary) 28%, transparent)",
               }}
             >
               <div className="flex items-center justify-between gap-2">
-                <h3 className="text-base font-semibold">{menu.name}</h3>
+                <h3 className="text-sm font-semibold">{menu.name}</h3>
                 <span
-                  className="rounded-full px-2.5 py-0.5 text-xs font-medium"
+                  className="rounded-full px-2.5 py-0.5 text-[11px] font-medium"
                   style={{
                     backgroundColor: "var(--color-secondary)",
                     color: "var(--color-accent)",
@@ -101,7 +60,7 @@ export default async function AdminDashboardPage() {
                   {menu.phase}
                 </span>
               </div>
-              <p className="mt-1.5 text-sm leading-relaxed opacity-75">
+              <p className="mt-1.5 text-xs leading-relaxed opacity-75">
                 {menu.description}
               </p>
             </div>
