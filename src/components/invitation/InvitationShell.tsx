@@ -2,7 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import type { SectionItem, SiteConfig } from "@/lib/config-schema";
+import {
+  getInvitationEvents,
+  type SectionItem,
+  type SiteConfig,
+} from "@/lib/config-schema";
 import {
   createThemeVariables,
   formatEventDateFull,
@@ -66,7 +70,6 @@ export function InvitationShell({
     config.general.eventTimeStart,
     config.general.eventTimezone
   );
-  const fullDate = formatEventDateFull(config.general.eventDate);
   const shortDate = formatEventDateShort(config.general.eventDate);
   const enabledSections = config.sections.filter((section) => section.enabled);
 
@@ -84,9 +87,7 @@ export function InvitationShell({
       case "mempelai":
         return <CoupleSection key="mempelai" config={config} />;
       case "acara":
-        return (
-          <EventSection key="acara" config={config} fullDate={fullDate} />
-        );
+        return <EventSection key="acara" config={config} />;
       case "galeri":
         return (
           <GallerySection
@@ -365,12 +366,11 @@ function CoupleSection({ config }: CoupleSectionProps) {
 
 interface EventSectionProps {
   config: SiteConfig;
-  fullDate: string;
 }
 
-function EventSection({ config, fullDate }: EventSectionProps) {
-  const mapsUrl = config.general.mapsUrl.trim();
-  const hasValidMapsUrl = isSafeExternalUrl(mapsUrl);
+function EventSection({ config }: EventSectionProps) {
+  const events = getInvitationEvents(config);
+  const isMultiple = events.length > 1;
 
   return (
     <section
@@ -389,99 +389,119 @@ function EventSection({ config, fullDate }: EventSectionProps) {
           id="judul-acara"
           className="font-heading mt-2 text-2xl font-semibold sm:text-3xl"
         >
-          {config.general.eventTitle}
+          {isMultiple ? "Rangkaian Acara" : (events[0]?.title ?? config.general.eventTitle)}
         </h2>
         <Ornament enabled={config.theme.ornaments} className="my-4" />
 
-        <div
-          className="mt-6 rounded-3xl border px-6 py-8"
-          style={{
-            backgroundColor:
-              "color-mix(in srgb, var(--color-secondary) 65%, var(--color-background))",
-            borderColor:
-              "color-mix(in srgb, var(--color-primary) 45%, transparent)",
-          }}
-        >
-          <div className="space-y-5">
-            <div>
-              <p
-                className="text-xs font-medium tracking-wider uppercase"
-                style={{ color: "var(--color-accent)" }}
+        <div className="mt-6 space-y-5">
+          {events.map((eventItem) => {
+            const mapsUrl = eventItem.mapsUrl.trim();
+            const hasValidMapsUrl = isSafeExternalUrl(mapsUrl);
+            const formattedDate = formatEventDateFull(eventItem.date);
+
+            return (
+              <article
+                key={eventItem.id}
+                className="rounded-3xl border px-6 py-8"
+                style={{
+                  backgroundColor:
+                    "color-mix(in srgb, var(--color-secondary) 65%, var(--color-background))",
+                  borderColor:
+                    "color-mix(in srgb, var(--color-primary) 45%, transparent)",
+                }}
               >
-                Hari &amp; Tanggal
-              </p>
-              <p className="font-heading mt-1 text-lg font-semibold">
-                {fullDate}
-              </p>
-            </div>
+                {isMultiple ? (
+                  <h3
+                    className="font-heading mb-5 text-xl font-semibold"
+                    style={{ color: "var(--color-accent)" }}
+                  >
+                    {eventItem.title}
+                  </h3>
+                ) : null}
 
-            <div
-              className="mx-auto h-px w-16 opacity-40"
-              style={{ backgroundColor: "var(--color-primary)" }}
-            />
+                <div className="space-y-5">
+                  <div>
+                    <p
+                      className="text-xs font-medium tracking-wider uppercase"
+                      style={{ color: "var(--color-accent)" }}
+                    >
+                      Hari &amp; Tanggal
+                    </p>
+                    <p className="font-heading mt-1 text-lg font-semibold">
+                      {formattedDate}
+                    </p>
+                  </div>
 
-            <div>
-              <p
-                className="text-xs font-medium tracking-wider uppercase"
-                style={{ color: "var(--color-accent)" }}
-              >
-                Waktu
-              </p>
-              <p className="mt-1 text-base font-medium">
-                {config.general.eventTimeStart}–{config.general.eventTimeEnd}{" "}
-                {config.general.eventTimezone}
-              </p>
-            </div>
+                  <div
+                    className="mx-auto h-px w-16 opacity-40"
+                    style={{ backgroundColor: "var(--color-primary)" }}
+                  />
 
-            <div
-              className="mx-auto h-px w-16 opacity-40"
-              style={{ backgroundColor: "var(--color-primary)" }}
-            />
+                  <div>
+                    <p
+                      className="text-xs font-medium tracking-wider uppercase"
+                      style={{ color: "var(--color-accent)" }}
+                    >
+                      Waktu
+                    </p>
+                    <p className="mt-1 text-base font-medium">
+                      {eventItem.timeStart}–{eventItem.timeEnd}{" "}
+                      {eventItem.timezone}
+                    </p>
+                  </div>
 
-            <div>
-              <p
-                className="text-xs font-medium tracking-wider uppercase"
-                style={{ color: "var(--color-accent)" }}
-              >
-                Lokasi
-              </p>
-              <p className="font-heading mt-1 text-lg font-semibold">
-                {config.general.venueName}
-              </p>
-              <p className="mt-1 text-sm leading-relaxed opacity-80">
-                {config.general.venueAddress}
-              </p>
-            </div>
-          </div>
+                  <div
+                    className="mx-auto h-px w-16 opacity-40"
+                    style={{ backgroundColor: "var(--color-primary)" }}
+                  />
 
-          {hasValidMapsUrl ? (
-            <a
-              href={mapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-7 inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
-              style={{
-                backgroundColor: "var(--color-primary)",
-                color: "var(--color-background)",
-              }}
-            >
-              <svg
-                aria-hidden="true"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M12 21s-6-5.3-6-10a6 6 0 1 1 12 0c0 4.7-6 10-6 10z" />
-                <circle cx="12" cy="11" r="2.2" />
-              </svg>
-              <span>Buka Google Maps</span>
-            </a>
-          ) : null}
+                  <div>
+                    <p
+                      className="text-xs font-medium tracking-wider uppercase"
+                      style={{ color: "var(--color-accent)" }}
+                    >
+                      Lokasi
+                    </p>
+                    <p className="font-heading mt-1 text-lg font-semibold">
+                      {eventItem.venueName}
+                    </p>
+                    <p className="mt-1 text-sm leading-relaxed opacity-80">
+                      {eventItem.venueAddress}
+                    </p>
+                  </div>
+                </div>
+
+                {hasValidMapsUrl ? (
+                  <a
+                    href={mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-7 inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                    style={{
+                      backgroundColor: "var(--color-primary)",
+                      color: "var(--color-background)",
+                    }}
+                  >
+                    <svg
+                      aria-hidden="true"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M12 21s-6-5.3-6-10a6 6 0 1 1 12 0c0 4.7-6 10-6 10z" />
+                      <circle cx="12" cy="11" r="2.2" />
+                    </svg>
+                    <span>Buka Google Maps</span>
+                  </a>
+                ) : null}
+              </article>
+            );
+          })}
         </div>
       </Reveal>
     </section>

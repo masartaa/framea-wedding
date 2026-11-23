@@ -74,6 +74,45 @@ export const personSchema = z.object({
   photoUrl: optionalUrlSchema,
 });
 
+export const eventItemSchema = z.object({
+  id: z.string().trim().min(1).max(40),
+  title: z
+    .string()
+    .trim()
+    .min(1, "Nama acara wajib diisi.")
+    .max(80, "Nama acara maksimal 80 karakter."),
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Format tanggal harus YYYY-MM-DD."),
+  timeStart: z
+    .string()
+    .trim()
+    .min(1, "Jam mulai wajib diisi.")
+    .max(20, "Jam mulai maksimal 20 karakter."),
+  timeEnd: z
+    .string()
+    .trim()
+    .min(1, "Jam selesai wajib diisi.")
+    .max(20, "Jam selesai maksimal 20 karakter."),
+  timezone: z
+    .string()
+    .trim()
+    .min(1, "Zona waktu wajib diisi.")
+    .max(10, "Zona waktu maksimal 10 karakter."),
+  venueName: z
+    .string()
+    .trim()
+    .min(1, "Nama tempat wajib diisi.")
+    .max(120, "Nama tempat maksimal 120 karakter."),
+  venueAddress: z
+    .string()
+    .trim()
+    .min(1, "Alamat lengkap wajib diisi.")
+    .max(300, "Alamat maksimal 300 karakter."),
+  mapsUrl: optionalUrlSchema,
+  isPrimary: z.boolean().optional().default(false),
+});
+
 export const siteConfigSchema = z.object({
   general: z.object({
     eventTitle: z
@@ -119,6 +158,11 @@ export const siteConfigSchema = z.object({
       .trim()
       .max(500, "Kalimat penutup maksimal 500 karakter."),
   }),
+  events: z
+    .array(eventItemSchema)
+    .max(6, "Maksimal 6 rangkaian acara.")
+    .optional()
+    .default([]),
   couple: z.object({
     introText: z
       .string()
@@ -177,9 +221,53 @@ export const siteConfigSchema = z.object({
 });
 
 export type SiteConfig = z.infer<typeof siteConfigSchema>;
+export type EventItem = z.infer<typeof eventItemSchema>;
 export type ThemeColors = SiteConfig["theme"]["colors"];
 export type SectionItem = SiteConfig["sections"][number];
 export type SectionId = SectionItem["id"];
+
+export function getInvitationEvents(config: SiteConfig): EventItem[] {
+  if (Array.isArray(config.events) && config.events.length > 0) {
+    return config.events;
+  }
+
+  return [
+    {
+      id: "acara-utama",
+      title: config.general.eventTitle,
+      date: config.general.eventDate,
+      timeStart: config.general.eventTimeStart,
+      timeEnd: config.general.eventTimeEnd,
+      timezone: config.general.eventTimezone,
+      venueName: config.general.venueName,
+      venueAddress: config.general.venueAddress,
+      mapsUrl: config.general.mapsUrl,
+      isPrimary: true,
+    },
+  ];
+}
+
+export function syncPrimaryEventToGeneral(
+  events: EventItem[],
+  general: SiteConfig["general"]
+): SiteConfig["general"] {
+  const primary = events.find((item) => item.isPrimary) ?? events[0];
+  if (!primary) {
+    return general;
+  }
+
+  return {
+    ...general,
+    eventTitle: primary.title,
+    eventDate: primary.date,
+    eventTimeStart: primary.timeStart,
+    eventTimeEnd: primary.timeEnd,
+    eventTimezone: primary.timezone,
+    venueName: primary.venueName,
+    venueAddress: primary.venueAddress,
+    mapsUrl: primary.mapsUrl,
+  };
+}
 
 export const SECTION_LABELS: Record<
   SectionId,
@@ -187,15 +275,18 @@ export const SECTION_LABELS: Record<
 > = {
   hero: {
     label: "Hero & Hitung Mundur",
-    description: "Foto utama, nama panggilan mempelai, kalimat pembuka, dan hitung mundur.",
+    description:
+      "Foto utama, nama panggilan mempelai, kalimat pembuka, dan hitung mundur.",
   },
   mempelai: {
     label: "Profil Mempelai",
-    description: "Teks pengantar, foto, nama lengkap, dan nama orang tua kedua mempelai.",
+    description:
+      "Teks pengantar, foto, nama lengkap, dan nama orang tua kedua mempelai.",
   },
   acara: {
     label: "Detail Acara & Peta",
-    description: "Hari, tanggal, jam, lokasi resepsi, alamat, dan tombol Google Maps.",
+    description:
+      "Rangkaian acara (Akad, Resepsi, Ngunduh Mantu), tanggal, jam, lokasi, dan Google Maps.",
   },
   galeri: {
     label: "Galeri Foto",
@@ -224,6 +315,20 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
     closingText:
       "Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir dan memberikan doa restu. Terima kasih.",
   },
+  events: [
+    {
+      id: "resepsi-utama",
+      title: "Resepsi Pernikahan",
+      date: "2027-01-03",
+      timeStart: "09.00",
+      timeEnd: "14.00",
+      timezone: "WIB",
+      venueName: "Koffie Goen Tuntang",
+      venueAddress: "Tuntang, Kabupaten Semarang, Jawa Tengah",
+      mapsUrl: "https://maps.google.com/?q=Koffie+Goen+Tuntang",
+      isPrimary: true,
+    },
+  ],
   couple: {
     introText:
       "Segala puji bagi Tuhan yang telah mempertemukan dan mempersatukan kami dalam ikatan suci pernikahan.",

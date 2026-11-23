@@ -1,4 +1,4 @@
-import type { SiteConfig } from "@/lib/config-schema";
+import { getInvitationEvents, type SiteConfig } from "@/lib/config-schema";
 import { formatEventDateFull, MAX_GUEST_NAME_LENGTH } from "@/lib/format";
 
 export const MAX_GUEST_BATCH_SIZE = 500;
@@ -66,18 +66,31 @@ export function buildPersonalInvitationUrl(
 
 export function createDefaultWhatsAppTemplate(config: SiteConfig): string {
   const coupleNames = `${config.couple.groom.nickname} & ${config.couple.bride.nickname}`;
-  const fullDate = formatEventDateFull(config.general.eventDate);
-  const timeRange = `${config.general.eventTimeStart}–${config.general.eventTimeEnd} ${config.general.eventTimezone}`;
+  const events = getInvitationEvents(config);
+
+  const eventBlocks = events.flatMap((eventItem, index) => {
+    const fullDate = formatEventDateFull(eventItem.date);
+    const timeRange = `${eventItem.timeStart}–${eventItem.timeEnd} ${eventItem.timezone}`;
+    const lines = [
+      ...(events.length > 1 ? [`*${eventItem.title}*`] : []),
+      `Hari/Tanggal: ${fullDate}`,
+      `Waktu: ${timeRange}`,
+      `Tempat: ${eventItem.venueName}`,
+    ];
+    return index < events.length - 1 ? [...lines, ""] : lines;
+  });
+
+  const introEventLabel =
+    events.length > 1 ? "rangkaian acara pernikahan" : `acara ${config.general.eventTitle}`;
 
   return [
     "Kepada Yth. {nama},",
     "",
-    `Tanpa mengurangi rasa hormat, kami mengundang Bapak/Ibu/Saudara/i untuk menghadiri acara ${config.general.eventTitle} kami:`,
+    `Tanpa mengurangi rasa hormat, kami mengundang Bapak/Ibu/Saudara/i untuk menghadiri ${introEventLabel} kami:`,
     "",
     `*${coupleNames}*`,
-    `Hari/Tanggal: ${fullDate}`,
-    `Waktu: ${timeRange}`,
-    `Tempat: ${config.general.venueName}`,
+    "",
+    ...eventBlocks,
     "",
     "Informasi lengkap undangan dapat dibuka melalui tautan berikut:",
     "{tautan}",

@@ -3,11 +3,16 @@
 import { useState, type FormEvent } from "react";
 import {
   DEFAULT_SITE_CONFIG,
+  getInvitationEvents,
   SECTION_LABELS,
   siteConfigSchema,
+  syncPrimaryEventToGeneral,
+  type EventItem,
   type SiteConfig,
 } from "@/lib/config-schema";
+import { formatEventDateFull } from "@/lib/format";
 import { isVercelBlobUrl } from "@/lib/media-utils";
+import { EventsManager } from "./EventsManager";
 import { GuestsManager } from "./GuestsManager";
 import { InvitationPreview } from "./InvitationPreview";
 import { MediaManager } from "./MediaManager";
@@ -16,6 +21,7 @@ import { WishesModerator } from "./WishesModerator";
 
 type ActiveTab =
   | "umum"
+  | "acara"
   | "mempelai"
   | "media"
   | "section"
@@ -40,6 +46,7 @@ interface SaveResponseBody {
 
 const TABS: ReadonlyArray<{ id: ActiveTab; label: string }> = [
   { id: "umum", label: "Umum" },
+  { id: "acara", label: "Acara" },
   { id: "mempelai", label: "Mempelai" },
   { id: "media", label: "Media" },
   { id: "tema", label: "Tema" },
@@ -49,7 +56,14 @@ const TABS: ReadonlyArray<{ id: ActiveTab; label: string }> = [
   { id: "pratinjau", label: "Pratinjau" },
 ];
 
-const TIMEZONE_OPTIONS = ["WIB", "WITA", "WIT"] as const;
+function normalizeConfigWithEvents(config: SiteConfig): SiteConfig {
+  const events = getInvitationEvents(config);
+  return {
+    ...config,
+    events,
+    general: syncPrimaryEventToGeneral(events, config.general),
+  };
+}
 
 function formatUpdatedAt(isoString: string | null): string | null {
   if (!isoString) {
@@ -72,6 +86,14 @@ function formatUpdatedAt(isoString: string | null): string | null {
 }
 
 function getTabForFieldPath(path: string): ActiveTab {
+  if (
+    path.startsWith("events") ||
+    path.startsWith("general.event") ||
+    path.startsWith("general.venue") ||
+    path === "general.mapsUrl"
+  ) {
+    return "acara";
+  }
   if (path.startsWith("media") || path.endsWith(".photoUrl")) {
     return "media";
   }
@@ -108,9 +130,12 @@ export function ContentManager({
   initialSource,
   initialUpdatedAt,
 }: ContentManagerProps) {
+  const normalizedInitial = normalizeConfigWithEvents(initialConfig);
+
   const [activeTab, setActiveTab] = useState<ActiveTab>("umum");
-  const [draft, setDraft] = useState<SiteConfig>(initialConfig);
-  const [savedConfig, setSavedConfig] = useState<SiteConfig>(initialConfig);
+  const [draft, setDraft] = useState<SiteConfig>(normalizedInitial);
+  const [savedConfig, setSavedConfig] =
+    useState<SiteConfig>(normalizedInitial);
   const [source, setSource] = useState<"database" | "default">(initialSource);
   const [updatedAt, setUpdatedAt] = useState<string | null>(initialUpdatedAt);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -149,6 +174,14 @@ export function ContentManager({
       },
     }));
     clearFieldError(`general.${key}`);
+  };
+
+  const updateEvents = (nextEvents: EventItem[]) => {
+    setDraft((prev) => ({
+      ...prev,
+      events: nextEvents,
+      general: syncPrimaryEventToGeneral(nextEvents, prev.general),
+    }));
   };
 
   const updatePerson = <K extends keyof SiteConfig["couple"]["groom"]>(
@@ -232,7 +265,8 @@ export function ContentManager({
   ) => {
     setStatusBanner(null);
 
-    const clientCheck = siteConfigSchema.safeParse(payload);
+    const normalizedPayload = normalizeConfigWithEvents(payload);
+    const clientCheck = siteConfigSchema.safeParse(normalizedPayload);
     if (!clientCheck.success) {
       const errors: Record<string, string> = {};
       for (const issue of clientCheck.error.issues) {
@@ -279,10 +313,11 @@ export function ContentManager({
         return;
       }
 
-      cleanupRemovedBlobs(savedConfig, data.config);
+      const normalizedSaved = normalizeConfigWithEvents(data.config);
+      cleanupRemovedBlobs(savedConfig, normalizedSaved);
 
-      setDraft(data.config);
-      setSavedConfig(data.config);
+      setDraft(normalizedSaved);
+      setSavedConfig(normalizedSaved);
       setSource("database");
       setUpdatedAt(data.updatedAt ?? new Date().toISOString());
       setShowResetConfirm(false);
@@ -369,7 +404,7 @@ export function ContentManager({
         <div
           role="tablist"
           aria-label="Menu pengaturan undangan"
-          className="mt-5 grid grid-cols-2 gap-2 rounded-2xl p-1.5 sm:grid-cols-4 lg:grid-cols-8"
+          className="mt-5 grid grid-cols-3 gap-2 rounded-2xl p-1.5 sm:grid-cols-5 lg:grid-cols-9"
           style={{
             backgroundColor: "var(--color-secondary)",
           }}
@@ -383,7 +418,7 @@ export function ContentManager({
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => setActiveTab(tab.id)}
-                className="min-h-11 cursor-pointer rounded-xl px-2.5 text-sm font-medium transition-colors"
+                className="min-h-11 cursor-pointer rounded-xl px-2 text-xs font-medium transition-colors sm:text-sm"
                 style={{
                   backgroundColor: isActive
                     ? "var(--color-primary)"
@@ -435,11 +470,11 @@ export function ContentManager({
         >
           <div>
             <h2 className="font-heading text-lg font-semibold">
-              Informasi Acara &amp; Sapaan
+              Informasi Umum &amp; Sapaan
             </h2>
             <p className="mt-0.5 text-sm opacity-75">
-              Mengatur nama panggilan di sampul/hero, jadwal resepsi, lokasi,
-              serta kalimat pembuka dan penutup.
+              Mengatur nama panggilan di sampul/hero serta kalimat pembuka dan
+              penutup undangan.
             </p>
           </div>
 
@@ -487,182 +522,44 @@ export function ContentManager({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {/* Ringkasan Jadwal Acara + Pintasan ke Tab Acara */}
+          <div
+            className="flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between"
+            style={{
+              backgroundColor:
+                "color-mix(in srgb, var(--color-secondary) 45%, var(--color-background))",
+              borderColor:
+                "color-mix(in srgb, var(--color-primary) 35%, transparent)",
+            }}
+          >
             <div>
-              <label
-                htmlFor="general-event-title"
-                className="block text-sm font-medium"
+              <p
+                className="text-xs font-semibold tracking-wider uppercase"
+                style={{ color: "var(--color-accent)" }}
               >
-                Judul Acara
-              </label>
-              <input
-                id="general-event-title"
-                type="text"
-                maxLength={80}
-                value={draft.general.eventTitle}
-                onChange={(event) =>
-                  updateGeneral("eventTitle", event.target.value)
-                }
-                className={inputClassName}
-                style={inputStyle}
-              />
-              <FieldError message={fieldErrors["general.eventTitle"]} />
+                Rangkaian Acara ({draft.events.length})
+              </p>
+              <p className="mt-1 text-sm font-medium">
+                {draft.general.eventTitle} ·{" "}
+                {formatEventDateFull(draft.general.eventDate)}
+              </p>
+              <p className="text-xs opacity-75">
+                {draft.general.eventTimeStart}–{draft.general.eventTimeEnd}{" "}
+                {draft.general.eventTimezone} · {draft.general.venueName}
+              </p>
             </div>
 
-            <div>
-              <label
-                htmlFor="general-event-date"
-                className="block text-sm font-medium"
-              >
-                Tanggal Acara
-              </label>
-              <input
-                id="general-event-date"
-                type="date"
-                value={draft.general.eventDate}
-                onChange={(event) =>
-                  updateGeneral("eventDate", event.target.value)
-                }
-                className={inputClassName}
-                style={inputStyle}
-              />
-              <FieldError message={fieldErrors["general.eventDate"]} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div>
-              <label
-                htmlFor="general-time-start"
-                className="block text-sm font-medium"
-              >
-                Jam Mulai
-              </label>
-              <input
-                id="general-time-start"
-                type="text"
-                placeholder="09.00"
-                maxLength={20}
-                value={draft.general.eventTimeStart}
-                onChange={(event) =>
-                  updateGeneral("eventTimeStart", event.target.value)
-                }
-                className={inputClassName}
-                style={inputStyle}
-              />
-              <FieldError message={fieldErrors["general.eventTimeStart"]} />
-            </div>
-
-            <div>
-              <label
-                htmlFor="general-time-end"
-                className="block text-sm font-medium"
-              >
-                Jam Selesai
-              </label>
-              <input
-                id="general-time-end"
-                type="text"
-                placeholder="14.00"
-                maxLength={20}
-                value={draft.general.eventTimeEnd}
-                onChange={(event) =>
-                  updateGeneral("eventTimeEnd", event.target.value)
-                }
-                className={inputClassName}
-                style={inputStyle}
-              />
-              <FieldError message={fieldErrors["general.eventTimeEnd"]} />
-            </div>
-
-            <div>
-              <label
-                htmlFor="general-timezone"
-                className="block text-sm font-medium"
-              >
-                Zona Waktu
-              </label>
-              <select
-                id="general-timezone"
-                value={draft.general.eventTimezone}
-                onChange={(event) =>
-                  updateGeneral("eventTimezone", event.target.value)
-                }
-                className={inputClassName}
-                style={inputStyle}
-              >
-                {TIMEZONE_OPTIONS.map((tz) => (
-                  <option key={tz} value={tz}>
-                    {tz}
-                  </option>
-                ))}
-              </select>
-              <FieldError message={fieldErrors["general.eventTimezone"]} />
-            </div>
-          </div>
-
-          <div>
-            <label
-              htmlFor="general-venue-name"
-              className="block text-sm font-medium"
+            <button
+              type="button"
+              onClick={() => setActiveTab("acara")}
+              className="inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center rounded-full border px-4 text-xs font-semibold"
+              style={{
+                backgroundColor: "var(--color-background)",
+                borderColor: "var(--color-primary)",
+              }}
             >
-              Nama Tempat
-            </label>
-            <input
-              id="general-venue-name"
-              type="text"
-              maxLength={120}
-              value={draft.general.venueName}
-              onChange={(event) =>
-                updateGeneral("venueName", event.target.value)
-              }
-              className={inputClassName}
-              style={inputStyle}
-            />
-            <FieldError message={fieldErrors["general.venueName"]} />
-          </div>
-
-          <div>
-            <label
-              htmlFor="general-venue-address"
-              className="block text-sm font-medium"
-            >
-              Alamat Lengkap
-            </label>
-            <textarea
-              id="general-venue-address"
-              rows={2}
-              maxLength={300}
-              value={draft.general.venueAddress}
-              onChange={(event) =>
-                updateGeneral("venueAddress", event.target.value)
-              }
-              className={inputClassName}
-              style={inputStyle}
-            />
-            <FieldError message={fieldErrors["general.venueAddress"]} />
-          </div>
-
-          <div>
-            <label
-              htmlFor="general-maps-url"
-              className="block text-sm font-medium"
-            >
-              Tautan Google Maps
-            </label>
-            <input
-              id="general-maps-url"
-              type="url"
-              placeholder="https://maps.google.com/..."
-              value={draft.general.mapsUrl}
-              onChange={(event) => updateGeneral("mapsUrl", event.target.value)}
-              className={inputClassName}
-              style={inputStyle}
-            />
-            <p className="mt-1 text-xs opacity-65">
-              Kosongkan jika tombol Google Maps ingin disembunyikan.
-            </p>
-            <FieldError message={fieldErrors["general.mapsUrl"]} />
+              Atur / Tambah Acara →
+            </button>
           </div>
 
           <div>
@@ -717,6 +614,15 @@ export function ContentManager({
             <FieldError message={fieldErrors["general.closingText"]} />
           </div>
         </section>
+      ) : null}
+
+      {activeTab === "acara" ? (
+        <EventsManager
+          events={draft.events}
+          fieldErrors={fieldErrors}
+          onChangeEvents={updateEvents}
+          onClearError={clearFieldError}
+        />
       ) : null}
 
       {activeTab === "mempelai" ? (
@@ -1121,8 +1027,8 @@ export function ContentManager({
               }}
             >
               <p className="text-sm leading-relaxed">
-                Yakin ingin mengembalikan seluruh konten, media, urutan section,
-                dan tema ke pengaturan default (Putih &amp; Emas)?
+                Yakin ingin mengembalikan seluruh konten, acara, media, urutan
+                section, dan tema ke pengaturan default (Putih &amp; Emas)?
               </p>
               <div className="flex shrink-0 items-center gap-2">
                 <button
@@ -1161,7 +1067,7 @@ export function ContentManager({
             borderColor: "var(--color-primary)",
           }}
         >
-          Pengingat: Anda masih memiliki perubahan konten/tema yang belum
+          Pengingat: Anda masih memiliki perubahan konten/acara/tema yang belum
           disimpan di tab lain.
         </div>
       ) : null}
