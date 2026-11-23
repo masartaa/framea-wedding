@@ -4,7 +4,6 @@ import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import Image from "next/image";
 import type { SiteConfig } from "@/lib/config-schema";
 import {
-  compressImageFile,
   formatFileSize,
   MAX_AUDIO_BYTES,
   MAX_GALLERY_PHOTOS,
@@ -17,6 +16,7 @@ import {
   createPresetSynth,
   type PresetSynthController,
 } from "@/lib/preset-synth";
+import { ImageCropModal, type CropSpec } from "./ImageCropModal";
 
 interface MediaManagerProps {
   config: SiteConfig;
@@ -34,6 +34,68 @@ interface UploadResponseBody {
 
 type UploadTarget = "hero" | "groom" | "bride" | "galeri" | "musik";
 
+interface CropQueueState {
+  target: Exclude<UploadTarget, "musik">;
+  files: File[];
+  index: number;
+  spec: CropSpec;
+  sessionKey: number;
+}
+
+function getHeroCropSpec(heroLayout: SiteConfig["theme"]["layout"]["hero"]): CropSpec {
+  if (heroLayout === "centered") {
+    return {
+      title: "Potong Foto Hero",
+      aspectLabel: "1:1 (Lingkaran Tengah)",
+      aspectRatio: 1,
+      outputWidth: 1080,
+      outputHeight: 1080,
+      circularGuide: true,
+    };
+  }
+  if (heroLayout === "split") {
+    return {
+      title: "Potong Foto Hero",
+      aspectLabel: "4:3 (Proporsional)",
+      aspectRatio: 4 / 3,
+      outputWidth: 1440,
+      outputHeight: 1080,
+      circularGuide: false,
+    };
+  }
+  return {
+    title: "Potong Foto Hero",
+    aspectLabel: "3:4 (Potret Penuh)",
+    aspectRatio: 3 / 4,
+    outputWidth: 1200,
+    outputHeight: 1600,
+    circularGuide: false,
+  };
+}
+
+function getCoupleCropSpec(who: "groom" | "bride"): CropSpec {
+  return {
+    title:
+      who === "groom"
+        ? "Potong Foto Mempelai Pria"
+        : "Potong Foto Mempelai Wanita",
+    aspectLabel: "1:1 (Bingkai Bulat)",
+    aspectRatio: 1,
+    outputWidth: 900,
+    outputHeight: 900,
+    circularGuide: true,
+  };
+}
+
+const GALLERY_CROP_SPEC: CropSpec = {
+  title: "Potong Foto Galeri",
+  aspectLabel: "4:5 (Kartu Galeri)",
+  aspectRatio: 4 / 5,
+  outputWidth: 1080,
+  outputHeight: 1350,
+  circularGuide: false,
+};
+
 export function MediaManager({
   config,
   onChangeHeroPhoto,
@@ -44,6 +106,7 @@ export function MediaManager({
   const [uploadingTarget, setUploadingTarget] = useState<UploadTarget | null>(
     null
   );
+  const [cropQueue, setCropQueue] = useState<CropQueueState | null>(null);
   const [notice, setNotice] = useState<{
     type: "info" | "error";
     message: string;
@@ -52,6 +115,7 @@ export function MediaManager({
     Exclude<MusicPresetId, ""> | null
   >(null);
   const synthRef = useRef<PresetSynthController | null>(null);
+  const cropSessionCounterRef = useRef(0);
 
   useEffect(() => {
     return () => {
@@ -86,28 +150,20 @@ export function MediaManager({
     }
   };
 
-  const uploadSingleFile = async (
-    rawFile: File,
+  const uploadPreparedFile = async (
+    fileToUpload: File,
     kind: MediaKind,
     sortOrder = 0
-  ): Promise<{ url: string; compressionInfo: string }> => {
-    let fileToUpload = rawFile;
-    let compressionInfo = formatFileSize(rawFile.size);
-
-    if (kind !== "musik") {
-      const compressed = await compressImageFile(rawFile);
-      fileToUpload = compressed.file;
-      if (compressed.compressedSize < compressed.originalSize) {
-        compressionInfo = `${formatFileSize(compressed.originalSize)} → ${formatFileSize(compressed.compressedSize)}`;
-      }
-      if (fileToUpload.size > MAX_IMAGE_BYTES) {
+  ): Promise<string> => {
+    if (kind === "musik") {
+      if (fileToUpload.size > MAX_AUDIO_BYTES) {
         throw new Error(
-          "Ukuran foto masih melebihi 2 MB setelah kompresi. Gunakan foto beresolusi lebih kecil."
+          `Ukuran musik maksimal 4 MB (berkas Anda ${formatFileSize(fileToUpload.size)}).`
         );
       }
-    } else if (fileToUpload.size > MAX_AUDIO_BYTES) {
+    } else if (fileToUpload.size > MAX_IMAGE_BYTES) {
       throw new Error(
-        `Ukuran musik maksimal 4 MB (berkas Anda ${formatFileSize(fileToUpload.size)}).`
+        "Ukuran foto masih melebihi 2 MB setelah dipotong dan dikompres. Coba pilih foto lain."
       );
     }
 
@@ -126,37 +182,35 @@ export function MediaManager({
       throw new Error(data.error ?? "Gagal mengunggah berkas.");
     }
 
-    return { url: data.url, compressionInfo };
+    return data.url;
   };
 
-  const handleHeroUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+  const openCropQueue = (
+    target: Exclude<UploadTarget, "musik">,
+    files: File[],
+    spec: CropSpec
+  ) => {
+    cropSessionCounterRef.current += 1;
+    setNotice(null);
+    setCropQueue({
+      target,
+      files,
+      index: 0,
+      spec,
+      sessionKey: cropSessionCounterRef.current,
+    });
+  };
+
+  const handleHeroSelect = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) {
       return;
     }
-
-    setNotice(null);
-    setUploadingTarget("hero");
-    try {
-      const { url, compressionInfo } = await uploadSingleFile(file, "hero");
-      onChangeHeroPhoto(url);
-      setNotice({
-        type: "info",
-        message: `Foto hero berhasil diunggah (${compressionInfo}). Klik "Simpan & Publikasikan" untuk menayangkan perubahan.`,
-      });
-    } catch (error: unknown) {
-      setNotice({
-        type: "error",
-        message:
-          error instanceof Error ? error.message : "Gagal mengunggah foto hero.",
-      });
-    } finally {
-      setUploadingTarget(null);
-    }
+    openCropQueue("hero", [file], getHeroCropSpec(config.theme.layout.hero));
   };
 
-  const handleCoupleUpload = async (
+  const handleCoupleSelect = (
     who: "groom" | "bride",
     event: ChangeEvent<HTMLInputElement>
   ) => {
@@ -165,30 +219,10 @@ export function MediaManager({
     if (!file) {
       return;
     }
-
-    setNotice(null);
-    setUploadingTarget(who);
-    try {
-      const { url, compressionInfo } = await uploadSingleFile(file, "mempelai");
-      onChangeCouplePhoto(who, url);
-      setNotice({
-        type: "info",
-        message: `Foto mempelai berhasil diunggah (${compressionInfo}). Jangan lupa klik "Simpan & Publikasikan".`,
-      });
-    } catch (error: unknown) {
-      setNotice({
-        type: "error",
-        message:
-          error instanceof Error
-            ? error.message
-            : "Gagal mengunggah foto mempelai.",
-      });
-    } finally {
-      setUploadingTarget(null);
-    }
+    openCropQueue(who, [file], getCoupleCropSpec(who));
   };
 
-  const handleGalleryUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+  const handleGallerySelect = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files ?? []);
     event.target.value = "";
     if (selectedFiles.length === 0) {
@@ -206,41 +240,87 @@ export function MediaManager({
     }
 
     const filesToProcess = selectedFiles.slice(0, remainingSlots);
-    setNotice(null);
-    setUploadingTarget("galeri");
+    openCropQueue("galeri", filesToProcess, GALLERY_CROP_SPEC);
+  };
 
+  const advanceCropQueue = (queue: CropQueueState) => {
+    const nextIndex = queue.index + 1;
+    if (nextIndex < queue.files.length) {
+      cropSessionCounterRef.current += 1;
+      setCropQueue({
+        ...queue,
+        index: nextIndex,
+        sessionKey: cropSessionCounterRef.current,
+      });
+    } else {
+      setCropQueue(null);
+    }
+  };
+
+  const handleCropConfirm = async (cropped: {
+    file: File;
+    originalSize: number;
+    compressedSize: number;
+  }) => {
+    if (!cropQueue) {
+      return;
+    }
+
+    const currentQueue = cropQueue;
+    const sizeInfo =
+      cropped.compressedSize < cropped.originalSize
+        ? `${formatFileSize(cropped.originalSize)} → ${formatFileSize(cropped.compressedSize)}`
+        : formatFileSize(cropped.compressedSize);
+
+    setUploadingTarget(currentQueue.target);
     try {
-      const uploadedUrls: string[] = [];
-      for (let i = 0; i < filesToProcess.length; i += 1) {
-        const file = filesToProcess[i];
-        if (!file) {
-          continue;
+      if (currentQueue.target === "hero") {
+        const url = await uploadPreparedFile(cropped.file, "hero");
+        onChangeHeroPhoto(url);
+        setNotice({
+          type: "info",
+          message: `Foto hero berhasil dipotong & diunggah (${sizeInfo}). Klik "Simpan & Publikasikan" untuk menayangkan.`,
+        });
+      } else if (
+        currentQueue.target === "groom" ||
+        currentQueue.target === "bride"
+      ) {
+        const url = await uploadPreparedFile(cropped.file, "mempelai");
+        onChangeCouplePhoto(currentQueue.target, url);
+        setNotice({
+          type: "info",
+          message: `Foto mempelai berhasil dipotong & diunggah (${sizeInfo}). Klik "Simpan & Publikasikan" untuk menyimpan.`,
+        });
+      } else {
+        const currentUrls = config.media.galleryPhotoUrls.filter(Boolean);
+        if (currentUrls.length >= MAX_GALLERY_PHOTOS) {
+          setNotice({
+            type: "error",
+            message: `Galeri sudah penuh (maksimal ${MAX_GALLERY_PHOTOS} foto).`,
+          });
+          setCropQueue(null);
+          return;
         }
-        const { url } = await uploadSingleFile(
-          file,
+        const url = await uploadPreparedFile(
+          cropped.file,
           "galeri",
-          currentUrls.length + i
+          currentUrls.length
         );
-        uploadedUrls.push(url);
+        onChangeGallery([...currentUrls, url]);
+        setNotice({
+          type: "info",
+          message: `Foto galeri ${currentQueue.index + 1}/${currentQueue.files.length} berhasil dipotong & diunggah (${sizeInfo}). Jangan lupa klik "Simpan & Publikasikan".`,
+        });
       }
 
-      onChangeGallery([...currentUrls, ...uploadedUrls]);
-      const skippedNotice =
-        selectedFiles.length > remainingSlots
-          ? ` (${selectedFiles.length - remainingSlots} foto dilewati karena batas maksimal ${MAX_GALLERY_PHOTOS} foto)`
-          : "";
-      setNotice({
-        type: "info",
-        message: `${uploadedUrls.length} foto galeri berhasil diunggah${skippedNotice}. Klik "Simpan & Publikasikan" untuk menyimpan.`,
-      });
+      advanceCropQueue(currentQueue);
     } catch (error: unknown) {
       setNotice({
         type: "error",
         message:
-          error instanceof Error
-            ? error.message
-            : "Gagal mengunggah foto galeri.",
+          error instanceof Error ? error.message : "Gagal mengunggah foto.",
       });
+      throw error;
     } finally {
       setUploadingTarget(null);
     }
@@ -257,11 +337,11 @@ export function MediaManager({
     setNotice(null);
     setUploadingTarget("musik");
     try {
-      const { url, compressionInfo } = await uploadSingleFile(file, "musik");
+      const url = await uploadPreparedFile(file, "musik");
       onChangeMusic(url, "");
       setNotice({
         type: "info",
-        message: `Musik latar berhasil diunggah (${compressionInfo}). Klik "Simpan & Publikasikan" agar aktif di undangan.`,
+        message: `Musik latar berhasil diunggah (${formatFileSize(file.size)}). Klik "Simpan & Publikasikan" agar aktif di undangan.`,
       });
     } catch (error: unknown) {
       setNotice({
@@ -296,6 +376,8 @@ export function MediaManager({
 
   const galleryPhotos = config.media.galleryPhotoUrls.filter(Boolean);
   const isBusy = uploadingTarget !== null;
+  const heroSpec = getHeroCropSpec(config.theme.layout.hero);
+  const currentCropFile = cropQueue ? cropQueue.files[cropQueue.index] : null;
 
   return (
     <section
@@ -312,8 +394,9 @@ export function MediaManager({
           Foto &amp; Musik Latar
         </h2>
         <p className="mt-0.5 text-sm opacity-75">
-          Foto otomatis dikompres sebelum diunggah ke Vercel Blob (maks. 2 MB
-          per foto). Musik mendukung MP3/M4A/OGG (maks. 4 MB) atau pilih preset.
+          Setiap foto dapat dipotong (crop) dan diposisikan sesuai bingkai
+          tampilannya sebelum dikompres dan diunggah ke Vercel Blob (maks. 2 MB
+          per foto).
         </p>
       </div>
 
@@ -376,8 +459,8 @@ export function MediaManager({
             <div>
               <h3 className="text-sm font-semibold">Foto Hero Utama</h3>
               <p className="text-xs opacity-75">
-                Tampil di bagian paling atas setelah sampul dibuka. Disarankan
-                orientasi potret (3:4) atau persegi.
+                Rasio potong otomatis mengikuti layout Hero aktif:{" "}
+                <strong>{heroSpec.aspectLabel}</strong>.
               </p>
             </div>
 
@@ -395,13 +478,13 @@ export function MediaManager({
                   {uploadingTarget === "hero"
                     ? "Mengunggah..."
                     : config.media.heroPhotoUrl
-                      ? "Ganti Foto Hero"
-                      : "Unggah Foto Hero"}
+                      ? "Pilih & Potong Ulang"
+                      : "Pilih & Potong Foto Hero"}
                 </span>
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
-                  onChange={handleHeroUpload}
+                  onChange={handleHeroSelect}
                   disabled={isBusy}
                   className="sr-only"
                 />
@@ -475,6 +558,9 @@ export function MediaManager({
             </div>
 
             <h3 className="mt-3 text-sm font-semibold">{title}</h3>
+            <p className="mt-0.5 text-[11px] opacity-70">
+              Bingkai bulat rasio 1:1
+            </p>
 
             <div className="mt-3 flex flex-wrap justify-center gap-2">
               <label
@@ -490,13 +576,13 @@ export function MediaManager({
                   {uploadingTarget === who
                     ? "Mengunggah..."
                     : photoUrl
-                      ? "Ganti Foto"
-                      : "Unggah Foto"}
+                      ? "Ganti & Potong"
+                      : "Pilih & Potong"}
                 </span>
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
-                  onChange={(event) => handleCoupleUpload(who, event)}
+                  onChange={(event) => handleCoupleSelect(who, event)}
                   disabled={isBusy}
                   className="sr-only"
                 />
@@ -534,8 +620,8 @@ export function MediaManager({
           <div>
             <h3 className="text-sm font-semibold">Galeri Foto</h3>
             <p className="text-xs opacity-75">
-              Maksimal {MAX_GALLERY_PHOTOS} foto. Anda bisa menggeser urutan
-              tampilnya.
+              Maksimal {MAX_GALLERY_PHOTOS} foto dengan rasio kartu{" "}
+              <strong>4:5</strong>. Anda dapat memotong dan mengatur urutannya.
             </p>
           </div>
           <span
@@ -642,13 +728,13 @@ export function MediaManager({
                 ? "Mengunggah foto..."
                 : galleryPhotos.length >= MAX_GALLERY_PHOTOS
                   ? "Kuota 6 Foto Penuh"
-                  : "Tambah Foto Galeri"}
+                  : "Tambah & Potong Foto Galeri"}
             </span>
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"
               multiple
-              onChange={handleGalleryUpload}
+              onChange={handleGallerySelect}
               disabled={isBusy || galleryPhotos.length >= MAX_GALLERY_PHOTOS}
               className="sr-only"
             />
@@ -672,7 +758,6 @@ export function MediaManager({
           </p>
         </div>
 
-        {/* Unggah Audio Sendiri */}
         <div
           className="space-y-3 rounded-xl border p-3.5"
           style={{
@@ -748,7 +833,6 @@ export function MediaManager({
           ) : null}
         </div>
 
-        {/* Preset Musik Ringan */}
         <div className="space-y-2.5">
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-semibold">
@@ -836,6 +920,26 @@ export function MediaManager({
           </div>
         </div>
       </div>
+
+      {cropQueue && currentCropFile ? (
+        <ImageCropModal
+          key={cropQueue.sessionKey}
+          file={currentCropFile}
+          spec={cropQueue.spec}
+          queueInfo={{
+            current: cropQueue.index + 1,
+            total: cropQueue.files.length,
+          }}
+          isSubmitting={isBusy}
+          onCancel={() => setCropQueue(null)}
+          onSkip={
+            cropQueue.files.length > 1
+              ? () => advanceCropQueue(cropQueue)
+              : undefined
+          }
+          onConfirm={handleCropConfirm}
+        />
+      ) : null}
     </section>
   );
 }
