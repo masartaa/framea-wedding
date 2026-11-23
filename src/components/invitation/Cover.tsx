@@ -55,10 +55,8 @@ export function Cover({
 
   const positionClass = previewMode
     ? "relative min-h-[620px] w-full"
-    : `fixed inset-0 z-50 transition-all duration-500 ${
-        isOpened
-          ? "pointer-events-none -translate-y-4 opacity-0"
-          : "translate-y-0 opacity-100"
+    : `fixed inset-0 z-50 cover-curtain ${
+        isOpened ? "cover-curtain-opened" : "translate-y-0 opacity-100"
       }`;
 
   return (

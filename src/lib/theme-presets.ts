@@ -5,6 +5,9 @@ export type HeadingFontOption = SiteConfig["theme"]["fonts"]["heading"];
 export type BodyFontOption = SiteConfig["theme"]["fonts"]["body"];
 export type CoverLayoutOption = SiteConfig["theme"]["layout"]["cover"];
 export type HeroLayoutOption = SiteConfig["theme"]["layout"]["hero"];
+export type HeroShapeOption = SiteConfig["theme"]["layout"]["heroShape"];
+export type HeroDecorationOption =
+  SiteConfig["theme"]["layout"]["heroDecoration"];
 
 export interface ThemePresetDefinition {
   id: ThemePresetKey;
@@ -170,17 +173,76 @@ export const HERO_LAYOUT_OPTIONS: ReadonlyArray<{
   {
     id: "full-photo",
     label: "Potret Penuh",
-    description: "Bingkai foto vertikal 3:4 menonjol di bagian atas.",
+    description: "Proporsi foto vertikal 3:4 menonjol di bagian atas.",
   },
   {
     id: "split",
     label: "Proporsional",
-    description: "Bingkai foto 4:3 ringkas agar judul segera terlihat.",
+    description: "Proporsi foto 4:3 ringkas agar judul segera terlihat.",
   },
   {
     id: "centered",
-    label: "Lingkaran Tengah",
-    description: "Bingkai foto bulat di tengah yang klasik.",
+    label: "Ringkas Tengah",
+    description: "Bingkai terpusat yang seimbang dan klasik.",
+  },
+];
+
+export const HERO_SHAPE_OPTIONS: ReadonlyArray<{
+  id: HeroShapeOption;
+  label: string;
+  description: string;
+}> = [
+  {
+    id: "rounded",
+    label: "Sudut Lembut",
+    description: "Persegi panjang elegan bersudut melengkung.",
+  },
+  {
+    id: "square",
+    label: "Persegi 1:1",
+    description: "Kotak simetris modern dan rapi.",
+  },
+  {
+    id: "arch",
+    label: "Lengkung Kubah",
+    description: "Melengkung di atas (arch), sangat populer untuk undangan.",
+  },
+  {
+    id: "oval",
+    label: "Oval Vertikal",
+    description: "Bentuk elips vertikal yang lembut dan romantis.",
+  },
+  {
+    id: "circle",
+    label: "Lingkaran",
+    description: "Bulat penuh 1:1 berfokus pada kedua mempelai.",
+  },
+];
+
+export const HERO_DECORATION_OPTIONS: ReadonlyArray<{
+  id: HeroDecorationOption;
+  label: string;
+  description: string;
+}> = [
+  {
+    id: "none",
+    label: "Polos",
+    description: "Bersih tanpa ornamen bingkai tambahan.",
+  },
+  {
+    id: "double-frame",
+    label: "Bingkai Ganda",
+    description: "Garis bingkai rangkap tipis mengikuti bentuk foto.",
+  },
+  {
+    id: "floral-corner",
+    label: "Daun & Bunga",
+    description: "Ornamen ranting daun & kelopak halus di sudut bingkai.",
+  },
+  {
+    id: "soft-glow",
+    label: "Pendar & Bintang",
+    description: "Cahaya lembut di belakang foto dengan aksen bintang kecil.",
   },
 ];
 

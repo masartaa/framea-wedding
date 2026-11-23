@@ -369,7 +369,7 @@ export function ImageCropModal({
               >
                 {spec.circularGuide ? (
                   <div
-                    className="h-full w-full rounded-full border-2"
+                    className="h-full w-full rounded-[50%] border-2"
                     style={{
                       borderColor:
                         "color-mix(in srgb, var(--color-background) 90%, transparent)",

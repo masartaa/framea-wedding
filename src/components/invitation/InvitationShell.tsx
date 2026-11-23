@@ -18,6 +18,7 @@ import {
 import { Countdown } from "./Countdown";
 import { Cover } from "./Cover";
 import { GallerySection } from "./GallerySection";
+import { HeroPhotoFrame } from "./HeroPhotoFrame";
 import { MusicPlayer, type MusicPlayerHandle } from "./MusicPlayer";
 import { Ornament } from "./Ornament";
 import { Reveal } from "./Reveal";
@@ -78,10 +79,11 @@ export function InvitationShell({
       case "hero":
         return (
           <HeroSection
-            key="hero"
+            key={isOpened ? "hero-opened" : "hero-closed"}
             config={config}
             shortDate={shortDate}
             targetTimestamp={targetTimestamp}
+            animateEntrance={previewMode || isOpened}
           />
         );
       case "mempelai":
@@ -166,12 +168,15 @@ interface HeroSectionProps {
   config: SiteConfig;
   shortDate: string;
   targetTimestamp: number;
+  animateEntrance: boolean;
 }
 
-function HeroSection({ config, shortDate, targetTimestamp }: HeroSectionProps) {
-  const heroPhoto = config.media.heroPhotoUrl.trim();
-  const layout = config.theme.layout.hero;
-
+function HeroSection({
+  config,
+  shortDate,
+  targetTimestamp,
+  animateEntrance,
+}: HeroSectionProps) {
   return (
     <section
       id="hero"
@@ -182,74 +187,51 @@ function HeroSection({ config, shortDate, targetTimestamp }: HeroSectionProps) {
           "linear-gradient(180deg, color-mix(in srgb, var(--color-secondary) 75%, var(--color-background)) 0%, var(--color-background) 100%)",
       }}
     >
-      <div
-        className={`relative mx-auto w-full overflow-hidden border ${
-          layout === "centered"
-            ? "aspect-square max-w-[260px] rounded-full"
-            : layout === "split"
-              ? "aspect-[4/3] rounded-3xl"
-              : "aspect-[3/4] rounded-[2rem]"
-        }`}
-        style={{
-          backgroundColor: "var(--color-secondary)",
-          borderColor:
-            "color-mix(in srgb, var(--color-primary) 45%, transparent)",
-        }}
-      >
-        {heroPhoto ? (
-          <Image
-            src={heroPhoto}
-            alt={`Foto ${config.couple.groom.nickname} dan ${config.couple.bride.nickname}`}
-            fill
-            priority
-            sizes="(max-width: 640px) 92vw, 472px"
-            className="object-cover"
-          />
-        ) : (
-          <div className="flex h-full w-full flex-col items-center justify-center px-6">
-            <span
-              className="font-heading text-5xl font-semibold tracking-wider opacity-85"
-              style={{ color: "var(--color-primary)" }}
-            >
-              {getInitials(config.couple.groom.nickname)} &amp;{" "}
-              {getInitials(config.couple.bride.nickname)}
-            </span>
-            <p className="mt-3 text-xs tracking-[0.2em] uppercase opacity-70">
-              {shortDate}
-            </p>
-          </div>
-        )}
+      <div className={animateEntrance ? "hero-enter-photo" : "opacity-0"}>
+        <HeroPhotoFrame
+          photoUrl={config.media.heroPhotoUrl}
+          groomNickname={config.couple.groom.nickname}
+          brideNickname={config.couple.bride.nickname}
+          shortDate={shortDate}
+          layout={config.theme.layout}
+        />
       </div>
 
-      <p
-        className="mt-8 text-xs font-medium tracking-[0.22em] uppercase"
-        style={{ color: "var(--color-accent)" }}
-      >
-        {config.general.eventTitle}
-      </p>
-
-      <h2 className="font-heading mt-2 text-3xl leading-tight font-semibold sm:text-4xl">
-        <span>{config.couple.groom.nickname}</span>
-        <span
-          className="mx-2 inline-block font-normal"
-          style={{ color: "var(--color-primary)" }}
+      <div className={animateEntrance ? "hero-enter-title" : "opacity-0"}>
+        <p
+          className="mt-8 text-xs font-medium tracking-[0.22em] uppercase"
+          style={{ color: "var(--color-accent)" }}
         >
-          &amp;
-        </span>
-        <span>{config.couple.bride.nickname}</span>
-      </h2>
-
-      <p className="mt-2 text-sm tracking-wide opacity-80">{shortDate}</p>
-
-      <Ornament enabled={config.theme.ornaments} className="my-5" />
-
-      {config.general.openingText ? (
-        <p className="mx-auto max-w-sm text-sm leading-relaxed opacity-85">
-          {config.general.openingText}
+          {config.general.eventTitle}
         </p>
-      ) : null}
 
-      <Countdown targetTimestamp={targetTimestamp} />
+        <h2 className="font-heading mt-2 text-3xl leading-tight font-semibold sm:text-4xl">
+          <span>{config.couple.groom.nickname}</span>
+          <span
+            className="mx-2 inline-block font-normal"
+            style={{ color: "var(--color-primary)" }}
+          >
+            &amp;
+          </span>
+          <span>{config.couple.bride.nickname}</span>
+        </h2>
+      </div>
+
+      <div className={animateEntrance ? "hero-enter-meta" : "opacity-0"}>
+        <p className="mt-2 text-sm tracking-wide opacity-80">{shortDate}</p>
+
+        <Ornament enabled={config.theme.ornaments} className="my-5" />
+
+        {config.general.openingText ? (
+          <p className="mx-auto max-w-sm text-sm leading-relaxed opacity-85">
+            {config.general.openingText}
+          </p>
+        ) : null}
+      </div>
+
+      <div className={animateEntrance ? "hero-enter-countdown" : "opacity-0"}>
+        <Countdown targetTimestamp={targetTimestamp} />
+      </div>
     </section>
   );
 }

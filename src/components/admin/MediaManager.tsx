@@ -42,23 +42,65 @@ interface CropQueueState {
   sessionKey: number;
 }
 
-function getHeroCropSpec(heroLayout: SiteConfig["theme"]["layout"]["hero"]): CropSpec {
-  if (heroLayout === "centered") {
+function getHeroCropSpec(layout: SiteConfig["theme"]["layout"]): CropSpec {
+  const shape = layout.heroShape ?? "rounded";
+
+  if (shape === "circle") {
     return {
       title: "Potong Foto Hero",
-      aspectLabel: "1:1 (Lingkaran Tengah)",
+      aspectLabel: "1:1 (Lingkaran)",
       aspectRatio: 1,
       outputWidth: 1080,
       outputHeight: 1080,
       circularGuide: true,
     };
   }
-  if (heroLayout === "split") {
+  if (shape === "oval") {
+    return {
+      title: "Potong Foto Hero",
+      aspectLabel: "3:4 (Oval Vertikal)",
+      aspectRatio: 3 / 4,
+      outputWidth: 1080,
+      outputHeight: 1440,
+      circularGuide: true,
+    };
+  }
+  if (shape === "arch") {
+    return {
+      title: "Potong Foto Hero",
+      aspectLabel: "3:4 (Lengkung Kubah)",
+      aspectRatio: 3 / 4,
+      outputWidth: 1200,
+      outputHeight: 1600,
+      circularGuide: false,
+    };
+  }
+  if (shape === "square") {
+    return {
+      title: "Potong Foto Hero",
+      aspectLabel: "1:1 (Persegi)",
+      aspectRatio: 1,
+      outputWidth: 1080,
+      outputHeight: 1080,
+      circularGuide: false,
+    };
+  }
+  if (layout.hero === "split") {
     return {
       title: "Potong Foto Hero",
       aspectLabel: "4:3 (Proporsional)",
       aspectRatio: 4 / 3,
       outputWidth: 1440,
+      outputHeight: 1080,
+      circularGuide: false,
+    };
+  }
+  if (layout.hero === "centered") {
+    return {
+      title: "Potong Foto Hero",
+      aspectLabel: "1:1 (Ringkas Tengah)",
+      aspectRatio: 1,
+      outputWidth: 1080,
       outputHeight: 1080,
       circularGuide: false,
     };
@@ -207,7 +249,7 @@ export function MediaManager({
     if (!file) {
       return;
     }
-    openCropQueue("hero", [file], getHeroCropSpec(config.theme.layout.hero));
+    openCropQueue("hero", [file], getHeroCropSpec(config.theme.layout));
   };
 
   const handleCoupleSelect = (
@@ -376,7 +418,7 @@ export function MediaManager({
 
   const galleryPhotos = config.media.galleryPhotoUrls.filter(Boolean);
   const isBusy = uploadingTarget !== null;
-  const heroSpec = getHeroCropSpec(config.theme.layout.hero);
+  const heroSpec = getHeroCropSpec(config.theme.layout);
   const currentCropFile = cropQueue ? cropQueue.files[cropQueue.index] : null;
 
   return (

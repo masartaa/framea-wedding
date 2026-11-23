@@ -43,6 +43,19 @@ export const bodyFontSchema = z.enum([
 
 export const coverLayoutSchema = z.enum(["center", "minimal", "framed"]);
 export const heroLayoutSchema = z.enum(["full-photo", "split", "centered"]);
+export const heroShapeSchema = z.enum([
+  "rounded",
+  "square",
+  "arch",
+  "oval",
+  "circle",
+]);
+export const heroDecorationSchema = z.enum([
+  "none",
+  "double-frame",
+  "floral-corner",
+  "soft-glow",
+]);
 
 export const sectionIdSchema = z.enum([
   "hero",
@@ -199,6 +212,8 @@ export const siteConfigSchema = z.object({
     layout: z.object({
       cover: coverLayoutSchema,
       hero: heroLayoutSchema,
+      heroShape: heroShapeSchema.optional().default("rounded"),
+      heroDecoration: heroDecorationSchema.optional().default("floral-corner"),
     }),
     ornaments: z.boolean(),
   }),
@@ -369,6 +384,8 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
     layout: {
       cover: "center",
       hero: "full-photo",
+      heroShape: "rounded",
+      heroDecoration: "floral-corner",
     },
     ornaments: true,
   },

@@ -13,12 +13,16 @@ import {
   FONT_PAIRINGS,
   getThemeContrastWarnings,
   HEADING_FONT_OPTIONS,
+  HERO_DECORATION_OPTIONS,
   HERO_LAYOUT_OPTIONS,
+  HERO_SHAPE_OPTIONS,
   THEME_PRESETS,
   type BodyFontOption,
   type CoverLayoutOption,
   type HeadingFontOption,
+  type HeroDecorationOption,
   type HeroLayoutOption,
+  type HeroShapeOption,
   type ThemePresetDefinition,
 } from "@/lib/theme-presets";
 
@@ -86,6 +90,20 @@ export function ThemeEditor({
     onChange({
       ...theme,
       layout: { ...theme.layout, hero },
+    });
+  };
+
+  const updateHeroShape = (heroShape: HeroShapeOption) => {
+    onChange({
+      ...theme,
+      layout: { ...theme.layout, heroShape },
+    });
+  };
+
+  const updateHeroDecoration = (heroDecoration: HeroDecorationOption) => {
+    onChange({
+      ...theme,
+      layout: { ...theme.layout, heroDecoration },
     });
   };
 
@@ -449,6 +467,106 @@ export function ThemeEditor({
                     key={option.id}
                     type="button"
                     onClick={() => updateHeroLayout(option.id)}
+                    aria-pressed={isSelected}
+                    className="flex min-h-11 cursor-pointer flex-col items-start rounded-2xl border p-3.5 text-left"
+                    style={{
+                      backgroundColor: isSelected
+                        ? "var(--color-secondary)"
+                        : "var(--color-background)",
+                      borderColor: isSelected
+                        ? "var(--color-primary)"
+                        : "color-mix(in srgb, var(--color-primary) 30%, transparent)",
+                      borderWidth: isSelected ? "2px" : "1px",
+                    }}
+                  >
+                    <span className="text-sm font-semibold">
+                      {option.label}
+                    </span>
+                    <span className="mt-1 text-xs leading-relaxed opacity-75">
+                      {option.description}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-sm font-medium">Bentuk Foto Hero</p>
+            <p className="mt-0.5 text-xs opacity-70">
+              Menentukan bentuk bingkai foto utama (oval, lingkaran, lengkung
+              kubah, atau persegi).
+            </p>
+            <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+              {HERO_SHAPE_OPTIONS.map((option) => {
+                const currentShape = theme.layout.heroShape ?? "rounded";
+                const isSelected = currentShape === option.id;
+                const shapePreviewClass =
+                  option.id === "circle"
+                    ? "h-8 w-8 rounded-full"
+                    : option.id === "oval"
+                      ? "h-9 w-7 rounded-[50%]"
+                      : option.id === "arch"
+                        ? "h-9 w-7 rounded-t-full rounded-b-sm"
+                        : option.id === "square"
+                          ? "h-8 w-8 rounded-md"
+                          : "h-9 w-7 rounded-xl";
+
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => updateHeroShape(option.id)}
+                    aria-pressed={isSelected}
+                    className="flex min-h-11 cursor-pointer flex-col items-start rounded-2xl border p-3 text-left"
+                    style={{
+                      backgroundColor: isSelected
+                        ? "var(--color-secondary)"
+                        : "var(--color-background)",
+                      borderColor: isSelected
+                        ? "var(--color-primary)"
+                        : "color-mix(in srgb, var(--color-primary) 30%, transparent)",
+                      borderWidth: isSelected ? "2px" : "1px",
+                    }}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`mb-2 border-2 ${shapePreviewClass}`}
+                      style={{
+                        borderColor: "var(--color-primary)",
+                        backgroundColor:
+                          "color-mix(in srgb, var(--color-primary) 18%, var(--color-background))",
+                      }}
+                    />
+                    <span className="text-xs font-semibold">
+                      {option.label}
+                    </span>
+                    <span className="mt-0.5 text-[11px] leading-snug opacity-75">
+                      {option.description}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-sm font-medium">Dekorasi Foto Hero</p>
+            <p className="mt-0.5 text-xs opacity-70">
+              Tambahkan bingkai ganda, ornamen daun &amp; bunga, atau pendar
+              lembut di sekitar foto Hero.
+            </p>
+            <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {HERO_DECORATION_OPTIONS.map((option) => {
+                const currentDecoration =
+                  theme.layout.heroDecoration ?? "floral-corner";
+                const isSelected = currentDecoration === option.id;
+
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => updateHeroDecoration(option.id)}
                     aria-pressed={isSelected}
                     className="flex min-h-11 cursor-pointer flex-col items-start rounded-2xl border p-3.5 text-left"
                     style={{
