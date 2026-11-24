@@ -11,6 +11,7 @@ export async function GET() {
     {
       authenticated: true,
       role: auth.session.role,
+      ...(auth.session.role === "couple" ? { slug: auth.session.slug } : {}),
       expiresAt: auth.session.expiresAt,
     },
     {

@@ -53,14 +53,16 @@ export function parseGuestNamesInput(rawText: string): string[] {
 
 export function buildPersonalInvitationUrl(
   origin: string,
-  guestName: string
+  guestName: string,
+  invitationSlug?: string
 ): string {
+  const path = invitationSlug ? `/${encodeURIComponent(invitationSlug)}` : "/";
   try {
-    const url = new URL("/", origin);
+    const url = new URL(path, origin);
     url.searchParams.set("to", guestName);
     return url.toString();
   } catch {
-    return `/?to=${encodeURIComponent(guestName)}`;
+    return `${path}?to=${encodeURIComponent(guestName)}`;
   }
 }
 

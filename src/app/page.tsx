@@ -1,42 +1,75 @@
 import type { Metadata } from "next";
-import { InvitationShell } from "@/components/invitation/InvitationShell";
-import { formatEventDateFull, isSafeExternalUrl } from "@/lib/format";
-import { getSiteConfig } from "@/lib/site-config";
+import Link from "next/link";
+import { Ornament } from "@/components/invitation/Ornament";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const { config } = await getSiteConfig();
-  const coupleTitle = `${config.couple.groom.nickname} & ${config.couple.bride.nickname}`;
-  const title = `Undangan Pernikahan ${coupleTitle}`;
-  const formattedDate = formatEventDateFull(config.general.eventDate);
-  const description = `${config.general.eventTitle} · ${formattedDate}, ${config.general.eventTimeStart}–${config.general.eventTimeEnd} ${config.general.eventTimezone} di ${config.general.venueName}.`;
-  const heroPhoto = config.media.heroPhotoUrl.trim();
-  const hasOgImage = isSafeExternalUrl(heroPhoto);
+export const metadata: Metadata = {
+  title: "Framea — Undangan Pernikahan Digital",
+  description:
+    "Platform undangan pernikahan digital yang ringan, modern, dan personal.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
-  return {
-    title,
-    description,
-    robots: {
-      index: false,
-      follow: false,
-    },
-    openGraph: {
-      title,
-      description,
-      type: "website",
-      locale: "id_ID",
-      ...(hasOgImage ? { images: [{ url: heroPhoto, alt: title }] } : {}),
-    },
-    twitter: {
-      card: hasOgImage ? "summary_large_image" : "summary",
-      title,
-      description,
-      ...(hasOgImage ? { images: [heroPhoto] } : {}),
-    },
-  };
-}
+export default function FrameaLandingPage() {
+  return (
+    <main
+      className="flex min-h-dvh w-full items-center justify-center px-5 py-12"
+      style={{
+        backgroundColor:
+          "color-mix(in srgb, var(--color-secondary) 55%, var(--color-background))",
+        color: "var(--color-text)",
+      }}
+    >
+      <div
+        className="w-full max-w-md rounded-3xl border px-6 py-10 text-center shadow-sm sm:px-8"
+        style={{
+          backgroundColor: "var(--color-background)",
+          borderColor:
+            "color-mix(in srgb, var(--color-primary) 45%, transparent)",
+        }}
+      >
+        <p
+          className="text-xs font-medium tracking-[0.22em] uppercase"
+          style={{ color: "var(--color-accent)" }}
+        >
+          Framea Wedding Invitation
+        </p>
 
-export default async function HomePage() {
-  const { config } = await getSiteConfig();
+        <Ornament enabled className="my-5" />
 
-  return <InvitationShell config={config} />;
+        <h1 className="font-heading text-3xl leading-tight font-semibold tracking-tight">
+          Undangan Pernikahan Digital
+        </h1>
+
+        <p className="mt-3 text-sm leading-relaxed opacity-80">
+          Untuk melihat undangan, silakan buka tautan personal yang telah
+          dibagikan oleh mempelai atau keluarga.
+        </p>
+
+        <div
+          className="mt-8 border-t pt-6"
+          style={{
+            borderColor:
+              "color-mix(in srgb, var(--color-primary) 30%, transparent)",
+          }}
+        >
+          <p className="text-xs opacity-70">
+            Pengelola atau pemilik undangan?
+          </p>
+          <Link
+            href="/admin/login"
+            className="mt-3 inline-flex min-h-11 items-center justify-center rounded-full px-7 text-sm font-medium tracking-wide transition-transform duration-150 hover:scale-[1.01] active:scale-[0.99]"
+            style={{
+              backgroundColor: "var(--color-primary)",
+              color: "var(--color-background)",
+            }}
+          >
+            Masuk Dashboard Admin
+          </Link>
+        </div>
+      </div>
+    </main>
+  );
 }

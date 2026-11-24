@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminLoginPage() {
   const session = await getAdminSession();
   if (session) {
-    redirect("/admin");
+    redirect(session.role === "couple" ? `/admin/${session.slug}` : "/admin");
   }
 
   const configured = isAuthConfigured();
@@ -41,7 +41,7 @@ export default async function AdminLoginPage() {
             Masuk Dashboard
           </h1>
           <p className="mt-1.5 text-sm opacity-75">
-            Masukkan sandi admin untuk mengelola undangan.
+            Masuk sebagai pemilik undangan atau Super Admin.
           </p>
         </div>
 
@@ -70,7 +70,7 @@ export default async function AdminLoginPage() {
             href="/"
             className="inline-flex min-h-11 items-center justify-center px-3 text-sm underline-offset-4 opacity-75 transition-opacity hover:underline hover:opacity-100"
           >
-            Kembali ke halaman undangan
+            Kembali ke beranda
           </Link>
         </div>
       </div>

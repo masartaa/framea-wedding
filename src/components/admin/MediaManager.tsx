@@ -19,6 +19,7 @@ import {
 import { ImageCropModal, type CropSpec } from "./ImageCropModal";
 
 interface MediaManagerProps {
+  invitationSlug: string;
   config: SiteConfig;
   onChangeHeroPhoto: (url: string) => void;
   onChangeCouplePhoto: (who: "groom" | "bride", url: string) => void;
@@ -139,6 +140,7 @@ const GALLERY_CROP_SPEC: CropSpec = {
 };
 
 export function MediaManager({
+  invitationSlug,
   config,
   onChangeHeroPhoto,
   onChangeCouplePhoto,
@@ -212,6 +214,7 @@ export function MediaManager({
     const formData = new FormData();
     formData.append("file", fileToUpload);
     formData.append("kind", kind);
+    formData.append("slug", invitationSlug);
     formData.append("sortOrder", String(sortOrder));
 
     const response = await fetch("/api/admin/upload", {

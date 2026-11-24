@@ -15,6 +15,10 @@ export default async function AdminDashboardLayout({
     redirect("/admin/login");
   }
 
+  const isSuperAdmin = session.role === "superadmin";
+  const publicPreviewHref =
+    session.role === "couple" ? `/${session.slug}` : "/";
+
   return (
     <div
       className="min-h-dvh w-full"
@@ -34,20 +38,45 @@ export default async function AdminDashboardLayout({
       >
         <div className="mx-auto flex w-full max-w-4xl flex-wrap items-center justify-between gap-3 px-4 py-3.5 sm:px-6">
           <div>
-            <p
-              className="text-[11px] font-medium tracking-[0.2em] uppercase"
-              style={{ color: "var(--color-accent)" }}
-            >
-              Framea Admin
-            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p
+                className="text-[11px] font-medium tracking-[0.2em] uppercase"
+                style={{ color: "var(--color-accent)" }}
+              >
+                Framea Admin
+              </p>
+              <span
+                className="rounded-full px-2.5 py-0.5 text-[11px] font-medium"
+                style={{
+                  backgroundColor: "var(--color-secondary)",
+                  color: "var(--color-accent)",
+                }}
+              >
+                {isSuperAdmin ? "Super Admin" : `/${session.slug}`}
+              </span>
+            </div>
             <p className="font-heading text-lg font-semibold">
               Dashboard Undangan
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
+            {isSuperAdmin ? (
+              <Link
+                href="/admin"
+                className="inline-flex min-h-11 items-center justify-center rounded-full border px-4 text-sm font-medium"
+                style={{
+                  backgroundColor: "var(--color-background)",
+                  borderColor:
+                    "color-mix(in srgb, var(--color-primary) 45%, transparent)",
+                }}
+              >
+                Daftar Undangan
+              </Link>
+            ) : null}
+
             <Link
-              href="/"
+              href={publicPreviewHref}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex min-h-11 items-center justify-center rounded-full px-4 text-sm font-medium"
@@ -56,7 +85,7 @@ export default async function AdminDashboardLayout({
                 color: "var(--color-text)",
               }}
             >
-              Lihat Undangan
+              {session.role === "couple" ? "Lihat Undangan" : "Beranda"}
             </Link>
             <LogoutButton />
           </div>

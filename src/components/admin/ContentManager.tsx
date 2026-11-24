@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import {
   DEFAULT_SITE_CONFIG,
@@ -31,6 +32,8 @@ type ActiveTab =
   | "pratinjau";
 
 interface ContentManagerProps {
+  invitationSlug: string;
+  invitationLabel: string;
   initialConfig: SiteConfig;
   initialSource: "database" | "default";
   initialUpdatedAt: string | null;
@@ -126,10 +129,16 @@ function collectBlobUrls(config: SiteConfig): Set<string> {
 }
 
 export function ContentManager({
+  invitationSlug,
+  invitationLabel,
   initialConfig,
   initialSource,
   initialUpdatedAt,
 }: ContentManagerProps) {
+  const encodedSlug = encodeURIComponent(invitationSlug);
+  const configEndpoint = `/api/admin/invitations/${encodedSlug}/config`;
+  const backupEndpoint = `/api/admin/invitations/${encodedSlug}/backup`;
+
   const normalizedInitial = normalizeConfigWithEvents(initialConfig);
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("umum");
@@ -290,7 +299,7 @@ export function ContentManager({
     setFieldErrors({});
     setIsSaving(true);
     try {
-      const response = await fetch("/api/admin/config", {
+      const response = await fetch(configEndpoint, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -358,7 +367,7 @@ export function ContentManager({
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `framea-config-${dateStamp}.json`;
+    anchor.download = `framea-${invitationSlug}-config-${dateStamp}.json`;
     document.body.appendChild(anchor);
     anchor.click();
     document.body.removeChild(anchor);
@@ -438,30 +447,45 @@ export function ContentManager({
               className="text-xs font-medium tracking-[0.18em] uppercase"
               style={{ color: "var(--color-accent)" }}
             >
-              Pengelolaan Undangan
+              Undangan · /{invitationSlug}
             </p>
             <h1 className="font-heading mt-1 text-2xl font-semibold">
-              Dashboard Framea
+              {invitationLabel}
             </h1>
           </div>
 
-          <div className="text-left text-xs sm:text-right">
-            <p className="opacity-75">
-              Sumber:{" "}
-              <span
-                className="font-medium"
-                style={{ color: "var(--color-accent)" }}
-              >
-                {source === "database"
-                  ? "Database Neon"
-                  : "Default (belum tersimpan)"}
-              </span>
-            </p>
-            {formattedUpdated ? (
-              <p className="mt-0.5 opacity-70">
-                Terakhir disimpan: {formattedUpdated} WIB
+          <div className="flex flex-col items-start gap-2 sm:items-end">
+            <Link
+              href={`/${invitationSlug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-11 items-center justify-center rounded-full border px-4 text-xs font-semibold"
+              style={{
+                backgroundColor: "var(--color-secondary)",
+                borderColor:
+                  "color-mix(in srgb, var(--color-primary) 45%, transparent)",
+              }}
+            >
+              Buka /{invitationSlug} ↗
+            </Link>
+            <div className="text-left text-xs sm:text-right">
+              <p className="opacity-75">
+                Sumber:{" "}
+                <span
+                  className="font-medium"
+                  style={{ color: "var(--color-accent)" }}
+                >
+                  {source === "database"
+                    ? "Database Neon"
+                    : "Default (belum tersimpan)"}
+                </span>
               </p>
-            ) : null}
+              {formattedUpdated ? (
+                <p className="mt-0.5 opacity-70">
+                  Terakhir disimpan: {formattedUpdated} WIB
+                </p>
+              ) : null}
+            </div>
           </div>
         </div>
 
@@ -862,6 +886,7 @@ export function ContentManager({
 
       {activeTab === "media" ? (
         <MediaManager
+          invitationSlug={invitationSlug}
           config={draft}
           onChangeHeroPhoto={(url) =>
             setDraft((prev) => ({
@@ -1023,9 +1048,13 @@ export function ContentManager({
         />
       ) : null}
 
-      {activeTab === "tamu" ? <GuestsManager config={savedConfig} /> : null}
+      {activeTab === "tamu" ? (
+        <GuestsManager invitationSlug={invitationSlug} config={savedConfig} />
+      ) : null}
 
-      {activeTab === "ucapan" ? <WishesModerator /> : null}
+      {activeTab === "ucapan" ? (
+        <WishesModerator invitationSlug={invitationSlug} />
+      ) : null}
 
       {activeTab === "pratinjau" ? <InvitationPreview config={draft} /> : null}
 
@@ -1142,7 +1171,7 @@ export function ContentManager({
 
             <div className="flex flex-wrap items-center gap-2">
               <a
-                href="/api/admin/backup"
+                href={backupEndpoint}
                 download
                 className="inline-flex min-h-11 items-center justify-center rounded-full border px-4 text-xs font-medium"
                 style={{

@@ -1,6 +1,7 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { normalizeInvitationSlug } from "@/lib/invitation-slug";
 import {
   ADMIN_SESSION_COOKIE,
   ADMIN_SESSION_MAX_AGE_SECONDS,
@@ -8,10 +9,14 @@ import {
   type AdminSession,
 } from "@/lib/session-token";
 
+export function isSessionSecretConfigured(): boolean {
+  const sessionSecret = process.env.SESSION_SECRET?.trim();
+  return Boolean(sessionSecret && sessionSecret.length >= 16);
+}
+
 export function isAuthConfigured(): boolean {
   const adminPassword = process.env.ADMIN_PASSWORD?.trim();
-  const sessionSecret = process.env.SESSION_SECRET?.trim();
-  return Boolean(adminPassword && sessionSecret && sessionSecret.length >= 16);
+  return Boolean(adminPassword && isSessionSecretConfigured());
 }
 
 function sha256Buffer(value: string): Buffer {
@@ -29,7 +34,9 @@ export function verifyAdminPassword(inputPassword: string): boolean {
   return timingSafeEqual(inputHash, expectedHash);
 }
 
-export function getSessionCookieOptions(maxAge = ADMIN_SESSION_MAX_AGE_SECONDS) {
+export function getSessionCookieOptions(
+  maxAge = ADMIN_SESSION_MAX_AGE_SECONDS
+) {
   return {
     name: ADMIN_SESSION_COOKIE,
     httpOnly: true,
@@ -44,6 +51,16 @@ export async function getAdminSession(): Promise<AdminSession | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_SESSION_COOKIE)?.value;
   return verifySessionToken(token);
+}
+
+export function canAccessInvitation(
+  session: AdminSession,
+  slug: string
+): boolean {
+  if (session.role === "superadmin") {
+    return true;
+  }
+  return session.slug === normalizeInvitationSlug(slug);
 }
 
 export async function requireAdminSession(): Promise<
@@ -65,4 +82,54 @@ export async function requireAdminSession(): Promise<
   }
 
   return { ok: true, session };
+}
+
+export async function requireSuperAdminSession(): Promise<
+  | { ok: true; session: Extract<AdminSession, { role: "superadmin" }> }
+  | { ok: false; response: NextResponse }
+> {
+  const auth = await requireAdminSession();
+  if (!auth.ok) {
+    return auth;
+  }
+
+  if (auth.session.role !== "superadmin") {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: "Akses ditolak. Fitur ini khusus untuk Super Admin." },
+        {
+          status: 403,
+          headers: { "Cache-Control": "no-store" },
+        }
+      ),
+    };
+  }
+
+  return { ok: true, session: auth.session };
+}
+
+export async function requireInvitationAccessSession(slug: string): Promise<
+  | { ok: true; session: AdminSession }
+  | { ok: false; response: NextResponse }
+> {
+  const auth = await requireAdminSession();
+  if (!auth.ok) {
+    return auth;
+  }
+
+  if (!canAccessInvitation(auth.session, slug)) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: "Akses ditolak. Anda tidak memiliki izin untuk undangan ini." },
+        {
+          status: 403,
+          headers: { "Cache-Control": "no-store" },
+        }
+      ),
+    };
+  }
+
+  return { ok: true, session: auth.session };
 }

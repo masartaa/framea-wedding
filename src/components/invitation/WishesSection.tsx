@@ -32,6 +32,7 @@ interface WishesPostResponse {
 interface WishesSectionProps {
   ornaments: boolean;
   previewMode?: boolean;
+  invitationSlug?: string;
 }
 
 const PREVIEW_WISHES: ReadonlyArray<PublicWish> = [
@@ -84,7 +85,12 @@ function formatWishDate(iso: string): string {
 export function WishesSection({
   ornaments,
   previewMode = false,
+  invitationSlug,
 }: WishesSectionProps) {
+  const apiEndpoint = invitationSlug
+    ? `/api/invitations/${encodeURIComponent(invitationSlug)}/wishes`
+    : "/api/wishes";
+
   const urlGuestName = useSyncExternalStore(
     subscribeToLocation,
     getGuestNameForForm,
@@ -116,7 +122,7 @@ export function WishesSection({
     }
 
     let cancelled = false;
-    fetch("/api/wishes", { cache: "no-store" })
+    fetch(apiEndpoint, { cache: "no-store" })
       .then((res) => res.json() as Promise<WishesGetResponse>)
       .then((data) => {
         if (cancelled) {
@@ -141,7 +147,7 @@ export function WishesSection({
     return () => {
       cancelled = true;
     };
-  }, [previewMode]);
+  }, [apiEndpoint, previewMode]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -176,7 +182,7 @@ export function WishesSection({
 
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/wishes", {
+      const response = await fetch(apiEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

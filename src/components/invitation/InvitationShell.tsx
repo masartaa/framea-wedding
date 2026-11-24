@@ -23,6 +23,7 @@ import { WishesSection } from "./WishesSection";
 
 interface InvitationShellProps {
   config: SiteConfig;
+  invitationSlug?: string;
   previewMode?: boolean;
   previewView?: "cover" | "content";
   onPreviewOpen?: () => void;
@@ -30,6 +31,7 @@ interface InvitationShellProps {
 
 export function InvitationShell({
   config,
+  invitationSlug,
   previewMode = false,
   previewView = "content",
   onPreviewOpen,
@@ -101,6 +103,7 @@ export function InvitationShell({
             key="ucapan"
             ornaments={config.theme.ornaments}
             previewMode={previewMode}
+            invitationSlug={invitationSlug}
           />
         );
     }

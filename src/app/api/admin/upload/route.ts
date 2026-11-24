@@ -1,10 +1,11 @@
 import { del, put } from "@vercel/blob";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { getDb } from "@/db";
-import { media } from "@/db/schema";
-import { requireAdminSession } from "@/lib/auth";
+import { invitations, media } from "@/db/schema";
+import { canAccessInvitation, requireAdminSession } from "@/lib/auth";
+import { normalizeInvitationSlug } from "@/lib/invitation-slug";
 import {
   ALLOWED_AUDIO_MIME_TYPES,
   ALLOWED_IMAGE_MIME_TYPES,
@@ -175,6 +176,21 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const rawSlug = formData.get("slug");
+  const targetSlug =
+    auth.session.role === "couple"
+      ? auth.session.slug
+      : typeof rawSlug === "string" && rawSlug.trim()
+        ? normalizeInvitationSlug(rawSlug)
+        : "";
+
+  if (targetSlug && !canAccessInvitation(auth.session, targetSlug)) {
+    return NextResponse.json(
+      { error: "Akses ditolak untuk undangan ini." },
+      { status: 403, headers: { "Cache-Control": "no-store" } }
+    );
+  }
+
   const rawSortOrder = Number(formData.get("sortOrder") ?? 0);
   const sortOrder =
     Number.isInteger(rawSortOrder) && rawSortOrder >= 0 ? rawSortOrder : 0;
@@ -266,10 +282,28 @@ export async function POST(request: NextRequest) {
 
   const extension = MIME_TO_EXTENSION[mime] ?? (isAudio ? "mp3" : "webp");
   const baseName = sanitizeBaseName(fileEntry.name);
-  const pathname = `framea/${kind}/${baseName}.${extension}`;
+  const pathPrefix = targetSlug ? `framea/${targetSlug}/${kind}` : `framea/${kind}`;
+  const pathname = `${pathPrefix}/${baseName}.${extension}`;
   const normalizedContentType = mime === "audio/mp3" ? "audio/mpeg" : mime;
 
   try {
+    let resolvedInvitationId: number | null =
+      auth.session.role === "couple" ? auth.session.invitationId : null;
+
+    if (resolvedInvitationId === null && targetSlug && process.env.DATABASE_URL) {
+      try {
+        const db = getDb();
+        const [inv] = await db
+          .select({ id: invitations.id })
+          .from(invitations)
+          .where(eq(invitations.slug, targetSlug))
+          .limit(1);
+        resolvedInvitationId = inv?.id ?? null;
+      } catch {
+        resolvedInvitationId = null;
+      }
+    }
+
     const blob = await put(pathname, Buffer.from(arrayBuffer), {
       access: "public",
       contentType: normalizedContentType,
@@ -283,6 +317,7 @@ export async function POST(request: NextRequest) {
         const [inserted] = await db
           .insert(media)
           .values({
+            invitationId: resolvedInvitationId,
             kind,
             url: blob.url,
             sortOrder,
@@ -363,6 +398,35 @@ export async function DELETE(request: NextRequest) {
     );
   }
 
+  // Peran couple hanya boleh menghapus berkas media milik undangannya sendiri
+  if (auth.session.role === "couple") {
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json(
+        { error: "Akses ditolak." },
+        { status: 403, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
+    const db = getDb();
+    const [owned] = await db
+      .select({ id: media.id })
+      .from(media)
+      .where(
+        and(
+          eq(media.url, url),
+          eq(media.invitationId, auth.session.invitationId)
+        )
+      )
+      .limit(1);
+
+    if (!owned) {
+      return NextResponse.json(
+        { error: "Akses ditolak. Berkas bukan milik undangan Anda." },
+        { status: 403, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+  }
+
   try {
     if (isBlobConfigured()) {
       await del(url);
@@ -371,7 +435,18 @@ export async function DELETE(request: NextRequest) {
     if (process.env.DATABASE_URL) {
       try {
         const db = getDb();
-        await db.delete(media).where(eq(media.url, url));
+        if (auth.session.role === "couple") {
+          await db
+            .delete(media)
+            .where(
+              and(
+                eq(media.url, url),
+                eq(media.invitationId, auth.session.invitationId)
+              )
+            );
+        } else {
+          await db.delete(media).where(eq(media.url, url));
+        }
       } catch (dbError: unknown) {
         const message =
           dbError instanceof Error ? dbError.message : "DB error";

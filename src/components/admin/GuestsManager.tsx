@@ -30,6 +30,7 @@ interface GuestsPostResponse {
 }
 
 interface GuestsManagerProps {
+  invitationSlug: string;
   config: SiteConfig;
 }
 
@@ -58,7 +59,8 @@ async function copyTextToClipboard(text: string): Promise<boolean> {
   }
 }
 
-export function GuestsManager({ config }: GuestsManagerProps) {
+export function GuestsManager({ invitationSlug, config }: GuestsManagerProps) {
+  const apiEndpoint = `/api/admin/invitations/${encodeURIComponent(invitationSlug)}/guests`;
   const [guests, setGuests] = useState<GuestItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [rawNames, setRawNames] = useState("");
@@ -80,7 +82,7 @@ export function GuestsManager({ config }: GuestsManagerProps) {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/admin/guests", { cache: "no-store" })
+    fetch(apiEndpoint, { cache: "no-store" })
       .then((res) => res.json() as Promise<GuestsGetResponse>)
       .then((data) => {
         if (cancelled) {
@@ -109,7 +111,7 @@ export function GuestsManager({ config }: GuestsManagerProps) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [apiEndpoint]);
 
   const detectedNamesCount = useMemo(
     () => parseGuestNamesInput(rawNames).length,
@@ -138,7 +140,7 @@ export function GuestsManager({ config }: GuestsManagerProps) {
 
     setIsAdding(true);
     try {
-      const response = await fetch("/api/admin/guests", {
+      const response = await fetch(apiEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rawNames }),
@@ -184,7 +186,7 @@ export function GuestsManager({ config }: GuestsManagerProps) {
     setDeletingId(id);
     setNotice(null);
     try {
-      const response = await fetch("/api/admin/guests", {
+      const response = await fetch(apiEndpoint, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
@@ -414,7 +416,11 @@ export function GuestsManager({ config }: GuestsManagerProps) {
         ) : (
           <div className="space-y-3">
             {filteredGuests.map((guest) => {
-              const personalUrl = buildPersonalInvitationUrl(origin, guest.name);
+              const personalUrl = buildPersonalInvitationUrl(
+                origin,
+                guest.name,
+                invitationSlug
+              );
               const waMessage = renderWhatsAppMessage(
                 waTemplate,
                 guest.name,

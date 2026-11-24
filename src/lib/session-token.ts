@@ -1,12 +1,24 @@
 import { SignJWT, jwtVerify } from "jose";
+import { isValidInvitationSlug } from "@/lib/invitation-slug";
 
 export const ADMIN_SESSION_COOKIE = "framea_admin_session";
 export const ADMIN_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7; // 7 hari
 
-export interface AdminSession {
-  role: "admin";
-  expiresAt: string;
-}
+export type AdminSession =
+  | {
+      role: "superadmin";
+      expiresAt: string;
+    }
+  | {
+      role: "couple";
+      slug: string;
+      invitationId: number;
+      expiresAt: string;
+    };
+
+export type SessionTokenPayload =
+  | { role: "superadmin" }
+  | { role: "couple"; slug: string; invitationId: number };
 
 function getEncodedSecret(): Uint8Array | null {
   const secret = process.env.SESSION_SECRET?.trim();
@@ -16,13 +28,15 @@ function getEncodedSecret(): Uint8Array | null {
   return new TextEncoder().encode(secret);
 }
 
-export async function createSessionToken(): Promise<string> {
+export async function createSessionToken(
+  payload: SessionTokenPayload
+): Promise<string> {
   const secret = getEncodedSecret();
   if (!secret) {
     throw new Error("SESSION_SECRET belum dikonfigurasi dengan benar.");
   }
 
-  return new SignJWT({ role: "admin" })
+  return new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(`${ADMIN_SESSION_MAX_AGE_SECONDS}s`)
@@ -46,14 +60,37 @@ export async function verifySessionToken(
       algorithms: ["HS256"],
     });
 
-    if (payload.role !== "admin" || typeof payload.exp !== "number") {
+    if (typeof payload.exp !== "number") {
       return null;
     }
 
-    return {
-      role: "admin",
-      expiresAt: new Date(payload.exp * 1000).toISOString(),
-    };
+    const expiresAt = new Date(payload.exp * 1000).toISOString();
+
+    // Kompatibel dengan cookie v1 ("admin") dan v2 ("superadmin")
+    if (payload.role === "superadmin" || payload.role === "admin") {
+      return {
+        role: "superadmin",
+        expiresAt,
+      };
+    }
+
+    if (
+      payload.role === "couple" &&
+      typeof payload.slug === "string" &&
+      isValidInvitationSlug(payload.slug) &&
+      typeof payload.invitationId === "number" &&
+      Number.isInteger(payload.invitationId) &&
+      payload.invitationId > 0
+    ) {
+      return {
+        role: "couple",
+        slug: payload.slug,
+        invitationId: payload.invitationId,
+        expiresAt,
+      };
+    }
+
+    return null;
   } catch {
     return null;
   }

@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "db:push": "drizzle-kit push",
-    "db:seed": "node src/db/seed.ts"
+    "db:seed": "node src/db/seed.ts",
+    "db:migrate-v2": "node src/db/migrate-v2.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.1",

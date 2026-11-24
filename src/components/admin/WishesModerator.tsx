@@ -32,7 +32,12 @@ function formatWishDate(iso: string): string {
   }).format(date);
 }
 
-export function WishesModerator() {
+interface WishesModeratorProps {
+  invitationSlug: string;
+}
+
+export function WishesModerator({ invitationSlug }: WishesModeratorProps) {
+  const apiEndpoint = `/api/admin/invitations/${encodeURIComponent(invitationSlug)}/wishes`;
   const [wishes, setWishes] = useState<AdminWishItem[]>([]);
   const [filter, setFilter] = useState<FilterMode>("all");
   const [isLoading, setIsLoading] = useState(true);
@@ -47,7 +52,7 @@ export function WishesModerator() {
     setIsLoading(true);
     setNotice(null);
     try {
-      const response = await fetch("/api/admin/wishes", { cache: "no-store" });
+      const response = await fetch(apiEndpoint, { cache: "no-store" });
       const data = (await response.json()) as AdminWishesGetResponse;
       if (!response.ok) {
         setNotice({
@@ -65,12 +70,12 @@ export function WishesModerator() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [apiEndpoint]);
 
   useEffect(() => {
     let cancelled = false;
 
-    fetch("/api/admin/wishes", { cache: "no-store" })
+    fetch(apiEndpoint, { cache: "no-store" })
       .then(async (response) => {
         const data = (await response.json()) as AdminWishesGetResponse;
         if (cancelled) {
@@ -102,7 +107,7 @@ export function WishesModerator() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [apiEndpoint]);
 
   const counts = useMemo(() => {
     let visible = 0;
@@ -131,7 +136,7 @@ export function WishesModerator() {
     setBusyId(item.id);
     setNotice(null);
     try {
-      const response = await fetch("/api/admin/wishes", {
+      const response = await fetch(apiEndpoint, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: item.id, isHidden: !item.isHidden }),
@@ -165,7 +170,7 @@ export function WishesModerator() {
     setBusyId(id);
     setNotice(null);
     try {
-      const response = await fetch("/api/admin/wishes", {
+      const response = await fetch(apiEndpoint, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
