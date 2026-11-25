@@ -223,7 +223,7 @@ function HeroSection({
         <Ornament enabled={config.theme.ornaments} className="my-5" />
 
         {config.general.openingText ? (
-          <p className="mx-auto max-w-sm text-sm leading-relaxed opacity-85">
+          <p className="mx-auto max-w-sm whitespace-pre-line break-words text-sm leading-relaxed opacity-85">
             {config.general.openingText}
           </p>
         ) : null}
@@ -278,7 +278,7 @@ function CoupleSection({ config }: CoupleSectionProps) {
         <Ornament enabled={config.theme.ornaments} className="my-4" />
 
         {config.couple.introText ? (
-          <p className="mx-auto max-w-sm text-sm leading-relaxed opacity-85">
+          <p className="mx-auto max-w-sm whitespace-pre-line break-words text-sm leading-relaxed opacity-85">
             {config.couple.introText}
           </p>
         ) : null}
@@ -447,7 +447,7 @@ function EventSection({ config }: EventSectionProps) {
                     <p className="font-heading mt-1 text-lg font-semibold">
                       {eventItem.venueName}
                     </p>
-                    <p className="mt-1 text-sm leading-relaxed opacity-80">
+                    <p className="mt-1 whitespace-pre-line break-words text-sm leading-relaxed opacity-80">
                       {eventItem.venueAddress}
                     </p>
                   </div>
@@ -501,7 +501,7 @@ function ClosingSection({ config }: ClosingSectionProps) {
         <Ornament enabled={config.theme.ornaments} className="mb-6" />
 
         {config.general.closingText ? (
-          <p className="mx-auto max-w-sm text-sm leading-relaxed opacity-85">
+          <p className="mx-auto max-w-sm whitespace-pre-line break-words text-sm leading-relaxed opacity-85">
             {config.general.closingText}
           </p>
         ) : null}
