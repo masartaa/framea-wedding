@@ -151,17 +151,27 @@ export const COVER_LAYOUT_OPTIONS: ReadonlyArray<{
   {
     id: "center",
     label: "Kartu Tengah",
-    description: "Kartu lembut di tengah dengan garis tipis elegan.",
+    description: "Kartu lembut di tengah dengan garis bingkai halus.",
   },
   {
     id: "minimal",
     label: "Minimalis",
-    description: "Bersih tanpa kotak kartu, fokus pada tipografi.",
+    description: "Bersih tanpa kotak kartu, fokus pada tipografi elegan.",
   },
   {
     id: "framed",
-    label: "Berbingkai",
-    description: "Bingkai tegas dengan bayangan lembut.",
+    label: "Bingkai Klasik",
+    description: "Bingkai ganda formal dengan garis dalam yang tegas.",
+  },
+  {
+    id: "arch-photo",
+    label: "Kubah Foto",
+    description: "Bingkai foto lengkung kubah di atas nama mempelai.",
+  },
+  {
+    id: "full-bleed",
+    label: "Foto Penuh",
+    description: "Foto utama memenuhi latar sampul dengan gradien lembut.",
   },
 ];
 

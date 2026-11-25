@@ -41,7 +41,13 @@ export const bodyFontSchema = z.enum([
   "Lora",
 ]);
 
-export const coverLayoutSchema = z.enum(["center", "minimal", "framed"]);
+export const coverLayoutSchema = z.enum([
+  "center",
+  "minimal",
+  "framed",
+  "arch-photo",
+  "full-bleed",
+]);
 export const heroLayoutSchema = z.enum(["full-photo", "split", "centered"]);
 export const heroShapeSchema = z.enum([
   "rounded",

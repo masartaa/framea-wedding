@@ -425,7 +425,11 @@ export function ThemeEditor({
         <div className="mt-4 space-y-5">
           <div>
             <p className="text-sm font-medium">Layout Sampul (Cover)</p>
-            <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <p className="mt-0.5 text-xs opacity-70">
+              Pilih 1 dari 5 variasi tampilan sampul yang dilihat tamu sebelum
+              menekan Buka Undangan.
+            </p>
+            <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
               {COVER_LAYOUT_OPTIONS.map((option) => {
                 const isSelected = theme.layout.cover === option.id;
                 return (
@@ -434,7 +438,7 @@ export function ThemeEditor({
                     type="button"
                     onClick={() => updateCoverLayout(option.id)}
                     aria-pressed={isSelected}
-                    className="flex min-h-11 cursor-pointer flex-col items-start rounded-2xl border p-3.5 text-left"
+                    className="flex min-h-11 cursor-pointer flex-col items-start rounded-2xl border p-3 text-left"
                     style={{
                       backgroundColor: isSelected
                         ? "var(--color-secondary)"
@@ -445,10 +449,11 @@ export function ThemeEditor({
                       borderWidth: isSelected ? "2px" : "1px",
                     }}
                   >
-                    <span className="text-sm font-semibold">
+                    <CoverLayoutIcon variant={option.id} />
+                    <span className="mt-2 text-xs font-semibold">
                       {option.label}
                     </span>
-                    <span className="mt-1 text-xs leading-relaxed opacity-75">
+                    <span className="mt-0.5 text-[11px] leading-snug opacity-75">
                       {option.description}
                     </span>
                   </button>
@@ -630,5 +635,110 @@ export function ThemeEditor({
         </div>
       </div>
     </section>
+  );
+}
+
+function CoverLayoutIcon({ variant }: { variant: CoverLayoutOption }) {
+  const baseStyle = {
+    borderColor: "var(--color-primary)",
+    backgroundColor:
+      "color-mix(in srgb, var(--color-primary) 12%, var(--color-background))",
+  };
+
+  if (variant === "minimal") {
+    return (
+      <span
+        aria-hidden="true"
+        className="flex h-10 w-8 flex-col items-center justify-center gap-1 rounded-md border border-dashed"
+        style={baseStyle}
+      >
+        <span
+          className="h-2.5 w-px"
+          style={{ backgroundColor: "var(--color-primary)" }}
+        />
+        <span
+          className="h-0.5 w-4 rounded-full"
+          style={{ backgroundColor: "var(--color-accent)" }}
+        />
+        <span
+          className="h-0.5 w-3 rounded-full opacity-60"
+          style={{ backgroundColor: "var(--color-primary)" }}
+        />
+      </span>
+    );
+  }
+
+  if (variant === "framed") {
+    return (
+      <span
+        aria-hidden="true"
+        className="flex h-10 w-8 items-center justify-center rounded-md border-2 p-0.5"
+        style={baseStyle}
+      >
+        <span
+          className="h-full w-full rounded-sm border"
+          style={{ borderColor: "var(--color-primary)" }}
+        />
+      </span>
+    );
+  }
+
+  if (variant === "arch-photo") {
+    return (
+      <span
+        aria-hidden="true"
+        className="flex h-10 w-8 flex-col items-center justify-center gap-1 rounded-md border p-1"
+        style={baseStyle}
+      >
+        <span
+          className="h-5 w-4 rounded-t-full rounded-b-[2px] border"
+          style={{
+            borderColor: "var(--color-primary)",
+            backgroundColor:
+              "color-mix(in srgb, var(--color-primary) 35%, transparent)",
+          }}
+        />
+        <span
+          className="h-0.5 w-4 rounded-full"
+          style={{ backgroundColor: "var(--color-accent)" }}
+        />
+      </span>
+    );
+  }
+
+  if (variant === "full-bleed") {
+    return (
+      <span
+        aria-hidden="true"
+        className="flex h-10 w-8 flex-col justify-end overflow-hidden rounded-md border"
+        style={{
+          borderColor: "var(--color-primary)",
+          background:
+            "linear-gradient(180deg, color-mix(in srgb, var(--color-primary) 45%, transparent) 0%, var(--color-background) 85%)",
+        }}
+      >
+        <span
+          className="mx-auto mb-1.5 h-0.5 w-4 rounded-full"
+          style={{ backgroundColor: "var(--color-accent)" }}
+        />
+      </span>
+    );
+  }
+
+  return (
+    <span
+      aria-hidden="true"
+      className="flex h-10 w-8 flex-col items-center justify-center gap-1 rounded-md border p-1"
+      style={baseStyle}
+    >
+      <span
+        className="h-0.5 w-4 rounded-full"
+        style={{ backgroundColor: "var(--color-accent)" }}
+      />
+      <span
+        className="h-2.5 w-5 rounded-[3px] border"
+        style={{ borderColor: "var(--color-primary)" }}
+      />
+    </span>
   );
 }
