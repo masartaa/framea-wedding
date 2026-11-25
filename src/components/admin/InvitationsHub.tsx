@@ -284,7 +284,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
   const handleCopyLoginLink = async (targetSlug: string) => {
     const origin =
       typeof window !== "undefined" ? window.location.origin : "";
-    const loginUrl = `${origin}/admin/login?slug=${encodeURIComponent(targetSlug)}`;
+    const loginUrl = `${origin}/login?slug=${encodeURIComponent(targetSlug)}`;
     const ok = await copyText(loginUrl);
     if (ok) {
       setCopiedSlug(targetSlug);
@@ -585,7 +585,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                     >
                       {copiedSlug === item.slug
                         ? "Link Login Tersalin!"
-                        : "Salin Link Login Pasangan"}
+                        : "Salin Link Login Klien"}
                     </button>
 
                     <button

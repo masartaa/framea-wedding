@@ -27,7 +27,7 @@ export default async function AdminLoginPage() {
         style={{
           backgroundColor: "var(--color-background)",
           borderColor:
-            "color-mix(in srgb, var(--color-primary) 45%, transparent)",
+            "color-mix(in srgb, var(--color-primary) 30%, transparent)",
         }}
       >
         <div className="text-center">
@@ -35,13 +35,13 @@ export default async function AdminLoginPage() {
             className="text-xs font-medium tracking-[0.2em] uppercase"
             style={{ color: "var(--color-accent)" }}
           >
-            Framea Admin
+            Framea Super Admin
           </p>
           <h1 className="font-heading mt-2 text-2xl font-semibold">
-            Masuk Dashboard
+            Masuk Super Admin
           </h1>
           <p className="mt-1.5 text-sm opacity-75">
-            Masuk sebagai pemilik undangan atau Super Admin.
+            Khusus pengelola utama untuk membuat dan mengatur seluruh undangan.
           </p>
         </div>
 
@@ -63,7 +63,7 @@ export default async function AdminLoginPage() {
           </div>
         ) : null}
 
-        <LoginForm />
+        <LoginForm mode="superadmin" />
 
         <div className="mt-6 text-center">
           <Link

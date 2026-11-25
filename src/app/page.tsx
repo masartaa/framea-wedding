@@ -55,18 +55,16 @@ export default function FrameaLandingPage() {
               "color-mix(in srgb, var(--color-primary) 30%, transparent)",
           }}
         >
-          <p className="text-xs opacity-70">
-            Pengelola atau pemilik undangan?
-          </p>
+          <p className="text-xs opacity-70">Pemilik undangan?</p>
           <Link
-            href="/admin/login"
+            href="/login"
             className="mt-3 inline-flex min-h-11 items-center justify-center rounded-full px-7 text-sm font-medium tracking-wide transition-transform duration-150 hover:scale-[1.01] active:scale-[0.99]"
             style={{
               backgroundColor: "var(--color-primary)",
               color: "var(--color-background)",
             }}
           >
-            Masuk Dashboard Admin
+            Masuk Pemilik Undangan
           </Link>
         </div>
       </div>

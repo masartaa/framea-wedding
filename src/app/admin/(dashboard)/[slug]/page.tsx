@@ -10,12 +10,12 @@ interface AdminInvitationPageProps {
 export default async function AdminInvitationPage({
   params,
 }: AdminInvitationPageProps) {
+  const { slug } = await params;
   const session = await getAdminSession();
   if (!session) {
-    redirect("/admin/login");
+    redirect(`/login?slug=${encodeURIComponent(slug)}`);
   }
 
-  const { slug } = await params;
   if (!canAccessInvitation(session, slug)) {
     redirect(session.role === "couple" ? `/admin/${session.slug}` : "/admin");
   }

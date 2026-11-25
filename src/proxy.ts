@@ -1,5 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { normalizeInvitationSlug } from "@/lib/invitation-slug";
+import {
+  isValidInvitationSlug,
+  normalizeInvitationSlug,
+} from "@/lib/invitation-slug";
 import {
   ADMIN_SESSION_COOKIE,
   verifySessionToken,
@@ -77,7 +80,7 @@ export async function proxy(request: NextRequest) {
     return applyAdminSecurityHeaders(NextResponse.next());
   }
 
-  if (pathname === "/admin/login") {
+  if (pathname === "/login" || pathname === "/admin/login") {
     if (session) {
       const targetPath =
         session.role === "couple" ? `/admin/${session.slug}` : "/admin";
@@ -90,8 +93,20 @@ export async function proxy(request: NextRequest) {
 
   if (pathname.startsWith("/admin")) {
     if (!session) {
+      if (pathname === "/admin") {
+        return applyAdminSecurityHeaders(
+          NextResponse.redirect(new URL("/admin/login", request.url))
+        );
+      }
+
+      const subRouteMatch = pathname.match(/^\/admin\/([^/]+)(?:\/.*)?$/);
+      const requestedSlug = normalizeInvitationSlug(subRouteMatch?.[1] ?? "");
+      const clientLoginUrl = isValidInvitationSlug(requestedSlug)
+        ? `/login?slug=${encodeURIComponent(requestedSlug)}`
+        : "/login";
+
       return applyAdminSecurityHeaders(
-        NextResponse.redirect(new URL("/admin/login", request.url))
+        NextResponse.redirect(new URL(clientLoginUrl, request.url))
       );
     }
 
@@ -119,5 +134,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/admin/:path*"],
+  matcher: ["/login", "/admin/:path*", "/api/admin/:path*"],
 };

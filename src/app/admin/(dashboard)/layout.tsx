@@ -18,6 +18,10 @@ export default async function AdminDashboardLayout({
   const isSuperAdmin = session.role === "superadmin";
   const publicPreviewHref =
     session.role === "couple" ? `/${session.slug}` : "/";
+  const logoutRedirectTo =
+    session.role === "couple"
+      ? `/login?slug=${encodeURIComponent(session.slug)}`
+      : "/admin/login";
 
   return (
     <div
@@ -87,7 +91,7 @@ export default async function AdminDashboardLayout({
             >
               {session.role === "couple" ? "Lihat Undangan" : "Beranda"}
             </Link>
-            <LogoutButton />
+            <LogoutButton redirectTo={logoutRedirectTo} />
           </div>
         </div>
       </header>

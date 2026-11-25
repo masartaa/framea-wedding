@@ -4,7 +4,11 @@ import { useState, useSyncExternalStore, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { normalizeInvitationSlug } from "@/lib/invitation-slug";
 
-type LoginMode = "couple" | "superadmin";
+export type LoginMode = "couple" | "superadmin";
+
+interface LoginFormProps {
+  mode: LoginMode;
+}
 
 interface LoginResponseBody {
   ok?: boolean;
@@ -27,7 +31,7 @@ function getServerSlug(): string {
   return "";
 }
 
-export function LoginForm() {
+export function LoginForm({ mode }: LoginFormProps) {
   const router = useRouter();
   const urlSlug = useSyncExternalStore(
     subscribeToLocation,
@@ -35,8 +39,6 @@ export function LoginForm() {
     getServerSlug
   );
 
-  const [hasChosenMode, setHasChosenMode] = useState(false);
-  const [selectedMode, setSelectedMode] = useState<LoginMode>("superadmin");
   const [hasEditedSlug, setHasEditedSlug] = useState(false);
   const [slugInput, setSlugInput] = useState("");
   const [password, setPassword] = useState("");
@@ -44,18 +46,7 @@ export function LoginForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const mode: LoginMode = hasChosenMode
-    ? selectedMode
-    : urlSlug
-      ? "couple"
-      : "superadmin";
   const slugValue = hasEditedSlug ? slugInput : urlSlug;
-
-  const handleModeChange = (nextMode: LoginMode) => {
-    setHasChosenMode(true);
-    setSelectedMode(nextMode);
-    setErrorMessage(null);
-  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -119,48 +110,6 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="mt-6 space-y-4" noValidate>
-      <div
-        role="tablist"
-        aria-label="Pilih peran login"
-        className="grid grid-cols-2 gap-1.5 rounded-2xl p-1"
-        style={{ backgroundColor: "var(--color-secondary)" }}
-      >
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === "couple"}
-          onClick={() => handleModeChange("couple")}
-          className="min-h-11 cursor-pointer rounded-xl px-2 text-xs font-semibold transition-colors"
-          style={{
-            backgroundColor:
-              mode === "couple" ? "var(--color-primary)" : "transparent",
-            color:
-              mode === "couple"
-                ? "var(--color-background)"
-                : "var(--color-text)",
-          }}
-        >
-          Pemilik Undangan
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === "superadmin"}
-          onClick={() => handleModeChange("superadmin")}
-          className="min-h-11 cursor-pointer rounded-xl px-2 text-xs font-semibold transition-colors"
-          style={{
-            backgroundColor:
-              mode === "superadmin" ? "var(--color-primary)" : "transparent",
-            color:
-              mode === "superadmin"
-                ? "var(--color-background)"
-                : "var(--color-text)",
-          }}
-        >
-          Super Admin
-        </button>
-      </div>
-
       {mode === "couple" ? (
         <div>
           <label
