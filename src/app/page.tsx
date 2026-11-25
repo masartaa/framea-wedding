@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export default function FrameaLandingPage() {
   return (
     <main
-      className="flex min-h-dvh w-full items-center justify-center px-5 py-12"
+      className="admin-monochrome flex min-h-dvh w-full items-center justify-center px-5 py-12"
       style={{
         backgroundColor:
           "color-mix(in srgb, var(--color-secondary) 55%, var(--color-background))",
@@ -27,7 +27,7 @@ export default function FrameaLandingPage() {
         style={{
           backgroundColor: "var(--color-background)",
           borderColor:
-            "color-mix(in srgb, var(--color-primary) 45%, transparent)",
+            "color-mix(in srgb, var(--color-primary) 28%, transparent)",
         }}
       >
         <p
