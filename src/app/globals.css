@@ -26,6 +26,16 @@ body {
   font-family: var(--font-heading);
 }
 
+.admin-monochrome {
+  --color-primary: #18181b;
+  --color-secondary: #f4f4f5;
+  --color-background: #ffffff;
+  --color-text: #18181b;
+  --color-accent: #3f3f46;
+  color: var(--color-text);
+  background-color: var(--color-background);
+}
+
 .reveal-base {
   opacity: 0;
   transform: translateY(16px);

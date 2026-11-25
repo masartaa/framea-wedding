@@ -14,5 +14,5 @@ export default function AdminRootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <>{children}</>;
+  return <div className="admin-monochrome min-h-dvh">{children}</div>;
 }
