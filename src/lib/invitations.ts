@@ -4,6 +4,7 @@ import { getDb } from "@/db";
 import { guests, invitations, media, wishes } from "@/db/schema";
 import {
   DEFAULT_SITE_CONFIG,
+  ensureAllSections,
   siteConfigSchema,
   type SiteConfig,
 } from "@/lib/config-schema";
@@ -49,7 +50,10 @@ export interface InvitationSummary {
 function parseStoredConfig(raw: unknown): SiteConfig {
   const parsed = siteConfigSchema.safeParse(raw);
   if (parsed.success) {
-    return parsed.data;
+    return {
+      ...parsed.data,
+      sections: ensureAllSections(parsed.data.sections),
+    };
   }
   console.warn(
     "Data konfigurasi undangan tidak valid, menggunakan fallback default."

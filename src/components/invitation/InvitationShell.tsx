@@ -19,6 +19,8 @@ import { HeroPhotoFrame } from "./HeroPhotoFrame";
 import { MusicPlayer, type MusicPlayerHandle } from "./MusicPlayer";
 import { Ornament } from "./Ornament";
 import { Reveal } from "./Reveal";
+import { RsvpSection } from "./RsvpSection";
+import { StorySection } from "./StorySection";
 import { WishesSection } from "./WishesSection";
 
 interface InvitationShellProps {
@@ -87,6 +89,14 @@ export function InvitationShell({
         );
       case "mempelai":
         return <CoupleSection key="mempelai" config={config} />;
+      case "kisah":
+        return (
+          <StorySection
+            key="kisah"
+            story={config.story}
+            ornaments={config.theme.ornaments}
+          />
+        );
       case "acara":
         return <EventSection key="acara" config={config} />;
       case "galeri":
@@ -95,6 +105,16 @@ export function InvitationShell({
             key="galeri"
             photoUrls={config.media.galleryPhotoUrls}
             ornaments={config.theme.ornaments}
+          />
+        );
+      case "rsvp":
+        return (
+          <RsvpSection
+            key="rsvp"
+            rsvpConfig={config.rsvp}
+            ornaments={config.theme.ornaments}
+            previewMode={previewMode}
+            invitationSlug={invitationSlug}
           />
         );
       case "ucapan":

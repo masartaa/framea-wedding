@@ -102,3 +102,26 @@ export const media = pgTable(
   },
   (table) => [index("media_invitation_idx").on(table.invitationId)]
 );
+
+export const rsvps = pgTable(
+  "rsvps",
+  {
+    id: serial("id").primaryKey(),
+    invitationId: integer("invitation_id").references(() => invitations.id, {
+      onDelete: "cascade",
+    }),
+    name: varchar("name", { length: 60 }).notNull(),
+    attendance: varchar("attendance", { length: 20 }).notNull(),
+    guestCount: integer("guest_count").default(1).notNull(),
+    note: varchar("note", { length: 200 }).default("").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index("rsvps_invitation_created_idx").on(
+      table.invitationId,
+      table.createdAt
+    ),
+  ]
+);

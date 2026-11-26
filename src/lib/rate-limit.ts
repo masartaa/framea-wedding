@@ -10,8 +10,12 @@ const FAILED_LOGIN_DELAY_MS = 800;
 const WISH_WINDOW_MS = 10 * 60 * 1000; // 10 menit
 const MAX_WISHES_PER_WINDOW = 3;
 
+const RSVP_WINDOW_MS = 10 * 60 * 1000; // 10 menit
+const MAX_RSVPS_PER_WINDOW = 5;
+
 const failedAttemptsByIp = new Map<string, AttemptRecord>();
 const wishSubmissionsByIp = new Map<string, AttemptRecord>();
+const rsvpSubmissionsByIp = new Map<string, AttemptRecord>();
 
 function cleanupExpired(store: Map<string, AttemptRecord>, now: number): void {
   if (store.size < 200) {
@@ -135,6 +139,49 @@ export function recordWishSubmission(ip: string): void {
     wishSubmissionsByIp.set(ip, {
       count: 1,
       resetAt: now + WISH_WINDOW_MS,
+    });
+    return;
+  }
+
+  existing.count += 1;
+}
+
+export function checkRsvpRateLimit(ip: string): {
+  allowed: boolean;
+  retryAfterSeconds: number;
+} {
+  const now = Date.now();
+  cleanupExpired(rsvpSubmissionsByIp, now);
+
+  const record = rsvpSubmissionsByIp.get(ip);
+  if (!record) {
+    return { allowed: true, retryAfterSeconds: 0 };
+  }
+
+  if (record.resetAt <= now) {
+    rsvpSubmissionsByIp.delete(ip);
+    return { allowed: true, retryAfterSeconds: 0 };
+  }
+
+  if (record.count >= MAX_RSVPS_PER_WINDOW) {
+    const retryAfterSeconds = Math.max(
+      1,
+      Math.ceil((record.resetAt - now) / 1000)
+    );
+    return { allowed: false, retryAfterSeconds };
+  }
+
+  return { allowed: true, retryAfterSeconds: 0 };
+}
+
+export function recordRsvpSubmission(ip: string): void {
+  const now = Date.now();
+  const existing = rsvpSubmissionsByIp.get(ip);
+
+  if (!existing || existing.resetAt <= now) {
+    rsvpSubmissionsByIp.set(ip, {
+      count: 1,
+      resetAt: now + RSVP_WINDOW_MS,
     });
     return;
   }

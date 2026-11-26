@@ -66,10 +66,67 @@ export const heroDecorationSchema = z.enum([
 export const sectionIdSchema = z.enum([
   "hero",
   "mempelai",
+  "kisah",
   "acara",
   "galeri",
+  "rsvp",
   "ucapan",
 ]);
+
+export const storyItemSchema = z.object({
+  id: z.string().trim().min(1).max(40),
+  period: z
+    .string()
+    .trim()
+    .min(1, "Periode atau tahun wajib diisi.")
+    .max(40, "Periode maksimal 40 karakter."),
+  title: z
+    .string()
+    .trim()
+    .min(1, "Judul momen wajib diisi.")
+    .max(80, "Judul momen maksimal 80 karakter."),
+  description: z
+    .string()
+    .trim()
+    .min(1, "Cerita momen wajib diisi.")
+    .max(400, "Cerita momen maksimal 400 karakter."),
+});
+
+export const DEFAULT_STORY_CONFIG = {
+  title: "Kisah Kami",
+  introText:
+    "Setiap langkah dan pertemuan sederhana menjadi awal dari perjalanan panjang menuju hari bahagia kami.",
+  items: [
+    {
+      id: "kisah-1",
+      period: "Tahap 1",
+      title: "Awal Pertemuan",
+      description:
+        "Ceritakan secara singkat bagaimana kalian pertama kali bertemu dan saling mengenal.",
+    },
+    {
+      id: "kisah-2",
+      period: "Tahap 2",
+      title: "Menjalani Bersama",
+      description:
+        "Bagikan momen penting yang membuat kalian semakin yakin untuk melangkah bersama.",
+    },
+    {
+      id: "kisah-3",
+      period: "Tahap 3",
+      title: "Menuju Pernikahan",
+      description:
+        "Dengan doa restu kedua keluarga, kami memantapkan hati menuju ikatan pernikahan.",
+    },
+  ],
+};
+
+export const DEFAULT_RSVP_CONFIG = {
+  title: "Konfirmasi Kehadiran",
+  introText:
+    "Mohon konfirmasi kehadiran Bapak/Ibu/Saudara/i agar kami dapat mempersiapkan penyambutan dengan baik.",
+  maxGuests: 5,
+};
 
 export const personSchema = z.object({
   nickname: z
@@ -190,6 +247,42 @@ export const siteConfigSchema = z.object({
     groom: personSchema,
     bride: personSchema,
   }),
+  story: z
+    .object({
+      title: z
+        .string()
+        .trim()
+        .min(1, "Judul kisah wajib diisi.")
+        .max(80, "Judul kisah maksimal 80 karakter."),
+      introText: z
+        .string()
+        .trim()
+        .max(300, "Teks pengantar kisah maksimal 300 karakter."),
+      items: z
+        .array(storyItemSchema)
+        .max(8, "Maksimal 8 momen kisah."),
+    })
+    .optional()
+    .default(DEFAULT_STORY_CONFIG),
+  rsvp: z
+    .object({
+      title: z
+        .string()
+        .trim()
+        .min(1, "Judul RSVP wajib diisi.")
+        .max(80, "Judul RSVP maksimal 80 karakter."),
+      introText: z
+        .string()
+        .trim()
+        .max(300, "Teks pengantar RSVP maksimal 300 karakter."),
+      maxGuests: z
+        .number()
+        .int()
+        .min(1, "Minimal 1 tamu.")
+        .max(10, "Maksimal 10 tamu per konfirmasi."),
+    })
+    .optional()
+    .default(DEFAULT_RSVP_CONFIG),
   media: z.object({
     heroPhotoUrl: optionalUrlSchema,
     galleryPhotoUrls: z
@@ -243,9 +336,33 @@ export const siteConfigSchema = z.object({
 
 export type SiteConfig = z.infer<typeof siteConfigSchema>;
 export type EventItem = z.infer<typeof eventItemSchema>;
+export type StoryItem = z.infer<typeof storyItemSchema>;
 export type ThemeColors = SiteConfig["theme"]["colors"];
 export type SectionItem = SiteConfig["sections"][number];
 export type SectionId = SectionItem["id"];
+
+export const ALL_SECTION_IDS: ReadonlyArray<SectionId> = [
+  "hero",
+  "mempelai",
+  "kisah",
+  "acara",
+  "galeri",
+  "rsvp",
+  "ucapan",
+];
+
+export function ensureAllSections(sections: SectionItem[]): SectionItem[] {
+  const existingIds = new Set(sections.map((item) => item.id));
+  const result = [...sections];
+
+  for (const sectionId of ALL_SECTION_IDS) {
+    if (!existingIds.has(sectionId)) {
+      result.push({ id: sectionId, enabled: true });
+    }
+  }
+
+  return result;
+}
 
 export function getInvitationEvents(config: SiteConfig): EventItem[] {
   if (Array.isArray(config.events) && config.events.length > 0) {
@@ -304,14 +421,24 @@ export const SECTION_LABELS: Record<
     description:
       "Teks pengantar, foto, nama lengkap, dan nama orang tua kedua mempelai.",
   },
+  kisah: {
+    label: "Our Story (Kisah Kami)",
+    description:
+      "Runtutan perjalanan kisah calon pengantin dalam format linimasa.",
+  },
   acara: {
     label: "Detail Acara & Peta",
     description:
       "Rangkaian acara (Akad, Resepsi, Ngunduh Mantu), tanggal, jam, lokasi, dan Google Maps.",
   },
   galeri: {
-    label: "Galeri Foto",
-    description: "Koleksi maksimal 6 foto dengan tampilan lightbox.",
+    label: "Galeri Slideshow",
+    description: "Koleksi maksimal 6 foto dalam slideshow interaktif dan lightbox.",
+  },
+  rsvp: {
+    label: "Konfirmasi Kehadiran (RSVP)",
+    description:
+      "Formulir konfirmasi kehadiran tamu beserta perkiraan jumlah tamu yang hadir.",
   },
   ucapan: {
     label: "Ucapan Tamu",
@@ -368,6 +495,8 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
       photoUrl: "",
     },
   },
+  story: DEFAULT_STORY_CONFIG,
+  rsvp: DEFAULT_RSVP_CONFIG,
   media: {
     heroPhotoUrl: "",
     galleryPhotoUrls: [],
@@ -398,8 +527,10 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   sections: [
     { id: "hero", enabled: true },
     { id: "mempelai", enabled: true },
+    { id: "kisah", enabled: true },
     { id: "acara", enabled: true },
     { id: "galeri", enabled: true },
+    { id: "rsvp", enabled: true },
     { id: "ucapan", enabled: true },
   ],
 };

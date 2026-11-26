@@ -1,7 +1,7 @@
 import { desc, eq } from "drizzle-orm";
 import { NextResponse, type NextRequest } from "next/server";
 import { getDb } from "@/db";
-import { guests, media, wishes } from "@/db/schema";
+import { guests, media, rsvps, wishes } from "@/db/schema";
 import { requireInvitationAccessSession } from "@/lib/auth";
 import { normalizeInvitationSlug } from "@/lib/invitation-slug";
 import { getInvitationBySlugFresh } from "@/lib/invitations";
@@ -29,7 +29,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
   try {
     const db = getDb();
-    const [dbGuests, dbWishes, dbMedia] = await Promise.all([
+    const [dbGuests, dbWishes, dbMedia, dbRsvps] = await Promise.all([
       db
         .select()
         .from(guests)
@@ -45,6 +45,11 @@ export async function GET(_request: NextRequest, context: RouteContext) {
         .from(media)
         .where(eq(media.invitationId, invitation.id))
         .orderBy(desc(media.createdAt)),
+      db
+        .select()
+        .from(rsvps)
+        .where(eq(rsvps.invitationId, invitation.id))
+        .orderBy(desc(rsvps.createdAt)),
     ]);
 
     const exportedAt = new Date().toISOString();
@@ -61,6 +66,14 @@ export async function GET(_request: NextRequest, context: RouteContext) {
         id: row.id,
         name: row.name,
         slug: row.slug,
+        createdAt: row.createdAt.toISOString(),
+      })),
+      rsvps: dbRsvps.map((row) => ({
+        id: row.id,
+        name: row.name,
+        attendance: row.attendance,
+        guestCount: row.guestCount,
+        note: row.note,
         createdAt: row.createdAt.toISOString(),
       })),
       wishes: dbWishes.map((row) => ({

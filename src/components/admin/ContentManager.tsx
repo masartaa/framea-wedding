@@ -10,6 +10,7 @@ import {
 } from "react";
 import {
   DEFAULT_SITE_CONFIG,
+  ensureAllSections,
   getInvitationEvents,
   SECTION_LABELS,
   siteConfigSchema,
@@ -23,6 +24,8 @@ import { EventsManager } from "./EventsManager";
 import { GuestsManager } from "./GuestsManager";
 import { InvitationPreview } from "./InvitationPreview";
 import { MediaManager } from "./MediaManager";
+import { RsvpManager } from "./RsvpManager";
+import { StoryManager } from "./StoryManager";
 import { ThemeEditor } from "./ThemeEditor";
 import { WishesModerator } from "./WishesModerator";
 
@@ -30,10 +33,12 @@ type ActiveTab =
   | "umum"
   | "acara"
   | "mempelai"
+  | "kisah"
   | "media"
   | "section"
   | "tema"
   | "tamu"
+  | "rsvp"
   | "ucapan"
   | "pratinjau";
 
@@ -57,10 +62,12 @@ const TABS: ReadonlyArray<{ id: ActiveTab; label: string }> = [
   { id: "umum", label: "Umum" },
   { id: "acara", label: "Acara" },
   { id: "mempelai", label: "Mempelai" },
+  { id: "kisah", label: "Kisah" },
   { id: "media", label: "Media" },
   { id: "tema", label: "Tema" },
   { id: "section", label: "Section" },
   { id: "tamu", label: "Tamu" },
+  { id: "rsvp", label: "RSVP" },
   { id: "ucapan", label: "Ucapan" },
   { id: "pratinjau", label: "Pratinjau" },
 ];
@@ -70,6 +77,7 @@ function normalizeConfigWithEvents(config: SiteConfig): SiteConfig {
   return {
     ...config,
     events,
+    sections: ensureAllSections(config.sections),
     general: syncPrimaryEventToGeneral(events, config.general),
   };
 }
@@ -102,6 +110,12 @@ function getTabForFieldPath(path: string): ActiveTab {
     path === "general.mapsUrl"
   ) {
     return "acara";
+  }
+  if (path.startsWith("story")) {
+    return "kisah";
+  }
+  if (path.startsWith("rsvp")) {
+    return "rsvp";
   }
   if (path.startsWith("media") || path.endsWith(".photoUrl")) {
     return "media";
@@ -528,7 +542,7 @@ export function ContentManager({
         <div
           role="tablist"
           aria-label="Menu pengaturan undangan"
-          className="mt-5 grid grid-cols-3 gap-2 rounded-2xl p-1.5 sm:grid-cols-5 lg:grid-cols-9"
+          className="mt-5 grid grid-cols-3 gap-2 rounded-2xl p-1.5 sm:grid-cols-4 lg:grid-cols-6"
           style={{
             backgroundColor: "var(--color-secondary)",
           }}
@@ -1024,6 +1038,17 @@ export function ContentManager({
         </section>
       ) : null}
 
+      {activeTab === "kisah" ? (
+        <StoryManager
+          story={draft.story}
+          fieldErrors={fieldErrors}
+          onChangeStory={(nextStory) =>
+            setDraft((prev) => ({ ...prev, story: nextStory }))
+          }
+          onClearError={clearFieldError}
+        />
+      ) : null}
+
       {activeTab === "media" ? (
         <MediaManager
           invitationSlug={invitationSlug}
@@ -1191,6 +1216,18 @@ export function ContentManager({
 
       {activeTab === "tamu" ? (
         <GuestsManager invitationSlug={invitationSlug} config={savedConfig} />
+      ) : null}
+
+      {activeTab === "rsvp" ? (
+        <RsvpManager
+          invitationSlug={invitationSlug}
+          rsvpConfig={draft.rsvp}
+          fieldErrors={fieldErrors}
+          onChangeRsvpConfig={(nextRsvp) =>
+            setDraft((prev) => ({ ...prev, rsvp: nextRsvp }))
+          }
+          onClearError={clearFieldError}
+        />
       ) : null}
 
       {activeTab === "ucapan" ? (
