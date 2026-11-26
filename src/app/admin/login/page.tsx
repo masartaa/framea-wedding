@@ -7,7 +7,7 @@ import { getAdminSession, isAuthConfigured } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Masuk Super Admin | Framea",
+  title: "Masuk Super Admin | Framea Wedding Invitation",
   description: "Halaman masuk pengelola utama Framea Wedding Invitation.",
   robots: {
     index: false,
@@ -47,10 +47,10 @@ export default async function AdminLoginPage() {
           }}
         >
           <div className="flex items-center justify-between gap-3">
-            <span className="font-heading text-base font-semibold text-white">
-              Framea
+            <span className="font-heading text-base leading-tight font-semibold text-white">
+              Framea Wedding Invitation
             </span>
-            <span className="rounded-md bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-200">
+            <span className="shrink-0 rounded-md bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-200">
               Pengelola Utama
             </span>
           </div>

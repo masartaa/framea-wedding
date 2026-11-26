@@ -7,7 +7,7 @@ import { getAdminSession } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Masuk Pemilik Undangan | Framea",
+  title: "Masuk Pemilik Undangan | Framea Wedding Invitation",
   description: "Halaman masuk untuk mengelola undangan pernikahan Anda.",
   robots: {
     index: false,
@@ -36,14 +36,14 @@ export default async function ClientLoginPage() {
           color: "var(--color-background)",
         }}
       >
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-3">
           <Link
             href="/"
-            className="font-heading inline-flex min-h-11 items-center text-xl font-semibold tracking-tight text-white transition-opacity hover:opacity-80 focus-visible:outline-white"
+            className="font-heading inline-flex min-h-11 items-center text-base leading-tight font-semibold tracking-tight text-white transition-opacity hover:opacity-80 focus-visible:outline-white sm:text-xl"
           >
-            Framea
+            Framea Wedding Invitation
           </Link>
-          <span className="text-xs text-zinc-300">Portal Pemilik</span>
+          <span className="shrink-0 text-xs text-zinc-300">Portal Pemilik</span>
         </div>
 
         <div className="my-6 lg:my-auto lg:py-10">
@@ -51,12 +51,12 @@ export default async function ClientLoginPage() {
             aria-hidden="true"
             className="mb-8 hidden aspect-[4/3] w-44 items-center justify-center rounded-t-full rounded-b-xl border border-zinc-700 p-2 lg:flex"
           >
-            <div className="flex h-full w-full flex-col items-center justify-center rounded-t-full rounded-b-lg border border-zinc-800 text-center">
+            <div className="flex h-full w-full flex-col items-center justify-center rounded-t-full rounded-b-lg border border-zinc-800 px-3 text-center">
               <span className="font-heading text-4xl font-semibold text-white">
                 F
               </span>
-              <span className="mt-1 text-[11px] text-zinc-300">
-                Studio Undangan
+              <span className="mt-1 text-[11px] leading-tight text-zinc-300">
+                Framea Wedding Invitation
               </span>
             </div>
           </div>
@@ -71,7 +71,7 @@ export default async function ClientLoginPage() {
         </div>
 
         <p className="hidden text-xs text-zinc-300 lg:block">
-          Akses privat khusus pemilik undangan Framea
+          Akses privat khusus pemilik undangan Framea Wedding Invitation
         </p>
       </aside>
 

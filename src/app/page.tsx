@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Framea: Undangan Pernikahan Digital",
+  title: "Framea Wedding Invitation",
   description:
     "Platform undangan pernikahan digital yang ringan, modern, dan personal.",
   robots: {
@@ -27,16 +27,16 @@ export default function FrameaLandingPage() {
             "color-mix(in srgb, var(--color-primary) 16%, transparent)",
         }}
       >
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
+        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-5 py-4 sm:px-8">
           <Link
             href="/"
-            className="font-heading inline-flex min-h-11 items-center text-xl font-semibold tracking-tight transition-opacity hover:opacity-75"
+            className="font-heading inline-flex min-h-11 items-center text-base leading-tight font-semibold tracking-tight transition-opacity hover:opacity-75 sm:text-xl"
           >
-            Framea
+            Framea Wedding Invitation
           </Link>
           <Link
             href="/login"
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-sm font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
+            className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border px-4 text-sm font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
             style={{
               borderColor:
                 "color-mix(in srgb, var(--color-primary) 32%, transparent)",
@@ -138,11 +138,11 @@ export default function FrameaLandingPage() {
                         "color-mix(in srgb, var(--color-primary) 45%, transparent)",
                     }}
                   />
-                  <p className="font-heading text-lg leading-snug font-semibold">
-                    Framea
+                  <p className="font-heading text-base leading-snug font-semibold">
+                    Framea Wedding Invitation
                   </p>
                   <p className="mt-1 text-xs opacity-75">
-                    Edisi Undangan Digital
+                    Undangan Pernikahan Digital
                   </p>
                 </div>
 

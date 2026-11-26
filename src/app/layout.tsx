@@ -3,8 +3,8 @@ import { ALL_FONT_VARIABLES } from "@/lib/fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Framea: Undangan Pernikahan Digital",
-  description: "Undangan pernikahan digital Framea.",
+  title: "Framea Wedding Invitation",
+  description: "Undangan pernikahan digital Framea Wedding Invitation.",
   robots: {
     index: false,
     follow: false,
