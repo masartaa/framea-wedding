@@ -43,21 +43,36 @@ export default async function AdminLoginPage() {
           className="px-6 py-6 sm:px-8"
           style={{
             backgroundColor: "var(--color-primary)",
-            color: "var(--color-background)",
+            color: "var(--color-on-primary)",
           }}
         >
           <div className="flex items-center justify-between gap-3">
-            <span className="font-heading text-base leading-tight font-semibold text-white">
+            <span
+              className="font-heading text-base leading-tight font-semibold"
+              style={{ color: "var(--color-on-primary)" }}
+            >
               Framea Wedding Invitation
             </span>
-            <span className="shrink-0 rounded-md bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-200">
+            <span
+              className="shrink-0 rounded-md px-2.5 py-1 text-xs font-medium"
+              style={{
+                backgroundColor: "var(--color-primary-surface)",
+                color: "var(--color-on-primary)",
+              }}
+            >
               Pengelola Utama
             </span>
           </div>
-          <h1 className="font-heading mt-4 text-2xl font-semibold text-white">
+          <h1
+            className="font-heading mt-4 text-2xl font-semibold"
+            style={{ color: "var(--color-on-primary)" }}
+          >
             Masuk Super Admin
           </h1>
-          <p className="mt-1.5 text-sm leading-relaxed text-zinc-300">
+          <p
+            className="mt-1.5 text-sm leading-relaxed"
+            style={{ color: "var(--color-on-primary-muted)" }}
+          >
             Buat undangan baru, atur slug tautan, dan kelola sandi akses klien.
           </p>
         </div>

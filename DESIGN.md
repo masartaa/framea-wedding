@@ -11,13 +11,13 @@ Framea memiliki dua karakter visual yang terpisah secara jelas sesuai fungsinya:
    - **Motif identitas:** Tipografi serif kontras pada nama mempelai, garis pemisah tipis, bingkai foto kubah/lingkaran, dan kartu acara berpusat pada jadwal.
 
 2. **Halaman Awal & Masuk (`/`, `/login`, `/admin/login`, `/[slug]/not-found`)**
-   - **Peran:** Pintu gerbang editorial monokrom bergaya cetak (*Print Editorial*) untuk menyambut tamu dan mengarahkan pemilik undangan atau Super Admin ke ruang kerjanya.
-   - **Gaya visual:** Kontras tinta hitam pekat (`#18181B`) dan kertas putih (`#FFFFFF` / `#F4F4F5`) dengan tipografi serif `Playfair Display` ekspresif, pembagi garis tipis `1px`, dan motif bingkai kubah (arch) monokrom.
+   - **Peran:** Pintu gerbang editorial bergaya cetak (*Print Editorial*) dengan palet **Espresso & Linen** untuk menyambut tamu dan mengarahkan pemilik undangan atau Super Admin ke ruang kerjanya.
+   - **Gaya visual:** Kontras Deep Espresso (`#3B2820`) dan Warm Linen (`#FAF7F2` / `#EFE9DF`) dengan tinta Dark Roast (`#261A15`), aksen Burnished Chestnut (`#7A4E2D`), tipografi serif `Playfair Display` ekspresif, pembagi garis tipis `1px`, dan motif bingkai kubah (arch).
    - **Dial:** `ENERGY 2 / RHYTHM 3 / MOTION 1` (komposisi asimetris dan split-screen pada desktop, merapat rapi di HP 375 px tanpa animasi dekoratif berlebih).
 
 3. **Dashboard Admin (`/admin`, `/admin/[slug]`)**
-   - **Peran:** Ruang kerja monokrom yang tenang dan fokus agar pemilik undangan dan Super Admin dapat mengelola konten tanpa bias warna tema tertentu.
-   - **Gaya visual:** Studio editorial monokrom dengan tinta gelap (`#18181B`), permukaan putih bersih (`#FFFFFF`), permukaan sekunder halus (`#F4F4F5`), dan aksen abu gelap (`#3F3F46`).
+   - **Peran:** Ruang kerja yang serasi dengan identitas **Espresso & Linen** agar pemilik undangan dan Super Admin nyaman mengelola konten, sementara pratinjau undangan tetap menampilkan palet tema milik masing-masing pasangan secara terisolasi.
+   - **Gaya visual:** Permukaan Warm Linen (`#FAF7F2`) dan Soft Sand (`#EFE9DF`) dengan kontrol utama Deep Espresso (`#3B2820`), tinta Dark Roast (`#261A15`), dan aksen Burnished Chestnut (`#7A4E2D`).
    - **Dial:** `ENERGY 1 / RHYTHM 2 / MOTION 1` (fokus kejelasan alur kerja, tanpa animasi dekoratif).
 
 ## Palette & Contrast Rules
@@ -45,3 +45,4 @@ Framea memiliki dua karakter visual yang terpisah secara jelas sesuai fungsinya:
 - **Layout satu kolom mobile-first di `/[slug]`:** Mayoritas tamu membuka tautan undangan dari WhatsApp di layar ponsel 375 px.
 - **Komposisi berbeda pada `/`, `/login`, `/admin/login`, dan `/[slug]/not-found`:** Membedakan fungsi tiap halaman secara visual (editorial pengantar di beranda, panel masuk pasangan di `/login`, lembar khusus Super Admin berbatas atas tinta di `/admin/login`, dan pemberitahuan langsung tanpa kartu berat di 404).
 - **Kartu di daftar undangan, acara, dan ucapan:** Memisahkan unit data dengan aksi mandiri (edit, salin tautan, moderasi, hapus).
+- **Ilustrasi garis halus botani & amplop segel lilin (`EditorialArtwork.tsx`):** Menguatkan identitas undangan pernikahan cetak secara langsung dengan bobot sangat ringan (< 3 KB SVG murni) dan otomatis mengikuti warna tema aktif.

@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  BotanicalCorner,
+  BotanicalSprig,
+  EnvelopeSealIllustration,
+} from "@/components/landing/EditorialArtwork";
+import { LandingShowcase } from "@/components/landing/LandingShowcase";
 
 export const metadata: Metadata = {
   title: "Framea Wedding Invitation",
@@ -36,7 +42,7 @@ export default function FrameaLandingPage() {
           </Link>
           <Link
             href="/login"
-            className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border px-4 text-sm font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
+            className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border px-4 text-sm font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
             style={{
               borderColor:
                 "color-mix(in srgb, var(--color-primary) 32%, transparent)",
@@ -54,6 +60,10 @@ export default function FrameaLandingPage() {
           className="grid grid-cols-1 items-center gap-8 md:grid-cols-12 md:gap-10"
         >
           <div className="md:col-span-7">
+            <BotanicalSprig
+              className="mb-3 h-7 w-32 opacity-75"
+            />
+
             <h1
               id="hero-framea-title"
               className="font-heading text-[clamp(2.25rem,5vw,3.65rem)] leading-[1.08] font-semibold tracking-tight"
@@ -92,100 +102,61 @@ export default function FrameaLandingPage() {
             </div>
           </div>
 
-          <div
-            aria-hidden="true"
-            className="flex justify-center md:col-span-5 md:justify-end"
-          >
-            <div
-              className="w-full max-w-[300px] rounded-2xl border p-5 sm:p-6"
-              style={{
-                backgroundColor: "var(--color-secondary)",
-                borderColor:
-                  "color-mix(in srgb, var(--color-primary) 16%, transparent)",
-              }}
-            >
-              <div
-                className="relative flex aspect-[3/4] flex-col items-center justify-between rounded-t-full rounded-b-xl border px-6 py-8 text-center"
-                style={{
-                  backgroundColor: "var(--color-background)",
-                  borderColor: "var(--color-primary)",
-                }}
-              >
-                <div
-                  className="pointer-events-none absolute inset-2 rounded-t-full rounded-b-lg border"
-                  style={{
-                    borderColor:
-                      "color-mix(in srgb, var(--color-primary) 24%, transparent)",
-                  }}
-                />
-
-                <span
-                  className="h-7 w-px"
-                  style={{
-                    backgroundColor:
-                      "color-mix(in srgb, var(--color-primary) 40%, transparent)",
-                  }}
-                />
-
-                <div className="relative z-10 flex flex-col items-center">
-                  <span className="font-heading text-5xl leading-none font-semibold">
-                    F
-                  </span>
-                  <div
-                    className="my-4 h-px w-10"
-                    style={{
-                      backgroundColor:
-                        "color-mix(in srgb, var(--color-primary) 45%, transparent)",
-                    }}
-                  />
-                  <p className="font-heading text-base leading-snug font-semibold">
-                    Framea Wedding Invitation
-                  </p>
-                  <p className="mt-1 text-xs opacity-75">
-                    Undangan Pernikahan Digital
-                  </p>
-                </div>
-
-                <div className="relative z-10 w-full border-t pt-3 text-[11px] opacity-75"
-                  style={{
-                    borderColor:
-                      "color-mix(in srgb, var(--color-primary) 18%, transparent)",
-                  }}
-                >
-                  Akses Privat via Tautan
-                </div>
-              </div>
+          <div className="relative flex justify-center overflow-hidden p-2 md:col-span-5 md:justify-end">
+            <BotanicalCorner className="pointer-events-none absolute top-0 left-0 h-20 w-20 opacity-45" />
+            <BotanicalCorner className="pointer-events-none absolute right-0 bottom-0 h-20 w-20 rotate-180 opacity-45" />
+            <div className="relative z-10 w-full">
+              <LandingShowcase />
             </div>
           </div>
         </section>
 
         <section
           aria-labelledby="panel-pemilik-heading"
-          className="flex flex-col gap-5 rounded-2xl px-6 py-7 sm:px-8 sm:py-8 md:flex-row md:items-center md:justify-between"
+          className="relative overflow-hidden rounded-2xl px-6 py-7 sm:px-8 sm:py-8"
           style={{
             backgroundColor: "var(--color-primary)",
-            color: "var(--color-background)",
+            color: "var(--color-on-primary)",
           }}
         >
-          <div className="max-w-xl">
-            <h2
-              id="panel-pemilik-heading"
-              className="font-heading text-2xl leading-tight font-semibold"
-            >
-              Kelola undangan Anda
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-zinc-300">
-              Masuk menggunakan slug dan sandi undangan untuk memperbarui teks,
-              foto, tema, dan daftar tamu kapan saja.
-            </p>
-          </div>
+          <BotanicalCorner className="pointer-events-none absolute -top-3 -right-3 h-24 w-24 rotate-90 opacity-20" />
+          <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
+              <div
+                className="hidden shrink-0 sm:block"
+                style={{ color: "var(--color-on-primary-muted)" }}
+              >
+                <EnvelopeSealIllustration className="h-20 w-28" />
+              </div>
 
-          <Link
-            href="/login"
-            className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-white px-6 text-sm font-semibold text-zinc-900 transition-colors hover:bg-zinc-200 active:bg-zinc-300 focus-visible:outline-white"
-          >
-            Masuk Pemilik Undangan
-          </Link>
+              <div className="max-w-lg">
+                <h2
+                  id="panel-pemilik-heading"
+                  className="font-heading text-2xl leading-tight font-semibold"
+                >
+                  Kelola undangan Anda
+                </h2>
+                <p
+                  className="mt-2 text-sm leading-relaxed"
+                  style={{ color: "var(--color-on-primary-muted)" }}
+                >
+                  Masuk menggunakan slug dan sandi undangan untuk memperbarui
+                  teks, foto, tema, dan daftar tamu kapan saja.
+                </p>
+              </div>
+            </div>
+
+            <Link
+              href="/login"
+              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl px-6 text-sm font-semibold transition-colors hover:bg-[var(--color-secondary)] active:opacity-85 focus-visible:outline-[var(--color-on-primary)]"
+              style={{
+                backgroundColor: "var(--color-background)",
+                color: "var(--color-primary)",
+              }}
+            >
+              Masuk Pemilik Undangan
+            </Link>
+          </div>
         </section>
       </main>
 

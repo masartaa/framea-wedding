@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/admin/LoginForm";
+import {
+  BotanicalCorner,
+  EnvelopeSealIllustration,
+} from "@/components/landing/EditorialArtwork";
 import { getAdminSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -30,47 +34,67 @@ export default async function ClientLoginPage() {
       }}
     >
       <aside
-        className="flex flex-col justify-between px-6 py-7 sm:px-10 lg:col-span-5 lg:px-12 lg:py-12"
+        className="relative flex flex-col justify-between overflow-hidden px-6 py-7 sm:px-10 lg:col-span-5 lg:px-12 lg:py-12"
         style={{
           backgroundColor: "var(--color-primary)",
-          color: "var(--color-background)",
+          color: "var(--color-on-primary)",
         }}
       >
-        <div className="flex items-center justify-between gap-3">
+        <BotanicalCorner className="pointer-events-none absolute -right-4 -bottom-4 hidden h-36 w-36 rotate-180 opacity-20 lg:block" />
+
+        <div className="relative z-10 flex items-center justify-between gap-3">
           <Link
             href="/"
-            className="font-heading inline-flex min-h-11 items-center text-base leading-tight font-semibold tracking-tight text-white transition-opacity hover:opacity-80 focus-visible:outline-white sm:text-xl"
+            className="font-heading inline-flex min-h-11 items-center text-base leading-tight font-semibold tracking-tight transition-opacity hover:opacity-80 focus-visible:outline-[var(--color-on-primary)] sm:text-xl"
+            style={{ color: "var(--color-on-primary)" }}
           >
             Framea Wedding Invitation
           </Link>
-          <span className="shrink-0 text-xs text-zinc-300">Portal Pemilik</span>
+          <span
+            className="shrink-0 text-xs"
+            style={{ color: "var(--color-on-primary-muted)" }}
+          >
+            Portal Pemilik
+          </span>
         </div>
 
-        <div className="my-6 lg:my-auto lg:py-10">
+        <div className="relative z-10 my-6 lg:my-auto lg:py-10">
           <div
             aria-hidden="true"
-            className="mb-8 hidden aspect-[4/3] w-44 items-center justify-center rounded-t-full rounded-b-xl border border-zinc-700 p-2 lg:flex"
+            className="mb-8 hidden w-56 items-center justify-center rounded-t-full rounded-b-2xl border p-4 lg:flex"
+            style={{ borderColor: "var(--color-primary-border)" }}
           >
-            <div className="flex h-full w-full flex-col items-center justify-center rounded-t-full rounded-b-lg border border-zinc-800 px-3 text-center">
-              <span className="font-heading text-4xl font-semibold text-white">
-                F
-              </span>
-              <span className="mt-1 text-[11px] leading-tight text-zinc-300">
-                Framea Wedding Invitation
-              </span>
+            <div
+              className="flex w-full flex-col items-center justify-center rounded-t-full rounded-b-xl border px-4 py-6 text-center"
+              style={{
+                borderColor:
+                  "color-mix(in srgb, var(--color-primary-border) 60%, transparent)",
+                color: "var(--color-on-primary-muted)",
+              }}
+            >
+              <EnvelopeSealIllustration className="h-28 w-40" />
             </div>
           </div>
 
-          <p className="font-heading text-2xl leading-snug font-semibold text-white sm:text-3xl">
+          <p
+            className="font-heading text-2xl leading-snug font-semibold sm:text-3xl"
+            style={{ color: "var(--color-on-primary)" }}
+          >
             Atur detail hari bahagia Anda dari satu tempat.
           </p>
-          <p className="mt-3 max-w-sm text-sm leading-relaxed text-zinc-300">
+          <p
+            className="mt-3 max-w-sm text-sm leading-relaxed"
+            style={{ color: "var(--color-on-primary-muted)" }}
+          >
             Perbarui rangkaian acara, unggah foto galeri, pilih tema warna, dan
             kelola daftar tamu WhatsApp secara langsung.
           </p>
         </div>
 
-        <p className="hidden text-xs text-zinc-300 lg:block">
+        <p
+          className="hidden text-xs lg:block"
+          style={{ color: "var(--color-on-primary-muted)" }}
+        >
           Akses privat khusus pemilik undangan Framea Wedding Invitation
         </p>
       </aside>

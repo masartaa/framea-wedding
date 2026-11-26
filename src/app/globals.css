@@ -78,11 +78,15 @@ body {
 }
 
 .admin-monochrome {
-  --color-primary: #18181b;
-  --color-secondary: #f4f4f5;
-  --color-background: #ffffff;
-  --color-text: #18181b;
-  --color-accent: #3f3f46;
+  --color-primary: #3b2820;
+  --color-secondary: #efe9df;
+  --color-background: #faf7f2;
+  --color-text: #261a15;
+  --color-accent: #7a4e2d;
+  --color-on-primary: #faf7f2;
+  --color-on-primary-muted: #e6dad0;
+  --color-primary-surface: #2a1c16;
+  --color-primary-border: #634639;
   color: var(--color-text);
   background-color: var(--color-background);
 }

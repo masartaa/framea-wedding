@@ -351,7 +351,7 @@ export function GuestsManager({ invitationSlug, config }: GuestsManagerProps) {
           <button
             type="button"
             onClick={() => setWaTemplate(createDefaultWhatsAppTemplate(config))}
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
             style={{
               backgroundColor: "var(--color-background)",
               borderColor:
@@ -454,7 +454,7 @@ export function GuestsManager({ invitationSlug, config }: GuestsManagerProps) {
                       onClick={() =>
                         void handleCopy(`link-${guest.id}`, personalUrl)
                       }
-                      className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
+                      className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
                       style={{
                         backgroundColor: "var(--color-background)",
                         borderColor: "var(--color-primary)",
@@ -497,7 +497,7 @@ export function GuestsManager({ invitationSlug, config }: GuestsManagerProps) {
                           type="button"
                           disabled={deletingId === guest.id}
                           onClick={() => setConfirmDeleteId(null)}
-                          className="inline-flex min-h-11 items-center justify-center rounded-xl border px-3 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
+                          className="inline-flex min-h-11 items-center justify-center rounded-xl border px-3 text-xs font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
                           style={{
                             backgroundColor: "var(--color-background)",
                             borderColor:
@@ -523,7 +523,7 @@ export function GuestsManager({ invitationSlug, config }: GuestsManagerProps) {
                       <button
                         type="button"
                         onClick={() => setConfirmDeleteId(guest.id)}
-                        className="ml-auto inline-flex min-h-11 items-center justify-center rounded-xl border px-3.5 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
+                        className="ml-auto inline-flex min-h-11 items-center justify-center rounded-xl border px-3.5 text-xs font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
                         style={{
                           backgroundColor: "var(--color-background)",
                           borderColor:

@@ -606,7 +606,7 @@ export function ImageCropModal({
               setZoom(1);
               setOffset({ x: 0, y: 0 });
             }}
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-50"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80 disabled:opacity-50"
             style={{
               backgroundColor: "var(--color-background)",
               borderColor:
@@ -622,7 +622,7 @@ export function ImageCropModal({
                 type="button"
                 disabled={busy}
                 onClick={onSkip}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-50"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80 disabled:opacity-50"
                 style={{
                   backgroundColor: "var(--color-background)",
                   borderColor:

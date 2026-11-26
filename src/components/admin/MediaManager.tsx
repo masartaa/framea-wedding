@@ -539,7 +539,7 @@ export function MediaManager({
                   type="button"
                   disabled={isBusy}
                   onClick={() => onChangeHeroPhoto("")}
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-50"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80 disabled:opacity-50"
                   style={{
                     borderColor:
                       "color-mix(in srgb, var(--color-primary) 50%, transparent)",
@@ -636,7 +636,7 @@ export function MediaManager({
                   type="button"
                   disabled={isBusy}
                   onClick={() => onChangeCouplePhoto(who, "")}
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-50"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80 disabled:opacity-50"
                   style={{
                     backgroundColor: "var(--color-background)",
                     borderColor:
@@ -705,7 +705,7 @@ export function MediaManager({
                     disabled={index === 0 || isBusy}
                     onClick={() => moveGalleryPhoto(index, -1)}
                     aria-label={`Geser foto ${index + 1} ke kiri`}
-                    className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border text-sm transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-40"
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border text-sm transition-colors hover:bg-[var(--color-secondary)] active:opacity-80 disabled:opacity-40"
                     style={{
                       backgroundColor: "var(--color-background)",
                       borderColor:
@@ -719,7 +719,7 @@ export function MediaManager({
                     disabled={isBusy}
                     onClick={() => removeGalleryPhoto(index)}
                     aria-label={`Hapus foto ${index + 1}`}
-                    className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border px-2 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-40"
+                    className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border px-2 text-xs font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80 disabled:opacity-40"
                     style={{
                       backgroundColor: "var(--color-background)",
                       borderColor:
@@ -734,7 +734,7 @@ export function MediaManager({
                     disabled={index === galleryPhotos.length - 1 || isBusy}
                     onClick={() => moveGalleryPhoto(index, 1)}
                     aria-label={`Geser foto ${index + 1} ke kanan`}
-                    className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border text-sm transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-40"
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border text-sm transition-colors hover:bg-[var(--color-secondary)] active:opacity-80 disabled:opacity-40"
                     style={{
                       backgroundColor: "var(--color-background)",
                       borderColor:
@@ -851,7 +851,7 @@ export function MediaManager({
                   type="button"
                   disabled={isBusy}
                   onClick={() => onChangeMusic("", "")}
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
                   style={{
                     backgroundColor: "var(--color-background)",
                     borderColor:
@@ -945,7 +945,7 @@ export function MediaManager({
                     <button
                       type="button"
                       onClick={() => void togglePresetPreview(preset.id)}
-                      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border px-3 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border px-3 text-xs font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
                       style={{
                         backgroundColor: "var(--color-background)",
                         borderColor:

@@ -709,7 +709,7 @@ export function ContentManager({
             <button
               type="button"
               onClick={() => setActiveTab("acara")}
-              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border px-4 text-xs font-semibold transition-colors hover:bg-zinc-100 active:bg-zinc-200"
+              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border px-4 text-xs font-semibold transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
               style={{
                 backgroundColor: "var(--color-background)",
                 borderColor: "var(--color-primary)",
@@ -1146,7 +1146,7 @@ export function ContentManager({
                       disabled={isFirst}
                       onClick={() => moveSection(index, -1)}
                       aria-label={`Naikkan ${meta.label}`}
-                      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border text-base font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-40"
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border text-base font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80 disabled:opacity-40"
                       style={{
                         backgroundColor: "var(--color-background)",
                         borderColor:
@@ -1161,7 +1161,7 @@ export function ContentManager({
                       disabled={isLast}
                       onClick={() => moveSection(index, 1)}
                       aria-label={`Turunkan ${meta.label}`}
-                      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border text-base font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-40"
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border text-base font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80 disabled:opacity-40"
                       style={{
                         backgroundColor: "var(--color-background)",
                         borderColor:
@@ -1228,7 +1228,7 @@ export function ContentManager({
                 type="button"
                 disabled={isSaving}
                 onClick={() => setShowResetConfirm((prev) => !prev)}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl border px-5 text-sm font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-50"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border px-5 text-sm font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80 disabled:opacity-50"
                 style={{
                   backgroundColor: "var(--color-background)",
                   borderColor:
@@ -1270,7 +1270,7 @@ export function ContentManager({
                   type="button"
                   disabled={isSaving}
                   onClick={() => setShowResetConfirm(false)}
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-sm font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-sm font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
                   style={{
                     backgroundColor: "var(--color-background)",
                     borderColor: "var(--color-primary)",
@@ -1328,7 +1328,7 @@ export function ContentManager({
               <button
                 type="button"
                 onClick={handleExportConfigJson}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
                 style={{
                   backgroundColor: "var(--color-background)",
                   borderColor:
@@ -1339,7 +1339,7 @@ export function ContentManager({
               </button>
 
               <label
-                className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
                 style={{
                   backgroundColor: "var(--color-background)",
                   borderColor:

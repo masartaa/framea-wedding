@@ -63,7 +63,7 @@ export default async function AdminDashboardLayout({
             {isSuperAdmin ? (
               <Link
                 href="/admin"
-                className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-sm font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-sm font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
                 style={{
                   backgroundColor: "var(--color-background)",
                   borderColor:

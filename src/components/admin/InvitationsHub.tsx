@@ -568,7 +568,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                     <button
                       type="button"
                       onClick={() => void handleCopyLoginLink(item.slug)}
-                      className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
+                      className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
                       style={{
                         backgroundColor: "var(--color-background)",
                         borderColor:
@@ -585,7 +585,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                       onClick={() =>
                         isEditing ? setEditingSlug(null) : startEditing(item)
                       }
-                      className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
+                      className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
                       style={{
                         backgroundColor: isEditing
                           ? "var(--color-secondary)"
@@ -603,7 +603,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                           type="button"
                           disabled={deletingSlug === item.slug}
                           onClick={() => setConfirmDeleteSlug(null)}
-                          className="inline-flex min-h-11 items-center justify-center rounded-xl border px-3.5 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
+                          className="inline-flex min-h-11 items-center justify-center rounded-xl border px-3.5 text-xs font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
                           style={{
                             backgroundColor: "var(--color-background)",
                             borderColor:
@@ -634,7 +634,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                           setEditingSlug(null);
                           setConfirmDeleteSlug(item.slug);
                         }}
-                        className="ml-auto inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
+                        className="ml-auto inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
                         style={{
                           backgroundColor: "var(--color-background)",
                           borderColor:
@@ -729,7 +729,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                             type="button"
                             disabled={isSavingMeta}
                             onClick={() => void handleSaveMeta(item.slug, true)}
-                            className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
+                            className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
                             style={{
                               backgroundColor: "var(--color-background)",
                               borderColor:
