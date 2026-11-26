@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { ContentManager } from "@/components/admin/ContentManager";
 import { canAccessInvitation, getAdminSession } from "@/lib/auth";
@@ -5,6 +6,21 @@ import { getInvitationBySlugFresh } from "@/lib/invitations";
 
 interface AdminInvitationPageProps {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({
+  params,
+}: AdminInvitationPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const invitation = await getInvitationBySlugFresh(slug);
+  if (!invitation) {
+    return {
+      title: "Undangan Tidak Ditemukan | Framea Admin",
+    };
+  }
+  return {
+    title: `Kelola ${invitation.label} | Framea Admin`,
+  };
 }
 
 export default async function AdminInvitationPage({

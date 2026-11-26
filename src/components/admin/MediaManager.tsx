@@ -427,7 +427,7 @@ export function MediaManager({
   return (
     <section
       aria-label="Pengaturan Media"
-      className="space-y-6 rounded-3xl border px-5 py-6 sm:px-6"
+      className="space-y-6 rounded-2xl border px-5 py-6 sm:px-6"
       style={{
         backgroundColor: "var(--color-background)",
         borderColor:
@@ -448,7 +448,7 @@ export function MediaManager({
       {notice ? (
         <div
           role={notice.type === "error" ? "alert" : "status"}
-          className="rounded-2xl border px-4 py-3 text-sm font-medium"
+          className="rounded-xl border px-4 py-3 text-sm font-medium"
           style={{
             backgroundColor:
               notice.type === "info"
@@ -468,7 +468,6 @@ export function MediaManager({
         </div>
       ) : null}
 
-      {/* Foto Hero */}
       <div
         className="rounded-2xl border p-4"
         style={{
@@ -494,7 +493,7 @@ export function MediaManager({
                 className="object-cover"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center px-2 text-center text-xs opacity-65">
+              <div className="flex h-full w-full items-center justify-center px-2 text-center text-xs opacity-75">
                 Belum ada foto
               </div>
             )}
@@ -511,8 +510,8 @@ export function MediaManager({
 
             <div className="flex flex-wrap items-center gap-2">
               <label
-                className={`inline-flex min-h-11 items-center justify-center rounded-full px-5 text-xs font-semibold ${
-                  isBusy ? "pointer-events-none opacity-60" : "cursor-pointer"
+                className={`inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80 ${
+                  isBusy ? "pointer-events-none opacity-60" : ""
                 }`}
                 style={{
                   backgroundColor: "var(--color-primary)",
@@ -540,7 +539,7 @@ export function MediaManager({
                   type="button"
                   disabled={isBusy}
                   onClick={() => onChangeHeroPhoto("")}
-                  className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-4 text-xs font-medium disabled:opacity-50"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-50"
                   style={{
                     borderColor:
                       "color-mix(in srgb, var(--color-primary) 50%, transparent)",
@@ -554,7 +553,6 @@ export function MediaManager({
         </div>
       </div>
 
-      {/* Foto Kedua Mempelai */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {(
           [
@@ -596,21 +594,21 @@ export function MediaManager({
                   className="object-cover"
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center px-2 text-xs opacity-65">
+                <div className="flex h-full w-full items-center justify-center px-2 text-xs opacity-75">
                   Kosong
                 </div>
               )}
             </div>
 
             <h3 className="mt-3 text-sm font-semibold">{title}</h3>
-            <p className="mt-0.5 text-[11px] opacity-70">
+            <p className="mt-0.5 text-[11px] opacity-75">
               Bingkai bulat rasio 1:1
             </p>
 
             <div className="mt-3 flex flex-wrap justify-center gap-2">
               <label
-                className={`inline-flex min-h-11 items-center justify-center rounded-full px-4 text-xs font-semibold ${
-                  isBusy ? "pointer-events-none opacity-60" : "cursor-pointer"
+                className={`inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80 ${
+                  isBusy ? "pointer-events-none opacity-60" : ""
                 }`}
                 style={{
                   backgroundColor: "var(--color-primary)",
@@ -638,7 +636,7 @@ export function MediaManager({
                   type="button"
                   disabled={isBusy}
                   onClick={() => onChangeCouplePhoto(who, "")}
-                  className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-4 text-xs font-medium disabled:opacity-50"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-50"
                   style={{
                     backgroundColor: "var(--color-background)",
                     borderColor:
@@ -653,7 +651,6 @@ export function MediaManager({
         ))}
       </div>
 
-      {/* Galeri Maksimal 6 Foto */}
       <div
         className="space-y-4 rounded-2xl border p-4"
         style={{
@@ -670,7 +667,7 @@ export function MediaManager({
             </p>
           </div>
           <span
-            className="rounded-full px-3 py-1 text-xs font-medium"
+            className="rounded-md px-2.5 py-1 text-xs font-medium"
             style={{
               backgroundColor: "var(--color-secondary)",
               color: "var(--color-accent)",
@@ -708,7 +705,7 @@ export function MediaManager({
                     disabled={index === 0 || isBusy}
                     onClick={() => moveGalleryPhoto(index, -1)}
                     aria-label={`Geser foto ${index + 1} ke kiri`}
-                    className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-lg border text-sm disabled:opacity-40"
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border text-sm transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-40"
                     style={{
                       backgroundColor: "var(--color-background)",
                       borderColor:
@@ -722,7 +719,7 @@ export function MediaManager({
                     disabled={isBusy}
                     onClick={() => removeGalleryPhoto(index)}
                     aria-label={`Hapus foto ${index + 1}`}
-                    className="inline-flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-lg border px-2 text-xs font-medium disabled:opacity-40"
+                    className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border px-2 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-40"
                     style={{
                       backgroundColor: "var(--color-background)",
                       borderColor:
@@ -737,7 +734,7 @@ export function MediaManager({
                     disabled={index === galleryPhotos.length - 1 || isBusy}
                     onClick={() => moveGalleryPhoto(index, 1)}
                     aria-label={`Geser foto ${index + 1} ke kanan`}
-                    className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-lg border text-sm disabled:opacity-40"
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border text-sm transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-40"
                     style={{
                       backgroundColor: "var(--color-background)",
                       borderColor:
@@ -751,17 +748,17 @@ export function MediaManager({
             ))}
           </div>
         ) : (
-          <p className="rounded-xl border border-dashed px-4 py-6 text-center text-xs opacity-70">
+          <p className="rounded-xl border border-dashed px-4 py-6 text-center text-xs opacity-75">
             Belum ada foto galeri yang diunggah.
           </p>
         )}
 
         <div>
           <label
-            className={`inline-flex min-h-11 items-center justify-center rounded-full px-5 text-xs font-semibold ${
+            className={`inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80 ${
               isBusy || galleryPhotos.length >= MAX_GALLERY_PHOTOS
                 ? "pointer-events-none opacity-50"
-                : "cursor-pointer"
+                : ""
             }`}
             style={{
               backgroundColor: "var(--color-primary)",
@@ -787,7 +784,6 @@ export function MediaManager({
         </div>
       </div>
 
-      {/* Musik Latar */}
       <div
         className="space-y-4 rounded-2xl border p-4"
         style={{
@@ -826,8 +822,8 @@ export function MediaManager({
 
             <div className="flex flex-wrap items-center gap-2">
               <label
-                className={`inline-flex min-h-11 items-center justify-center rounded-full px-4 text-xs font-semibold ${
-                  isBusy ? "pointer-events-none opacity-60" : "cursor-pointer"
+                className={`inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80 ${
+                  isBusy ? "pointer-events-none opacity-60" : ""
                 }`}
                 style={{
                   backgroundColor: "var(--color-primary)",
@@ -855,7 +851,7 @@ export function MediaManager({
                   type="button"
                   disabled={isBusy}
                   onClick={() => onChangeMusic("", "")}
-                  className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-4 text-xs font-medium"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
                   style={{
                     backgroundColor: "var(--color-background)",
                     borderColor:
@@ -890,12 +886,12 @@ export function MediaManager({
                   stopPresetPreview();
                   onChangeMusic("", "");
                 }}
-                className="min-h-11 cursor-pointer px-2 text-xs font-medium underline underline-offset-4 opacity-80 hover:opacity-100"
+                className="min-h-11 rounded-xl px-2 text-xs font-medium underline underline-offset-4 opacity-80 transition-opacity hover:opacity-100"
               >
                 Matikan Musik (Tanpa Musik)
               </button>
             ) : (
-              <span className="text-xs opacity-65">Saat ini: Tanpa Musik</span>
+              <span className="text-xs opacity-75">Saat ini: Tanpa Musik</span>
             )}
           </div>
 
@@ -933,7 +929,7 @@ export function MediaManager({
                         stopPresetPreview();
                         onChangeMusic("", preset.id);
                       }}
-                      className="inline-flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-full px-3 text-xs font-semibold"
+                      className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl px-3 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80"
                       style={{
                         backgroundColor: isSelected
                           ? "var(--color-primary)"
@@ -949,7 +945,7 @@ export function MediaManager({
                     <button
                       type="button"
                       onClick={() => void togglePresetPreview(preset.id)}
-                      className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-full border px-3 text-xs font-medium"
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border px-3 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
                       style={{
                         backgroundColor: "var(--color-background)",
                         borderColor:

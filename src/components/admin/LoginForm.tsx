@@ -130,14 +130,16 @@ export function LoginForm({ mode }: LoginFormProps) {
               setSlugInput(event.target.value);
             }}
             disabled={isSubmitting}
-            placeholder="contoh: raka-dina"
-            className="mt-1.5 min-h-11 w-full rounded-xl border px-3.5 text-sm outline-none transition-colors focus:ring-2"
+            aria-invalid={errorMessage ? true : undefined}
+            aria-describedby={errorMessage ? "login-error-alert" : undefined}
+            placeholder="contoh: nama-pasangan"
+            className="mt-1.5 min-h-11 w-full rounded-xl border px-3.5 text-sm transition-colors"
             style={inputStyle}
           />
-          <p className="mt-1 text-xs opacity-65">
-            Bagian akhir tautan undangan Anda (misal{" "}
-            <code className="font-mono">/raka-dina</code> → isi{" "}
-            <code className="font-mono">raka-dina</code>).
+          <p className="mt-1 text-xs opacity-75">
+            Tulis bagian akhir tautan undangan Anda (misal{" "}
+            <code className="font-mono">nama-pasangan</code> dari tautan{" "}
+            <code className="font-mono">/nama-pasangan</code>).
           </p>
         </div>
       ) : null}
@@ -156,6 +158,8 @@ export function LoginForm({ mode }: LoginFormProps) {
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
             required
+            aria-invalid={errorMessage ? true : undefined}
+            aria-describedby={errorMessage ? "login-error-alert" : undefined}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             disabled={isSubmitting}
@@ -164,14 +168,14 @@ export function LoginForm({ mode }: LoginFormProps) {
                 ? "Masukkan sandi undangan"
                 : "Masukkan sandi Super Admin"
             }
-            className="min-h-11 w-full rounded-xl border px-3.5 text-sm outline-none transition-colors focus:ring-2"
+            className="min-h-11 w-full rounded-xl border px-3.5 text-sm transition-colors"
             style={inputStyle}
           />
           <button
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
             aria-label={showPassword ? "Sembunyikan sandi" : "Tampilkan sandi"}
-            className="inline-flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border px-3 text-xs font-medium"
+            className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-xl border px-3 text-xs font-medium transition-opacity hover:opacity-85 active:opacity-75"
             style={{
               backgroundColor: "var(--color-secondary)",
               borderColor:
@@ -186,6 +190,7 @@ export function LoginForm({ mode }: LoginFormProps) {
 
       {errorMessage ? (
         <p
+          id="login-error-alert"
           role="alert"
           className="rounded-xl border px-3.5 py-2.5 text-sm font-medium"
           style={{
@@ -202,7 +207,7 @@ export function LoginForm({ mode }: LoginFormProps) {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full px-6 text-sm font-medium tracking-wide transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex min-h-11 w-full items-center justify-center rounded-xl px-6 text-sm font-semibold tracking-wide transition-opacity hover:opacity-90 active:opacity-80 disabled:opacity-60"
         style={{
           backgroundColor: "var(--color-primary)",
           color: "var(--color-background)",

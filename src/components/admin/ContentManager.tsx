@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import {
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import {
   DEFAULT_SITE_CONFIG,
   getInvitationEvents,
@@ -154,6 +160,36 @@ export function ContentManager({
   } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const tabButtonRefs = useRef<Partial<Record<ActiveTab, HTMLButtonElement | null>>>(
+    {}
+  );
+
+  const handleTabKeyDown = (
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+    index: number
+  ) => {
+    let nextIndex: number | null = null;
+    if (event.key === "ArrowRight") {
+      nextIndex = (index + 1) % TABS.length;
+    } else if (event.key === "ArrowLeft") {
+      nextIndex = (index - 1 + TABS.length) % TABS.length;
+    } else if (event.key === "Home") {
+      nextIndex = 0;
+    } else if (event.key === "End") {
+      nextIndex = TABS.length - 1;
+    }
+
+    if (nextIndex === null) {
+      return;
+    }
+
+    event.preventDefault();
+    const nextTab = TABS[nextIndex];
+    if (nextTab) {
+      setActiveTab(nextTab.id);
+      tabButtonRefs.current[nextTab.id]?.focus();
+    }
+  };
 
   const isDirty = JSON.stringify(draft) !== JSON.stringify(savedConfig);
   const formattedUpdated = formatUpdatedAt(updatedAt);
@@ -424,7 +460,7 @@ export function ContentManager({
   };
 
   const inputClassName =
-    "mt-1.5 min-h-11 w-full rounded-xl border px-3.5 py-2.5 text-sm outline-none transition-colors focus:ring-2";
+    "mt-1.5 min-h-11 w-full rounded-xl border px-3.5 py-2.5 text-sm transition-colors";
   const inputStyle = {
     backgroundColor: "var(--color-background)",
     borderColor: "color-mix(in srgb, var(--color-primary) 45%, transparent)",
@@ -434,7 +470,7 @@ export function ContentManager({
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-5">
       <section
-        className="rounded-3xl border px-5 py-5 sm:px-6"
+        className="rounded-2xl border px-5 py-5 sm:px-6"
         style={{
           backgroundColor: "var(--color-background)",
           borderColor:
@@ -444,7 +480,7 @@ export function ContentManager({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p
-              className="text-xs font-medium tracking-[0.18em] uppercase"
+              className="text-xs font-medium"
               style={{ color: "var(--color-accent)" }}
             >
               Undangan · /{invitationSlug}
@@ -459,14 +495,14 @@ export function ContentManager({
               href={`/${invitationSlug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-11 items-center justify-center rounded-full border px-4 text-xs font-semibold"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-semibold transition-opacity hover:opacity-85 active:opacity-75"
               style={{
                 backgroundColor: "var(--color-secondary)",
                 borderColor:
                   "color-mix(in srgb, var(--color-primary) 45%, transparent)",
               }}
             >
-              Buka /{invitationSlug} ↗
+              Buka /{invitationSlug}
             </Link>
             <div className="text-left text-xs sm:text-right">
               <p className="opacity-75">
@@ -481,7 +517,7 @@ export function ContentManager({
                 </span>
               </p>
               {formattedUpdated ? (
-                <p className="mt-0.5 opacity-70">
+                <p className="mt-0.5 opacity-75">
                   Terakhir disimpan: {formattedUpdated} WIB
                 </p>
               ) : null}
@@ -497,16 +533,23 @@ export function ContentManager({
             backgroundColor: "var(--color-secondary)",
           }}
         >
-          {TABS.map((tab) => {
+          {TABS.map((tab, index) => {
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
+                ref={(el) => {
+                  tabButtonRefs.current[tab.id] = el;
+                }}
+                id={`tab-${tab.id}`}
                 type="button"
                 role="tab"
                 aria-selected={isActive}
+                aria-controls={`panel-${tab.id}`}
+                tabIndex={isActive ? 0 : -1}
+                onKeyDown={(event) => handleTabKeyDown(event, index)}
                 onClick={() => setActiveTab(tab.id)}
-                className="min-h-11 cursor-pointer rounded-xl px-2 text-xs font-medium transition-colors sm:text-sm"
+                className="min-h-11 rounded-xl px-2 text-xs font-medium transition-opacity hover:opacity-90 active:opacity-80 sm:text-sm"
                 style={{
                   backgroundColor: isActive
                     ? "var(--color-primary)"
@@ -526,7 +569,7 @@ export function ContentManager({
       {statusBanner && !isDirectActionTab ? (
         <div
           role={statusBanner.type === "error" ? "alert" : "status"}
-          className="rounded-2xl border px-4 py-3.5 text-sm font-medium"
+          className="rounded-xl border px-4 py-3.5 text-sm font-medium"
           style={{
             backgroundColor:
               statusBanner.type === "success"
@@ -546,10 +589,15 @@ export function ContentManager({
         </div>
       ) : null}
 
+      <div
+        role="tabpanel"
+        id={`panel-${activeTab}`}
+        aria-labelledby={`tab-${activeTab}`}
+      >
       {activeTab === "umum" ? (
         <section
           aria-label="Pengaturan Umum"
-          className="space-y-5 rounded-3xl border px-5 py-6 sm:px-6"
+          className="space-y-5 rounded-2xl border px-5 py-6 sm:px-6"
           style={{
             backgroundColor: "var(--color-background)",
             borderColor:
@@ -578,6 +626,14 @@ export function ContentManager({
                 id="umum-groom-nickname"
                 type="text"
                 maxLength={40}
+                aria-invalid={
+                  fieldErrors["couple.groom.nickname"] ? true : undefined
+                }
+                aria-describedby={
+                  fieldErrors["couple.groom.nickname"]
+                    ? "err-umum-groom-nickname"
+                    : undefined
+                }
                 value={draft.couple.groom.nickname}
                 onChange={(event) =>
                   updatePerson("groom", "nickname", event.target.value)
@@ -585,7 +641,10 @@ export function ContentManager({
                 className={inputClassName}
                 style={inputStyle}
               />
-              <FieldError message={fieldErrors["couple.groom.nickname"]} />
+              <FieldError
+                id="err-umum-groom-nickname"
+                message={fieldErrors["couple.groom.nickname"]}
+              />
             </div>
 
             <div>
@@ -599,6 +658,14 @@ export function ContentManager({
                 id="umum-bride-nickname"
                 type="text"
                 maxLength={40}
+                aria-invalid={
+                  fieldErrors["couple.bride.nickname"] ? true : undefined
+                }
+                aria-describedby={
+                  fieldErrors["couple.bride.nickname"]
+                    ? "err-umum-bride-nickname"
+                    : undefined
+                }
                 value={draft.couple.bride.nickname}
                 onChange={(event) =>
                   updatePerson("bride", "nickname", event.target.value)
@@ -606,11 +673,13 @@ export function ContentManager({
                 className={inputClassName}
                 style={inputStyle}
               />
-              <FieldError message={fieldErrors["couple.bride.nickname"]} />
+              <FieldError
+                id="err-umum-bride-nickname"
+                message={fieldErrors["couple.bride.nickname"]}
+              />
             </div>
           </div>
 
-          {/* Ringkasan Jadwal Acara + Pintasan ke Tab Acara */}
           <div
             className="flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between"
             style={{
@@ -622,7 +691,7 @@ export function ContentManager({
           >
             <div>
               <p
-                className="text-xs font-semibold tracking-wider uppercase"
+                className="text-xs font-semibold"
                 style={{ color: "var(--color-accent)" }}
               >
                 Rangkaian Acara ({draft.events.length})
@@ -640,13 +709,13 @@ export function ContentManager({
             <button
               type="button"
               onClick={() => setActiveTab("acara")}
-              className="inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center rounded-full border px-4 text-xs font-semibold"
+              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border px-4 text-xs font-semibold transition-colors hover:bg-zinc-100 active:bg-zinc-200"
               style={{
                 backgroundColor: "var(--color-background)",
                 borderColor: "var(--color-primary)",
               }}
             >
-              Atur / Tambah Acara →
+              Atur Acara
             </button>
           </div>
 
@@ -658,7 +727,7 @@ export function ContentManager({
               >
                 Kalimat Pembuka
               </label>
-              <span className="text-xs opacity-60">
+              <span className="text-xs opacity-75">
                 {draft.general.openingText.length}/500
               </span>
             </div>
@@ -666,6 +735,14 @@ export function ContentManager({
               id="general-opening-text"
               rows={3}
               maxLength={500}
+              aria-invalid={
+                fieldErrors["general.openingText"] ? true : undefined
+              }
+              aria-describedby={
+                fieldErrors["general.openingText"]
+                  ? "err-general-opening-text"
+                  : undefined
+              }
               value={draft.general.openingText}
               onChange={(event) =>
                 updateGeneral("openingText", event.target.value)
@@ -673,7 +750,10 @@ export function ContentManager({
               className={inputClassName}
               style={inputStyle}
             />
-            <FieldError message={fieldErrors["general.openingText"]} />
+            <FieldError
+              id="err-general-opening-text"
+              message={fieldErrors["general.openingText"]}
+            />
           </div>
 
           <div>
@@ -684,7 +764,7 @@ export function ContentManager({
               >
                 Kalimat Penutup
               </label>
-              <span className="text-xs opacity-60">
+              <span className="text-xs opacity-75">
                 {draft.general.closingText.length}/500
               </span>
             </div>
@@ -692,6 +772,14 @@ export function ContentManager({
               id="general-closing-text"
               rows={3}
               maxLength={500}
+              aria-invalid={
+                fieldErrors["general.closingText"] ? true : undefined
+              }
+              aria-describedby={
+                fieldErrors["general.closingText"]
+                  ? "err-general-closing-text"
+                  : undefined
+              }
               value={draft.general.closingText}
               onChange={(event) =>
                 updateGeneral("closingText", event.target.value)
@@ -699,7 +787,10 @@ export function ContentManager({
               className={inputClassName}
               style={inputStyle}
             />
-            <FieldError message={fieldErrors["general.closingText"]} />
+            <FieldError
+              id="err-general-closing-text"
+              message={fieldErrors["general.closingText"]}
+            />
           </div>
         </section>
       ) : null}
@@ -716,7 +807,7 @@ export function ContentManager({
       {activeTab === "mempelai" ? (
         <section
           aria-label="Pengaturan Mempelai"
-          className="space-y-5 rounded-3xl border px-5 py-6 sm:px-6"
+          className="space-y-5 rounded-2xl border px-5 py-6 sm:px-6"
           style={{
             backgroundColor: "var(--color-background)",
             borderColor:
@@ -741,7 +832,7 @@ export function ContentManager({
               >
                 Teks Pengantar Mempelai
               </label>
-              <span className="text-xs opacity-60">
+              <span className="text-xs opacity-75">
                 {draft.couple.introText.length}/300
               </span>
             </div>
@@ -749,6 +840,12 @@ export function ContentManager({
               id="couple-intro-text"
               rows={3}
               maxLength={300}
+              aria-invalid={fieldErrors["couple.introText"] ? true : undefined}
+              aria-describedby={
+                fieldErrors["couple.introText"]
+                  ? "err-couple-intro-text"
+                  : undefined
+              }
               value={draft.couple.introText}
               onChange={(event) => {
                 setDraft((prev) => ({
@@ -760,7 +857,10 @@ export function ContentManager({
               className={inputClassName}
               style={inputStyle}
             />
-            <FieldError message={fieldErrors["couple.introText"]} />
+            <FieldError
+              id="err-couple-intro-text"
+              message={fieldErrors["couple.introText"]}
+            />
           </div>
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -797,6 +897,14 @@ export function ContentManager({
                       id={`couple-${key}-nickname`}
                       type="text"
                       maxLength={40}
+                      aria-invalid={
+                        fieldErrors[`couple.${key}.nickname`] ? true : undefined
+                      }
+                      aria-describedby={
+                        fieldErrors[`couple.${key}.nickname`]
+                          ? `err-couple-${key}-nickname`
+                          : undefined
+                      }
                       value={person.nickname}
                       onChange={(event) =>
                         updatePerson(key, "nickname", event.target.value)
@@ -805,6 +913,7 @@ export function ContentManager({
                       style={inputStyle}
                     />
                     <FieldError
+                      id={`err-couple-${key}-nickname`}
                       message={fieldErrors[`couple.${key}.nickname`]}
                     />
                   </div>
@@ -820,6 +929,14 @@ export function ContentManager({
                       id={`couple-${key}-fullname`}
                       type="text"
                       maxLength={120}
+                      aria-invalid={
+                        fieldErrors[`couple.${key}.fullName`] ? true : undefined
+                      }
+                      aria-describedby={
+                        fieldErrors[`couple.${key}.fullName`]
+                          ? `err-couple-${key}-fullname`
+                          : undefined
+                      }
                       value={person.fullName}
                       onChange={(event) =>
                         updatePerson(key, "fullName", event.target.value)
@@ -828,6 +945,7 @@ export function ContentManager({
                       style={inputStyle}
                     />
                     <FieldError
+                      id={`err-couple-${key}-fullname`}
                       message={fieldErrors[`couple.${key}.fullName`]}
                     />
                   </div>
@@ -843,6 +961,16 @@ export function ContentManager({
                       id={`couple-${key}-father`}
                       type="text"
                       maxLength={120}
+                      aria-invalid={
+                        fieldErrors[`couple.${key}.fatherName`]
+                          ? true
+                          : undefined
+                      }
+                      aria-describedby={
+                        fieldErrors[`couple.${key}.fatherName`]
+                          ? `err-couple-${key}-father`
+                          : undefined
+                      }
                       value={person.fatherName}
                       onChange={(event) =>
                         updatePerson(key, "fatherName", event.target.value)
@@ -851,6 +979,7 @@ export function ContentManager({
                       style={inputStyle}
                     />
                     <FieldError
+                      id={`err-couple-${key}-father`}
                       message={fieldErrors[`couple.${key}.fatherName`]}
                     />
                   </div>
@@ -866,6 +995,16 @@ export function ContentManager({
                       id={`couple-${key}-mother`}
                       type="text"
                       maxLength={120}
+                      aria-invalid={
+                        fieldErrors[`couple.${key}.motherName`]
+                          ? true
+                          : undefined
+                      }
+                      aria-describedby={
+                        fieldErrors[`couple.${key}.motherName`]
+                          ? `err-couple-${key}-mother`
+                          : undefined
+                      }
                       value={person.motherName}
                       onChange={(event) =>
                         updatePerson(key, "motherName", event.target.value)
@@ -874,6 +1013,7 @@ export function ContentManager({
                       style={inputStyle}
                     />
                     <FieldError
+                      id={`err-couple-${key}-mother`}
                       message={fieldErrors[`couple.${key}.motherName`]}
                     />
                   </div>
@@ -913,7 +1053,7 @@ export function ContentManager({
       {activeTab === "section" ? (
         <section
           aria-label="Pengaturan Section"
-          className="space-y-4 rounded-3xl border px-5 py-6 sm:px-6"
+          className="space-y-4 rounded-2xl border px-5 py-6 sm:px-6"
           style={{
             backgroundColor: "var(--color-background)",
             borderColor:
@@ -931,7 +1071,7 @@ export function ContentManager({
               </p>
             </div>
             <span
-              className="rounded-full px-3 py-1 text-xs font-medium"
+              className="rounded-md px-2.5 py-1 text-xs font-medium"
               style={{
                 backgroundColor: "var(--color-secondary)",
                 color: "var(--color-accent)",
@@ -941,7 +1081,7 @@ export function ContentManager({
             </span>
           </div>
 
-          <FieldError message={fieldErrors["sections"]} />
+          <FieldError id="err-sections" message={fieldErrors["sections"]} />
 
           <div className="space-y-3">
             {draft.sections.map((section, index) => {
@@ -959,12 +1099,12 @@ export function ContentManager({
                       : "var(--color-background)",
                     borderColor:
                       "color-mix(in srgb, var(--color-primary) 35%, transparent)",
-                    opacity: section.enabled ? 1 : 0.72,
+                    opacity: section.enabled ? 1 : 0.78,
                   }}
                 >
                   <div className="flex items-start gap-3">
                     <span
-                      className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold"
+                      className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-xs font-semibold"
                       style={{
                         backgroundColor: "var(--color-secondary)",
                         color: "var(--color-accent)",
@@ -985,8 +1125,9 @@ export function ContentManager({
                       type="button"
                       role="switch"
                       aria-checked={section.enabled}
+                      aria-label={`Aktifkan section ${meta.label}`}
                       onClick={() => toggleSection(index)}
-                      className="inline-flex min-h-11 min-w-24 cursor-pointer items-center justify-center rounded-full border px-4 text-xs font-semibold transition-colors"
+                      className="inline-flex min-h-11 min-w-24 items-center justify-center rounded-xl border px-4 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80"
                       style={{
                         backgroundColor: section.enabled
                           ? "var(--color-primary)"
@@ -1005,7 +1146,7 @@ export function ContentManager({
                       disabled={isFirst}
                       onClick={() => moveSection(index, -1)}
                       aria-label={`Naikkan ${meta.label}`}
-                      className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-xl border text-base font-medium disabled:cursor-not-allowed disabled:opacity-40"
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border text-base font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-40"
                       style={{
                         backgroundColor: "var(--color-background)",
                         borderColor:
@@ -1020,7 +1161,7 @@ export function ContentManager({
                       disabled={isLast}
                       onClick={() => moveSection(index, 1)}
                       aria-label={`Turunkan ${meta.label}`}
-                      className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-xl border text-base font-medium disabled:cursor-not-allowed disabled:opacity-40"
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border text-base font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-40"
                       style={{
                         backgroundColor: "var(--color-background)",
                         borderColor:
@@ -1057,10 +1198,11 @@ export function ContentManager({
       ) : null}
 
       {activeTab === "pratinjau" ? <InvitationPreview config={draft} /> : null}
+      </div>
 
       {!isDirectActionTab ? (
         <section
-          className="rounded-3xl border px-5 py-4 sm:px-6"
+          className="rounded-2xl border px-5 py-4 sm:px-6"
           style={{
             backgroundColor: "var(--color-background)",
             borderColor:
@@ -1086,7 +1228,7 @@ export function ContentManager({
                 type="button"
                 disabled={isSaving}
                 onClick={() => setShowResetConfirm((prev) => !prev)}
-                className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-5 text-sm font-medium transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border px-5 text-sm font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-50"
                 style={{
                   backgroundColor: "var(--color-background)",
                   borderColor:
@@ -1100,7 +1242,7 @@ export function ContentManager({
               <button
                 type="submit"
                 disabled={isSaving}
-                className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full px-7 text-sm font-semibold transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl px-7 text-sm font-semibold transition-opacity hover:opacity-90 active:opacity-80 disabled:opacity-60"
                 style={{
                   backgroundColor: "var(--color-primary)",
                   color: "var(--color-background)",
@@ -1128,7 +1270,7 @@ export function ContentManager({
                   type="button"
                   disabled={isSaving}
                   onClick={() => setShowResetConfirm(false)}
-                  className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-4 text-sm font-medium"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-sm font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
                   style={{
                     backgroundColor: "var(--color-background)",
                     borderColor: "var(--color-primary)",
@@ -1140,7 +1282,7 @@ export function ContentManager({
                   type="button"
                   disabled={isSaving}
                   onClick={handleConfirmReset}
-                  className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full px-4 text-sm font-semibold"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold transition-opacity hover:opacity-90 active:opacity-80"
                   style={{
                     backgroundColor: "var(--color-accent)",
                     color: "var(--color-background)",
@@ -1163,7 +1305,7 @@ export function ContentManager({
               <p className="text-xs font-semibold">
                 Cadangan &amp; Pulihkan Data (JSON)
               </p>
-              <p className="text-[11px] opacity-70">
+              <p className="text-[11px] opacity-75">
                 Simpan salinan cadangan sebelum menyebar undangan atau pulihkan
                 konfigurasi dari berkas JSON.
               </p>
@@ -1173,7 +1315,7 @@ export function ContentManager({
               <a
                 href={backupEndpoint}
                 download
-                className="inline-flex min-h-11 items-center justify-center rounded-full border px-4 text-xs font-medium"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-opacity hover:opacity-85 active:opacity-75"
                 style={{
                   backgroundColor: "var(--color-secondary)",
                   borderColor:
@@ -1186,7 +1328,7 @@ export function ContentManager({
               <button
                 type="button"
                 onClick={handleExportConfigJson}
-                className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-4 text-xs font-medium"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
                 style={{
                   backgroundColor: "var(--color-background)",
                   borderColor:
@@ -1197,7 +1339,7 @@ export function ContentManager({
               </button>
 
               <label
-                className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-4 text-xs font-medium"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
                 style={{
                   backgroundColor: "var(--color-background)",
                   borderColor:
@@ -1217,7 +1359,7 @@ export function ContentManager({
         </section>
       ) : isDirty ? (
         <div
-          className="rounded-2xl border px-4 py-3 text-xs font-medium"
+          className="rounded-xl border px-4 py-3 text-xs font-medium"
           style={{
             backgroundColor: "var(--color-secondary)",
             borderColor: "var(--color-primary)",
@@ -1231,13 +1373,14 @@ export function ContentManager({
   );
 }
 
-function FieldError({ message }: { message?: string }) {
+function FieldError({ id, message }: { id?: string; message?: string }) {
   if (!message) {
     return null;
   }
 
   return (
     <p
+      id={id}
       role="alert"
       className="mt-1 text-xs font-medium"
       style={{ color: "var(--color-accent)" }}

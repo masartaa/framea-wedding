@@ -377,11 +377,11 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   theme: {
     preset: "putih-emas",
     colors: {
-      primary: "#C9A24B",
+      primary: "#856217",
       secondary: "#F5EFE0",
       background: "#FFFFFF",
       text: "#2B2B2B",
-      accent: "#B8860B",
+      accent: "#735310",
     },
     fonts: {
       heading: "Playfair Display",

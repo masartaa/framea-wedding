@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Ornament } from "./Ornament";
 import { Reveal } from "./Reveal";
@@ -13,15 +13,33 @@ interface GallerySectionProps {
 export function GallerySection({ photoUrls, ornaments }: GallerySectionProps) {
   const photos = photoUrls.filter((url) => url.trim().length > 0).slice(0, 6);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const lastTriggerRef = useRef<HTMLElement | null>(null);
+
+  const closeLightbox = () => {
+    setActiveIndex(null);
+    const trigger = lastTriggerRef.current;
+    lastTriggerRef.current = null;
+    if (trigger) {
+      requestAnimationFrame(() => trigger.focus());
+    }
+  };
 
   useEffect(() => {
     if (activeIndex === null) {
       return;
     }
 
+    const dialog = dialogRef.current;
+    const focusables = dialog?.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+    );
+    focusables?.[0]?.focus();
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setActiveIndex(null);
+        event.preventDefault();
+        closeLightbox();
       } else if (event.key === "ArrowRight") {
         setActiveIndex((prev) =>
           prev === null ? null : (prev + 1) % photos.length
@@ -30,6 +48,22 @@ export function GallerySection({ photoUrls, ornaments }: GallerySectionProps) {
         setActiveIndex((prev) =>
           prev === null ? null : (prev - 1 + photos.length) % photos.length
         );
+      } else if (event.key === "Tab" && dialog) {
+        const list = dialog.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+        );
+        if (list.length === 0) {
+          return;
+        }
+        const first = list[0];
+        const last = list[list.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
       }
     };
 
@@ -45,7 +79,7 @@ export function GallerySection({ photoUrls, ornaments }: GallerySectionProps) {
     >
       <Reveal>
         <p
-          className="text-xs font-medium tracking-[0.2em] uppercase"
+          className="text-xs font-medium tracking-wider"
           style={{ color: "var(--color-accent)" }}
         >
           Momen Bahagia
@@ -76,9 +110,12 @@ export function GallerySection({ photoUrls, ornaments }: GallerySectionProps) {
               <button
                 key={`${url}-${index}`}
                 type="button"
-                onClick={() => setActiveIndex(index)}
+                onClick={(event) => {
+                  lastTriggerRef.current = event.currentTarget;
+                  setActiveIndex(index);
+                }}
                 aria-label={`Lihat foto galeri ${index + 1}`}
-                className="group relative aspect-[4/5] min-h-11 w-full cursor-pointer overflow-hidden rounded-2xl border transition-transform duration-200 hover:scale-[1.01] focus-visible:outline-2 focus-visible:outline-offset-2"
+                className="group relative aspect-[4/5] min-h-11 w-full overflow-hidden rounded-2xl border transition-opacity duration-200 hover:opacity-95 active:opacity-85"
                 style={{
                   borderColor:
                     "color-mix(in srgb, var(--color-primary) 35%, transparent)",
@@ -99,6 +136,7 @@ export function GallerySection({ photoUrls, ornaments }: GallerySectionProps) {
 
       {activeIndex !== null && photos[activeIndex] ? (
         <div
+          ref={dialogRef}
           role="dialog"
           aria-modal="true"
           aria-label="Pratinjau foto galeri"
@@ -106,7 +144,7 @@ export function GallerySection({ photoUrls, ornaments }: GallerySectionProps) {
           style={{
             backgroundColor: "color-mix(in srgb, var(--color-text) 90%, black)",
           }}
-          onClick={() => setActiveIndex(null)}
+          onClick={closeLightbox}
         >
           <div
             className="relative flex w-full max-w-md flex-col items-center"
@@ -121,9 +159,9 @@ export function GallerySection({ photoUrls, ornaments }: GallerySectionProps) {
               </span>
               <button
                 type="button"
-                onClick={() => setActiveIndex(null)}
+                onClick={closeLightbox}
                 aria-label="Tutup galeri"
-                className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-full border text-sm font-medium"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border text-sm font-medium transition-opacity hover:opacity-90 active:opacity-75"
                 style={{
                   borderColor: "var(--color-primary)",
                   backgroundColor: "var(--color-background)",
@@ -153,7 +191,7 @@ export function GallerySection({ photoUrls, ornaments }: GallerySectionProps) {
                       (activeIndex - 1 + photos.length) % photos.length
                     )
                   }
-                  className="inline-flex min-h-11 min-w-24 cursor-pointer items-center justify-center rounded-full px-4 text-sm font-medium"
+                  className="inline-flex min-h-11 min-w-24 items-center justify-center rounded-full px-4 text-sm font-medium transition-opacity hover:opacity-90 active:opacity-80"
                   style={{
                     backgroundColor: "var(--color-secondary)",
                     color: "var(--color-text)",
@@ -166,7 +204,7 @@ export function GallerySection({ photoUrls, ornaments }: GallerySectionProps) {
                   onClick={() =>
                     setActiveIndex((activeIndex + 1) % photos.length)
                   }
-                  className="inline-flex min-h-11 min-w-24 cursor-pointer items-center justify-center rounded-full px-4 text-sm font-medium"
+                  className="inline-flex min-h-11 min-w-24 items-center justify-center rounded-full px-4 text-sm font-medium transition-opacity hover:opacity-90 active:opacity-80"
                   style={{
                     backgroundColor: "var(--color-primary)",
                     color: "var(--color-background)",

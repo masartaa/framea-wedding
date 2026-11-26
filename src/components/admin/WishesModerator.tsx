@@ -200,7 +200,7 @@ export function WishesModerator({ invitationSlug }: WishesModeratorProps) {
   return (
     <section
       aria-label="Moderasi Ucapan Tamu"
-      className="space-y-5 rounded-3xl border px-5 py-6 sm:px-6"
+      className="space-y-5 rounded-2xl border px-5 py-6 sm:px-6"
       style={{
         backgroundColor: "var(--color-background)",
         borderColor:
@@ -222,7 +222,7 @@ export function WishesModerator({ invitationSlug }: WishesModeratorProps) {
           type="button"
           disabled={isLoading}
           onClick={() => void handleReload()}
-          className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-4 text-xs font-medium disabled:opacity-50"
+          className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-opacity hover:opacity-85 active:opacity-75 disabled:opacity-50"
           style={{
             backgroundColor: "var(--color-secondary)",
             borderColor:
@@ -253,7 +253,7 @@ export function WishesModerator({ invitationSlug }: WishesModeratorProps) {
               type="button"
               aria-pressed={isSelected}
               onClick={() => setFilter(tab.id)}
-              className="min-h-11 cursor-pointer rounded-xl px-2 text-xs font-semibold transition-colors"
+              className="min-h-11 rounded-xl px-2 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80"
               style={{
                 backgroundColor: isSelected
                   ? "var(--color-primary)"
@@ -272,7 +272,7 @@ export function WishesModerator({ invitationSlug }: WishesModeratorProps) {
       {notice ? (
         <div
           role={notice.type === "error" ? "alert" : "status"}
-          className="rounded-2xl border px-4 py-3 text-sm font-medium"
+          className="rounded-xl border px-4 py-3 text-sm font-medium"
           style={{
             backgroundColor:
               notice.type === "info"
@@ -294,7 +294,7 @@ export function WishesModerator({ invitationSlug }: WishesModeratorProps) {
 
       {isLoading ? (
         <div
-          className="rounded-2xl border px-4 py-8 text-center text-sm opacity-70"
+          className="rounded-2xl border px-4 py-8 text-center text-sm opacity-75"
           style={{
             borderColor:
               "color-mix(in srgb, var(--color-primary) 30%, transparent)",
@@ -328,7 +328,7 @@ export function WishesModerator({ invitationSlug }: WishesModeratorProps) {
                     : "color-mix(in srgb, var(--color-secondary) 32%, var(--color-background))",
                   borderColor:
                     "color-mix(in srgb, var(--color-primary) 32%, transparent)",
-                  opacity: item.isHidden ? 0.78 : 1,
+                  opacity: item.isHidden ? 0.8 : 1,
                 }}
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -337,7 +337,7 @@ export function WishesModerator({ invitationSlug }: WishesModeratorProps) {
                       {item.name}
                     </h3>
                     <span
-                      className="rounded-full px-2.5 py-0.5 text-[11px] font-medium"
+                      className="rounded-md px-2 py-0.5 text-[11px] font-medium"
                       style={{
                         backgroundColor: item.isHidden
                           ? "color-mix(in srgb, var(--color-accent) 14%, var(--color-background))"
@@ -348,7 +348,7 @@ export function WishesModerator({ invitationSlug }: WishesModeratorProps) {
                       {item.isHidden ? "Disembunyikan" : "Tampil"}
                     </span>
                   </div>
-                  <time className="text-xs opacity-65">
+                  <time className="text-xs opacity-75">
                     {formatWishDate(item.createdAt)} WIB
                   </time>
                 </div>
@@ -362,7 +362,7 @@ export function WishesModerator({ invitationSlug }: WishesModeratorProps) {
                     type="button"
                     disabled={isBusy}
                     onClick={() => void handleToggleVisibility(item)}
-                    className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-4 text-xs font-semibold disabled:opacity-50"
+                    className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80 disabled:opacity-50"
                     style={{
                       backgroundColor: item.isHidden
                         ? "var(--color-primary)"
@@ -386,7 +386,7 @@ export function WishesModerator({ invitationSlug }: WishesModeratorProps) {
                         type="button"
                         disabled={isBusy}
                         onClick={() => setConfirmDeleteId(null)}
-                        className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-3 text-xs font-medium"
+                        className="inline-flex min-h-11 items-center justify-center rounded-xl border px-3 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
                         style={{
                           backgroundColor: "var(--color-background)",
                           borderColor:
@@ -399,7 +399,7 @@ export function WishesModerator({ invitationSlug }: WishesModeratorProps) {
                         type="button"
                         disabled={isBusy}
                         onClick={() => void handleDelete(item.id)}
-                        className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full px-4 text-xs font-semibold"
+                        className="inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80"
                         style={{
                           backgroundColor: "var(--color-accent)",
                           color: "var(--color-background)",
@@ -413,7 +413,7 @@ export function WishesModerator({ invitationSlug }: WishesModeratorProps) {
                       type="button"
                       disabled={isBusy}
                       onClick={() => setConfirmDeleteId(item.id)}
-                      className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-4 text-xs font-medium disabled:opacity-50"
+                      className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-50"
                       style={{
                         backgroundColor: "var(--color-background)",
                         borderColor:

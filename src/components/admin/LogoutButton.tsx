@@ -27,7 +27,7 @@ export function LogoutButton({ redirectTo = "/admin/login" }: LogoutButtonProps)
       type="button"
       onClick={handleLogout}
       disabled={isLoading}
-      className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-5 text-sm font-medium transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
+      className="inline-flex min-h-11 items-center justify-center rounded-xl border px-5 text-sm font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-60"
       style={{
         backgroundColor: "var(--color-background)",
         borderColor: "var(--color-primary)",

@@ -177,6 +177,8 @@ function HeroSection({
   targetTimestamp,
   animateEntrance,
 }: HeroSectionProps) {
+  const HeadingTag = animateEntrance ? "h1" : "h2";
+
   return (
     <section
       id="hero"
@@ -199,13 +201,13 @@ function HeroSection({
 
       <div className={animateEntrance ? "hero-enter-title" : "opacity-0"}>
         <p
-          className="mt-8 text-xs font-medium tracking-[0.22em] uppercase"
+          className="mt-8 text-xs font-medium tracking-wider"
           style={{ color: "var(--color-accent)" }}
         >
           {config.general.eventTitle}
         </p>
 
-        <h2 className="font-heading mt-2 text-3xl leading-tight font-semibold sm:text-4xl">
+        <HeadingTag className="font-heading mt-2 text-3xl leading-tight font-semibold sm:text-4xl">
           <span>{config.couple.groom.nickname}</span>
           <span
             className="mx-2 inline-block font-normal"
@@ -214,7 +216,7 @@ function HeroSection({
             &amp;
           </span>
           <span>{config.couple.bride.nickname}</span>
-        </h2>
+        </HeadingTag>
       </div>
 
       <div className={animateEntrance ? "hero-enter-meta" : "opacity-0"}>
@@ -263,15 +265,9 @@ function CoupleSection({ config }: CoupleSectionProps) {
       }}
     >
       <Reveal>
-        <p
-          className="text-xs font-medium tracking-[0.2em] uppercase"
-          style={{ color: "var(--color-accent)" }}
-        >
-          Mempelai
-        </p>
         <h2
           id="judul-mempelai"
-          className="font-heading mt-2 text-2xl font-semibold sm:text-3xl"
+          className="font-heading text-2xl font-semibold sm:text-3xl"
         >
           Kedua Mempelai
         </h2>
@@ -362,7 +358,7 @@ function EventSection({ config }: EventSectionProps) {
     >
       <Reveal>
         <p
-          className="text-xs font-medium tracking-[0.2em] uppercase"
+          className="text-xs font-medium tracking-wider"
           style={{ color: "var(--color-accent)" }}
         >
           Detail Acara
@@ -458,7 +454,7 @@ function EventSection({ config }: EventSectionProps) {
                     href={mapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-7 inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                    className="mt-7 inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-opacity duration-200 hover:opacity-90 active:opacity-80"
                     style={{
                       backgroundColor: "var(--color-primary)",
                       color: "var(--color-background)",
@@ -506,7 +502,7 @@ function ClosingSection({ config }: ClosingSectionProps) {
           </p>
         ) : null}
 
-        <p className="mt-6 text-xs tracking-[0.2em] uppercase opacity-70">
+        <p className="mt-6 text-xs tracking-wider opacity-75">
           Kami yang berbahagia
         </p>
         <p className="font-heading mt-2 text-2xl font-semibold">

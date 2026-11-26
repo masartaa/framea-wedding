@@ -20,13 +20,13 @@ export const THEME_PRESETS: ReadonlyArray<ThemePresetDefinition> = [
   {
     id: "putih-emas",
     name: "Putih & Emas",
-    description: "Elegan klasik dengan aksen emas lembut (default).",
+    description: "Elegan klasik dengan aksen emas antik (default).",
     colors: {
-      primary: "#C9A24B",
+      primary: "#856217",
       secondary: "#F5EFE0",
       background: "#FFFFFF",
       text: "#2B2B2B",
-      accent: "#B8860B",
+      accent: "#735310",
     },
   },
   {
@@ -34,23 +34,23 @@ export const THEME_PRESETS: ReadonlyArray<ThemePresetDefinition> = [
     name: "Sage Green",
     description: "Nuansa hijau natural yang tenang dan modern.",
     colors: {
-      primary: "#5F7A61",
+      primary: "#557057",
       secondary: "#EEF3EE",
       background: "#FAFBF9",
       text: "#263327",
-      accent: "#445E46",
+      accent: "#3E5740",
     },
   },
   {
     id: "dusty-rose",
     name: "Dusty Rose",
-    description: "Romantis lembut dengan sentuhan mawar pastel.",
+    description: "Romantis lembut dengan sentuhan mawar gelap.",
     colors: {
-      primary: "#B56E78",
+      primary: "#944954",
       secondary: "#F8ECEE",
       background: "#FFFDFD",
       text: "#362528",
-      accent: "#944E58",
+      accent: "#7E3944",
     },
   },
   {
@@ -62,7 +62,7 @@ export const THEME_PRESETS: ReadonlyArray<ThemePresetDefinition> = [
       secondary: "#EDF1F7",
       background: "#FFFFFF",
       text: "#1B2433",
-      accent: "#9A7426",
+      accent: "#755512",
     },
   },
   {
@@ -70,11 +70,11 @@ export const THEME_PRESETS: ReadonlyArray<ThemePresetDefinition> = [
     name: "Terracotta",
     description: "Hangat, intim, dan bernuansa bumi.",
     colors: {
-      primary: "#B86B4B",
+      primary: "#9A4D30",
       secondary: "#F6ECE6",
       background: "#FFFDFB",
       text: "#33251F",
-      accent: "#944F32",
+      accent: "#823D23",
     },
   },
 ];
@@ -251,8 +251,8 @@ export const HERO_DECORATION_OPTIONS: ReadonlyArray<{
   },
   {
     id: "soft-glow",
-    label: "Pendar & Bintang",
-    description: "Cahaya lembut di belakang foto dengan aksen bintang kecil.",
+    label: "Bingkai Sudut",
+    description: "Lapisan tonal lembut di belakang foto dengan siku sudut tipis.",
   },
 ];
 
@@ -335,20 +335,29 @@ export function getThemeContrastWarnings(
   }
 
   const primaryVsBg = getContrastRatio(colors.primary, colors.background);
-  if (primaryVsBg !== null && primaryVsBg < 2.2) {
+  if (primaryVsBg !== null && primaryVsBg < 4.5) {
     warnings.push({
       id: "primary-bg",
       ratio: primaryVsBg,
-      message: `Kontras teks tombol (Warna Latar di atas Warna Utama) rendah (${primaryVsBg.toFixed(1)}:1); gelapkan Warna Utama atau terangkan Warna Latar.`,
+      message: `Kontras teks tombol (Warna Latar di atas Warna Utama) rendah (${primaryVsBg.toFixed(1)}:1, standar WCAG AA minimal 4,5:1). Gelapkan Warna Utama atau terangkan Warna Latar.`,
     });
   }
 
   const accentVsBg = getContrastRatio(colors.accent, colors.background);
-  if (accentVsBg !== null && accentVsBg < 3) {
+  if (accentVsBg !== null && accentVsBg < 4.5) {
     warnings.push({
       id: "accent-bg",
       ratio: accentVsBg,
-      message: `Kontras Warna Aksen terhadap Warna Latar rendah (${accentVsBg.toFixed(1)}:1, disarankan minimal 3,0:1).`,
+      message: `Kontras Warna Aksen terhadap Warna Latar rendah (${accentVsBg.toFixed(1)}:1, standar WCAG AA minimal 4,5:1).`,
+    });
+  }
+
+  const accentVsSecondary = getContrastRatio(colors.accent, colors.secondary);
+  if (accentVsSecondary !== null && accentVsSecondary < 4.5) {
+    warnings.push({
+      id: "accent-secondary",
+      ratio: accentVsSecondary,
+      message: `Kontras Warna Aksen terhadap Warna Sekunder rendah (${accentVsSecondary.toFixed(1)}:1, standar WCAG AA minimal 4,5:1).`,
     });
   }
 

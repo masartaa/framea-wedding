@@ -93,6 +93,7 @@ export function ImageCropModal({
   const [isProcessing, setIsProcessing] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
   const dragStateRef = useRef<{
     pointerId: number;
     startX: number;
@@ -100,6 +101,19 @@ export function ImageCropModal({
     originX: number;
     originY: number;
   } | null>(null);
+
+  useEffect(() => {
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const dialog = dialogRef.current;
+    const initialFocusable = dialog?.querySelector<HTMLElement>(
+      'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    initialFocusable?.focus();
+
+    return () => {
+      previousFocus?.focus?.();
+    };
+  }, []);
 
   useEffect(() => {
     const objectUrl = URL.createObjectURL(file);
@@ -128,7 +142,27 @@ export function ImageCropModal({
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape" && !isSubmitting && !isProcessing) {
+        event.preventDefault();
         onCancel();
+        return;
+      }
+
+      if (event.key === "Tab" && dialogRef.current) {
+        const list = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), input:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+        );
+        if (list.length === 0) {
+          return;
+        }
+        const first = list[0];
+        const last = list[list.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -235,6 +269,23 @@ export function ImageCropModal({
     }
   };
 
+  const nudgeOffset = (dx: number, dy: number) => {
+    if (!loadedImage || isSubmitting || isProcessing) {
+      return;
+    }
+    setOffset((prev) =>
+      clampOffset(
+        prev.x + dx,
+        prev.y + dy,
+        loadedImage.naturalWidth,
+        loadedImage.naturalHeight,
+        frame.width,
+        frame.height,
+        zoom
+      )
+    );
+  };
+
   const handleConfirmClick = async () => {
     if (!loadedImage || isSubmitting || isProcessing) {
       return;
@@ -280,6 +331,7 @@ export function ImageCropModal({
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby="judul-crop-modal"
@@ -289,7 +341,7 @@ export function ImageCropModal({
       }}
     >
       <div
-        className="w-full max-w-md rounded-3xl border p-5 shadow-lg"
+        className="w-full max-w-md rounded-2xl border p-5 shadow-lg"
         style={{
           backgroundColor: "var(--color-background)",
           borderColor: "var(--color-primary)",
@@ -299,7 +351,7 @@ export function ImageCropModal({
         <div className="flex items-start justify-between gap-3">
           <div>
             <p
-              className="text-[11px] font-medium tracking-[0.18em] uppercase"
+              className="text-xs font-medium"
               style={{ color: "var(--color-accent)" }}
             >
               {queueInfo && queueInfo.total > 1
@@ -313,7 +365,7 @@ export function ImageCropModal({
               {spec.title}
             </h2>
             <p className="mt-0.5 text-xs opacity-75">
-              Rasio {spec.aspectLabel} · Geser foto untuk mengatur posisi
+              Rasio {spec.aspectLabel} · Geser foto atau gunakan tombol arah
             </p>
           </div>
 
@@ -322,7 +374,7 @@ export function ImageCropModal({
             disabled={busy}
             onClick={onCancel}
             aria-label="Tutup editor potong foto"
-            className="inline-flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border text-sm font-semibold disabled:opacity-50"
+            className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border text-sm font-semibold transition-opacity hover:opacity-85 active:opacity-75 disabled:opacity-50"
             style={{
               backgroundColor: "var(--color-secondary)",
               borderColor:
@@ -335,6 +387,24 @@ export function ImageCropModal({
 
         <div className="mt-4 flex flex-col items-center">
           <div
+            tabIndex={loadedImage ? 0 : -1}
+            aria-label="Area potong foto. Gunakan tombol panah keyboard atau seret untuk memindahkan posisi foto."
+            onKeyDown={(event) => {
+              const step = event.shiftKey ? 24 : 10;
+              if (event.key === "ArrowLeft") {
+                event.preventDefault();
+                nudgeOffset(-step, 0);
+              } else if (event.key === "ArrowRight") {
+                event.preventDefault();
+                nudgeOffset(step, 0);
+              } else if (event.key === "ArrowUp") {
+                event.preventDefault();
+                nudgeOffset(0, -step);
+              } else if (event.key === "ArrowDown") {
+                event.preventDefault();
+                nudgeOffset(0, step);
+              }
+            }}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
@@ -361,7 +431,6 @@ export function ImageCropModal({
               </div>
             )}
 
-            {/* Panduan grid sepertiga atau lingkaran */}
             {loadedImage ? (
               <div
                 aria-hidden="true"
@@ -410,6 +479,69 @@ export function ImageCropModal({
             </p>
           ) : null}
 
+          <div
+            role="group"
+            aria-label="Geser posisi foto"
+            className="mt-3 flex items-center gap-2"
+          >
+            <button
+              type="button"
+              disabled={busy || !loadedImage}
+              onClick={() => nudgeOffset(-16, 0)}
+              aria-label="Geser foto ke kiri"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border text-sm font-semibold transition-opacity hover:opacity-85 active:opacity-75 disabled:opacity-40"
+              style={{
+                backgroundColor: "var(--color-secondary)",
+                borderColor:
+                  "color-mix(in srgb, var(--color-primary) 40%, transparent)",
+              }}
+            >
+              ←
+            </button>
+            <button
+              type="button"
+              disabled={busy || !loadedImage}
+              onClick={() => nudgeOffset(0, -16)}
+              aria-label="Geser foto ke atas"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border text-sm font-semibold transition-opacity hover:opacity-85 active:opacity-75 disabled:opacity-40"
+              style={{
+                backgroundColor: "var(--color-secondary)",
+                borderColor:
+                  "color-mix(in srgb, var(--color-primary) 40%, transparent)",
+              }}
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              disabled={busy || !loadedImage}
+              onClick={() => nudgeOffset(0, 16)}
+              aria-label="Geser foto ke bawah"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border text-sm font-semibold transition-opacity hover:opacity-85 active:opacity-75 disabled:opacity-40"
+              style={{
+                backgroundColor: "var(--color-secondary)",
+                borderColor:
+                  "color-mix(in srgb, var(--color-primary) 40%, transparent)",
+              }}
+            >
+              ↓
+            </button>
+            <button
+              type="button"
+              disabled={busy || !loadedImage}
+              onClick={() => nudgeOffset(16, 0)}
+              aria-label="Geser foto ke kanan"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border text-sm font-semibold transition-opacity hover:opacity-85 active:opacity-75 disabled:opacity-40"
+              style={{
+                backgroundColor: "var(--color-secondary)",
+                borderColor:
+                  "color-mix(in srgb, var(--color-primary) 40%, transparent)",
+              }}
+            >
+              →
+            </button>
+          </div>
+
           <div className="mt-4 w-full space-y-2">
             <div className="flex items-center justify-between text-xs">
               <label htmlFor="crop-zoom-range" className="font-medium">
@@ -424,7 +556,7 @@ export function ImageCropModal({
                 disabled={busy || zoom <= MIN_ZOOM}
                 onClick={() => handleZoomChange(zoom - 0.15)}
                 aria-label="Perkecil foto"
-                className="inline-flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border text-base font-semibold disabled:opacity-40"
+                className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-xl border text-base font-semibold transition-opacity hover:opacity-85 active:opacity-75 disabled:opacity-40"
                 style={{
                   backgroundColor: "var(--color-secondary)",
                   borderColor:
@@ -445,7 +577,7 @@ export function ImageCropModal({
                 onChange={(event) =>
                   handleZoomChange(Number(event.target.value))
                 }
-                className="h-11 flex-1 cursor-pointer accent-[var(--color-primary)]"
+                className="h-11 flex-1 accent-[var(--color-primary)]"
               />
 
               <button
@@ -453,7 +585,7 @@ export function ImageCropModal({
                 disabled={busy || zoom >= MAX_ZOOM}
                 onClick={() => handleZoomChange(zoom + 0.15)}
                 aria-label="Perbesar foto"
-                className="inline-flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border text-base font-semibold disabled:opacity-40"
+                className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-xl border text-base font-semibold transition-opacity hover:opacity-85 active:opacity-75 disabled:opacity-40"
                 style={{
                   backgroundColor: "var(--color-secondary)",
                   borderColor:
@@ -474,7 +606,7 @@ export function ImageCropModal({
               setZoom(1);
               setOffset({ x: 0, y: 0 });
             }}
-            className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-4 text-xs font-medium disabled:opacity-50"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-50"
             style={{
               backgroundColor: "var(--color-background)",
               borderColor:
@@ -490,7 +622,7 @@ export function ImageCropModal({
                 type="button"
                 disabled={busy}
                 onClick={onSkip}
-                className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-4 text-xs font-medium disabled:opacity-50"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-50"
                 style={{
                   backgroundColor: "var(--color-background)",
                   borderColor:
@@ -505,7 +637,7 @@ export function ImageCropModal({
               type="button"
               disabled={busy || !loadedImage}
               onClick={() => void handleConfirmClick()}
-              className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full px-6 text-xs font-semibold transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl px-6 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80 disabled:opacity-60"
               style={{
                 backgroundColor: "var(--color-primary)",
                 color: "var(--color-background)",

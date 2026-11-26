@@ -22,7 +22,6 @@ async function migrateV2() {
 
   const db = getDb();
 
-  // 1. Cek apakah sudah ada undangan di tabel invitations
   let [primaryInvitation] = await db
     .select({
       id: invitations.id,
@@ -97,7 +96,6 @@ async function migrateV2() {
     );
   }
 
-  // 2. Hubungkan semua baris guests, wishes, dan media lama (invitation_id IS NULL) ke undangan awal
   const [updatedGuests, updatedWishes, updatedMedia] = await Promise.all([
     db
       .update(guests)

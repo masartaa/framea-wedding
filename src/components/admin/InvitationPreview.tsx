@@ -18,7 +18,7 @@ export function InvitationPreview({ config }: InvitationPreviewProps) {
   return (
     <section
       aria-label="Pratinjau Undangan"
-      className="space-y-4 rounded-3xl border px-4 py-5 sm:px-6"
+      className="space-y-4 rounded-2xl border px-4 py-5 sm:px-6"
       style={{
         backgroundColor: "var(--color-background)",
         borderColor:
@@ -47,7 +47,7 @@ export function InvitationPreview({ config }: InvitationPreviewProps) {
               type="button"
               onClick={() => setViewport("mobile")}
               aria-pressed={viewport === "mobile"}
-              className="min-h-11 cursor-pointer rounded-lg px-3.5 text-xs font-semibold transition-colors"
+              className="min-h-11 rounded-lg px-3.5 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80"
               style={{
                 backgroundColor:
                   viewport === "mobile"
@@ -65,7 +65,7 @@ export function InvitationPreview({ config }: InvitationPreviewProps) {
               type="button"
               onClick={() => setViewport("desktop")}
               aria-pressed={viewport === "desktop"}
-              className="min-h-11 cursor-pointer rounded-lg px-3.5 text-xs font-semibold transition-colors"
+              className="min-h-11 rounded-lg px-3.5 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80"
               style={{
                 backgroundColor:
                   viewport === "desktop"
@@ -91,7 +91,7 @@ export function InvitationPreview({ config }: InvitationPreviewProps) {
               type="button"
               onClick={() => setView("cover")}
               aria-pressed={view === "cover"}
-              className="min-h-11 cursor-pointer rounded-lg px-3.5 text-xs font-semibold transition-colors"
+              className="min-h-11 rounded-lg px-3.5 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80"
               style={{
                 backgroundColor:
                   view === "cover" ? "var(--color-primary)" : "transparent",
@@ -107,7 +107,7 @@ export function InvitationPreview({ config }: InvitationPreviewProps) {
               type="button"
               onClick={() => setView("content")}
               aria-pressed={view === "content"}
-              className="min-h-11 cursor-pointer rounded-lg px-3.5 text-xs font-semibold transition-colors"
+              className="min-h-11 rounded-lg px-3.5 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80"
               style={{
                 backgroundColor:
                   view === "content" ? "var(--color-primary)" : "transparent",
@@ -145,7 +145,7 @@ export function InvitationPreview({ config }: InvitationPreviewProps) {
           }}
         >
           <div
-            className="flex items-center justify-between border-b px-4 py-2 text-[11px] opacity-70"
+            className="flex items-center justify-between border-b px-4 py-2 text-[11px] opacity-75"
             style={{
               backgroundColor: "var(--color-secondary)",
               borderColor:

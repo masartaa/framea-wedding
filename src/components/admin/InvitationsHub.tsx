@@ -37,7 +37,7 @@ async function copyText(text: string): Promise<boolean> {
       await navigator.clipboard.writeText(text);
       return true;
     } catch {
-      // fallback di bawah
+      // Clipboard API fails on insecure origins; fall back to execCommand.
     }
   }
   try {
@@ -295,7 +295,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
   };
 
   const inputClassName =
-    "mt-1.5 min-h-11 w-full rounded-xl border px-3.5 text-sm outline-none focus:ring-2";
+    "mt-1.5 min-h-11 w-full rounded-xl border px-3.5 text-sm transition-colors";
   const inputStyle = {
     backgroundColor: "var(--color-background)",
     borderColor: "color-mix(in srgb, var(--color-primary) 45%, transparent)",
@@ -304,9 +304,8 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
 
   return (
     <div className="space-y-6">
-      {/* Form Buat Undangan Baru */}
       <section
-        className="rounded-3xl border px-5 py-6 sm:px-6"
+        className="rounded-2xl border px-5 py-6 sm:px-6"
         style={{
           backgroundColor: "var(--color-background)",
           borderColor:
@@ -314,13 +313,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
         }}
       >
         <div>
-          <p
-            className="text-xs font-medium tracking-[0.18em] uppercase"
-            style={{ color: "var(--color-accent)" }}
-          >
-            Panel Super Admin
-          </p>
-          <h1 className="font-heading mt-1 text-2xl font-semibold">
+          <h1 className="font-heading text-2xl font-semibold">
             Kelola Semua Undangan
           </h1>
           <p className="mt-1 text-sm opacity-75">
@@ -332,7 +325,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
         {notice ? (
           <div
             role={notice.type === "error" ? "alert" : "status"}
-            className="mt-4 rounded-2xl border px-4 py-3 text-sm font-medium"
+            className="mt-4 rounded-xl border px-4 py-3 text-sm font-medium"
             style={{
               backgroundColor:
                 notice.type === "success"
@@ -382,7 +375,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                 value={label}
                 onChange={(event) => setLabel(event.target.value)}
                 disabled={isCreating}
-                placeholder="Contoh: Raka & Dina"
+                placeholder="Contoh: Nama Pria & Nama Wanita"
                 className={inputClassName}
                 style={inputStyle}
               />
@@ -405,11 +398,11 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                   setSlug(event.target.value);
                 }}
                 disabled={isCreating}
-                placeholder="raka-dina"
+                placeholder="nama-pria-wanita"
                 className={`${inputClassName} font-mono`}
                 style={inputStyle}
               />
-              <p className="mt-1 text-[11px] opacity-70">
+              <p className="mt-1 text-[11px] opacity-75">
                 Tautan publik:{" "}
                 <code className="font-mono">
                   /{normalizedCreateSlug || "slug-anda"}
@@ -435,7 +428,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                 className={inputClassName}
                 style={inputStyle}
               />
-              <p className="mt-1 text-[11px] opacity-70">
+              <p className="mt-1 text-[11px] opacity-75">
                 Isi jika teman/pasangan boleh login &amp; edit sendiri.
               </p>
             </div>
@@ -445,7 +438,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
             <button
               type="submit"
               disabled={isCreating}
-              className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full px-6 text-sm font-semibold transition-opacity disabled:opacity-60"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl px-6 text-sm font-semibold transition-opacity hover:opacity-90 active:opacity-80 disabled:opacity-60"
               style={{
                 backgroundColor: "var(--color-primary)",
                 color: "var(--color-background)",
@@ -457,7 +450,6 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
         </form>
       </section>
 
-      {/* Daftar Undangan */}
       <section aria-labelledby="judul-daftar-undangan" className="space-y-3">
         <div className="flex items-center justify-between gap-2">
           <h2
@@ -470,7 +462,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
 
         {items.length === 0 ? (
           <div
-            className="rounded-3xl border border-dashed px-6 py-10 text-center text-sm opacity-75"
+            className="rounded-2xl border border-dashed px-6 py-10 text-center text-sm opacity-75"
             style={{
               backgroundColor: "var(--color-background)",
               borderColor:
@@ -489,7 +481,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
               return (
                 <article
                   key={item.id}
-                  className="rounded-3xl border p-5"
+                  className="rounded-2xl border p-5"
                   style={{
                     backgroundColor: "var(--color-background)",
                     borderColor:
@@ -503,7 +495,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                           {item.label}
                         </h3>
                         <span
-                          className="rounded-full px-2.5 py-0.5 font-mono text-xs font-medium"
+                          className="rounded-md px-2 py-0.5 font-mono text-xs font-medium"
                           style={{
                             backgroundColor: "var(--color-secondary)",
                             color: "var(--color-accent)",
@@ -512,7 +504,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                           /{item.slug}
                         </span>
                         <span
-                          className="rounded-full px-2.5 py-0.5 text-[11px] font-medium"
+                          className="rounded-md px-2 py-0.5 text-[11px] font-medium"
                           style={{
                             backgroundColor: item.hasPassword
                               ? "var(--color-secondary)"
@@ -533,7 +525,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                         {formatEventDateShort(item.eventDate)}
                       </p>
 
-                      <p className="mt-1 text-xs opacity-65">
+                      <p className="mt-1 text-xs opacity-75">
                         {item.guestCount} tamu · {item.wishCount} ucapan
                       </p>
                     </div>
@@ -541,7 +533,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                     <div className="flex flex-wrap items-center gap-2">
                       <Link
                         href={`/admin/${item.slug}`}
-                        className="inline-flex min-h-11 items-center justify-center rounded-full px-5 text-xs font-semibold"
+                        className="inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80"
                         style={{
                           backgroundColor: "var(--color-primary)",
                           color: "var(--color-background)",
@@ -554,7 +546,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                         href={`/${item.slug}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex min-h-11 items-center justify-center rounded-full border px-4 text-xs font-medium"
+                        className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-opacity hover:opacity-85 active:opacity-75"
                         style={{
                           backgroundColor: "var(--color-secondary)",
                           borderColor:
@@ -576,7 +568,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                     <button
                       type="button"
                       onClick={() => void handleCopyLoginLink(item.slug)}
-                      className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-4 text-xs font-medium"
+                      className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
                       style={{
                         backgroundColor: "var(--color-background)",
                         borderColor:
@@ -593,7 +585,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                       onClick={() =>
                         isEditing ? setEditingSlug(null) : startEditing(item)
                       }
-                      className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-4 text-xs font-medium"
+                      className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
                       style={{
                         backgroundColor: isEditing
                           ? "var(--color-secondary)"
@@ -611,7 +603,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                           type="button"
                           disabled={deletingSlug === item.slug}
                           onClick={() => setConfirmDeleteSlug(null)}
-                          className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-3.5 text-xs font-medium"
+                          className="inline-flex min-h-11 items-center justify-center rounded-xl border px-3.5 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
                           style={{
                             backgroundColor: "var(--color-background)",
                             borderColor:
@@ -624,7 +616,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                           type="button"
                           disabled={deletingSlug === item.slug}
                           onClick={() => void handleDelete(item.slug)}
-                          className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full px-4 text-xs font-semibold"
+                          className="inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80"
                           style={{
                             backgroundColor: "var(--color-accent)",
                             color: "var(--color-background)",
@@ -642,7 +634,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                           setEditingSlug(null);
                           setConfirmDeleteSlug(item.slug);
                         }}
-                        className="ml-auto inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-4 text-xs font-medium"
+                        className="ml-auto inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
                         style={{
                           backgroundColor: "var(--color-background)",
                           borderColor:
@@ -737,7 +729,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                             type="button"
                             disabled={isSavingMeta}
                             onClick={() => void handleSaveMeta(item.slug, true)}
-                            className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-4 text-xs font-medium"
+                            className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
                             style={{
                               backgroundColor: "var(--color-background)",
                               borderColor:
@@ -748,7 +740,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                             Matikan Login Pasangan
                           </button>
                         ) : (
-                          <span className="text-xs opacity-70">
+                          <span className="text-xs opacity-75">
                             Isi sandi (min. 6 karakter) untuk mengaktifkan login
                             pasangan.
                           </span>
@@ -758,7 +750,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                           type="button"
                           disabled={isSavingMeta}
                           onClick={() => void handleSaveMeta(item.slug, false)}
-                          className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full px-5 text-xs font-semibold disabled:opacity-60"
+                          className="inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80 disabled:opacity-60"
                           style={{
                             backgroundColor: "var(--color-primary)",
                             color: "var(--color-background)",

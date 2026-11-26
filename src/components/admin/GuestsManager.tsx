@@ -40,7 +40,7 @@ async function copyTextToClipboard(text: string): Promise<boolean> {
       await navigator.clipboard.writeText(text);
       return true;
     } catch {
-      // fallback ke execCommand di bawah
+      // Clipboard API fails on insecure origins; fall back to execCommand.
     }
   }
 
@@ -237,7 +237,7 @@ export function GuestsManager({ invitationSlug, config }: GuestsManagerProps) {
   return (
     <section
       aria-label="Kelola Daftar Tamu"
-      className="space-y-6 rounded-3xl border px-5 py-6 sm:px-6"
+      className="space-y-6 rounded-2xl border px-5 py-6 sm:px-6"
       style={{
         backgroundColor: "var(--color-background)",
         borderColor:
@@ -257,7 +257,7 @@ export function GuestsManager({ invitationSlug, config }: GuestsManagerProps) {
       {notice ? (
         <div
           role={notice.type === "error" ? "alert" : "status"}
-          className="rounded-2xl border px-4 py-3 text-sm font-medium"
+          className="rounded-xl border px-4 py-3 text-sm font-medium"
           style={{
             backgroundColor:
               notice.type === "info"
@@ -277,7 +277,6 @@ export function GuestsManager({ invitationSlug, config }: GuestsManagerProps) {
         </div>
       ) : null}
 
-      {/* Tambah Tamu */}
       <div
         className="space-y-3 rounded-2xl border p-4"
         style={{
@@ -291,7 +290,7 @@ export function GuestsManager({ invitationSlug, config }: GuestsManagerProps) {
           <label htmlFor="guest-names-input" className="text-sm font-semibold">
             Tambah Nama Tamu
           </label>
-          <span className="text-xs opacity-70">
+          <span className="text-xs opacity-75">
             {detectedNamesCount} nama terdeteksi
           </span>
         </div>
@@ -302,13 +301,13 @@ export function GuestsManager({ invitationSlug, config }: GuestsManagerProps) {
           value={rawNames}
           onChange={(event) => setRawNames(event.target.value)}
           disabled={isAdding}
-          placeholder={"Contoh:\nBudi Santoso\nIbu Sari & Keluarga\nAndi Pratama"}
-          className="w-full rounded-xl border px-3.5 py-2.5 text-sm outline-none focus:ring-2"
+          placeholder={"Satu nama per baris, contoh:\nNama Tamu 1\nNama Keluarga 2"}
+          className="w-full rounded-xl border px-3.5 py-2.5 text-sm"
           style={inputStyle}
         />
 
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs opacity-70">
+          <p className="text-xs opacity-75">
             Satu nama per baris (maks. 60 karakter per nama). Duplikat otomatis
             dilewati.
           </p>
@@ -316,7 +315,7 @@ export function GuestsManager({ invitationSlug, config }: GuestsManagerProps) {
             type="button"
             disabled={isAdding || detectedNamesCount === 0}
             onClick={() => void handleAddGuests()}
-            className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full px-6 text-xs font-semibold transition-opacity disabled:cursor-not-allowed disabled:opacity-55"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl px-6 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80 disabled:opacity-55"
             style={{
               backgroundColor: "var(--color-primary)",
               color: "var(--color-background)",
@@ -331,7 +330,6 @@ export function GuestsManager({ invitationSlug, config }: GuestsManagerProps) {
         </div>
       </div>
 
-      {/* Template WhatsApp */}
       <div
         className="space-y-2.5 rounded-2xl border p-4"
         style={{
@@ -346,14 +344,14 @@ export function GuestsManager({ invitationSlug, config }: GuestsManagerProps) {
             </label>
             <p className="text-xs opacity-75">
               Gunakan <code className="font-mono">{"{nama}"}</code> dan{" "}
-              <code className="font-mono">{"{tautan}"}</code> — akan diganti
-              otomatis untuk tiap tamu.
+              <code className="font-mono">{"{tautan}"}</code>, keduanya akan
+              diganti otomatis untuk tiap tamu.
             </p>
           </div>
           <button
             type="button"
             onClick={() => setWaTemplate(createDefaultWhatsAppTemplate(config))}
-            className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-4 text-xs font-medium"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
             style={{
               backgroundColor: "var(--color-background)",
               borderColor:
@@ -369,12 +367,11 @@ export function GuestsManager({ invitationSlug, config }: GuestsManagerProps) {
           rows={6}
           value={waTemplate}
           onChange={(event) => setWaTemplate(event.target.value)}
-          className="w-full rounded-xl border px-3.5 py-2.5 text-xs leading-relaxed outline-none focus:ring-2"
+          className="w-full rounded-xl border px-3.5 py-2.5 text-xs leading-relaxed"
           style={inputStyle}
         />
       </div>
 
-      {/* Daftar Tamu */}
       <div className="space-y-3">
         <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
           <h3 className="text-sm font-semibold">
@@ -386,14 +383,14 @@ export function GuestsManager({ invitationSlug, config }: GuestsManagerProps) {
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Cari nama tamu..."
             aria-label="Cari nama tamu"
-            className="min-h-11 w-full rounded-xl border px-3.5 text-sm outline-none focus:ring-2 sm:max-w-xs"
+            className="min-h-11 w-full rounded-xl border px-3.5 text-sm sm:max-w-xs"
             style={inputStyle}
           />
         </div>
 
         {isLoading ? (
           <div
-            className="rounded-2xl border px-4 py-8 text-center text-sm opacity-70"
+            className="rounded-2xl border px-4 py-8 text-center text-sm opacity-75"
             style={{
               borderColor:
                 "color-mix(in srgb, var(--color-primary) 30%, transparent)",
@@ -446,7 +443,7 @@ export function GuestsManager({ invitationSlug, config }: GuestsManagerProps) {
                     <h4 className="text-sm font-semibold break-words">
                       {guest.name}
                     </h4>
-                    <p className="font-mono text-[11px] break-all opacity-70">
+                    <p className="font-mono text-[11px] break-all opacity-75">
                       {personalUrl}
                     </p>
                   </div>
@@ -457,7 +454,7 @@ export function GuestsManager({ invitationSlug, config }: GuestsManagerProps) {
                       onClick={() =>
                         void handleCopy(`link-${guest.id}`, personalUrl)
                       }
-                      className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-4 text-xs font-medium"
+                      className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
                       style={{
                         backgroundColor: "var(--color-background)",
                         borderColor: "var(--color-primary)",
@@ -471,7 +468,7 @@ export function GuestsManager({ invitationSlug, config }: GuestsManagerProps) {
                       onClick={() =>
                         void handleCopy(`wa-${guest.id}`, waMessage)
                       }
-                      className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full px-4 text-xs font-semibold"
+                      className="inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80"
                       style={{
                         backgroundColor: "var(--color-primary)",
                         color: "var(--color-background)",
@@ -484,7 +481,7 @@ export function GuestsManager({ invitationSlug, config }: GuestsManagerProps) {
                       href={waShareUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex min-h-11 items-center justify-center rounded-full border px-4 text-xs font-medium"
+                      className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-opacity hover:opacity-85 active:opacity-75"
                       style={{
                         backgroundColor: "var(--color-secondary)",
                         borderColor:
@@ -500,7 +497,7 @@ export function GuestsManager({ invitationSlug, config }: GuestsManagerProps) {
                           type="button"
                           disabled={deletingId === guest.id}
                           onClick={() => setConfirmDeleteId(null)}
-                          className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-3 text-xs font-medium"
+                          className="inline-flex min-h-11 items-center justify-center rounded-xl border px-3 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
                           style={{
                             backgroundColor: "var(--color-background)",
                             borderColor:
@@ -513,7 +510,7 @@ export function GuestsManager({ invitationSlug, config }: GuestsManagerProps) {
                           type="button"
                           disabled={deletingId === guest.id}
                           onClick={() => void handleDeleteGuest(guest.id)}
-                          className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full px-3.5 text-xs font-semibold"
+                          className="inline-flex min-h-11 items-center justify-center rounded-xl px-3.5 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80"
                           style={{
                             backgroundColor: "var(--color-accent)",
                             color: "var(--color-background)",
@@ -526,7 +523,7 @@ export function GuestsManager({ invitationSlug, config }: GuestsManagerProps) {
                       <button
                         type="button"
                         onClick={() => setConfirmDeleteId(guest.id)}
-                        className="ml-auto inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-3.5 text-xs font-medium"
+                        className="ml-auto inline-flex min-h-11 items-center justify-center rounded-xl border px-3.5 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
                         style={{
                           backgroundColor: "var(--color-background)",
                           borderColor:

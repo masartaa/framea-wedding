@@ -38,16 +38,16 @@ interface WishesSectionProps {
 const PREVIEW_WISHES: ReadonlyArray<PublicWish> = [
   {
     id: -1,
-    name: "Budi Santoso",
+    name: "Contoh Tamu 1 (Pratinjau)",
     message:
-      "Selamat menempuh hidup baru! Semoga menjadi keluarga yang sakinah, mawaddah, dan rahmah.",
+      "[Contoh ucapan doa restu dari tamu undangan yang akan tampil di sini.]",
     createdAt: "2026-12-20T08:30:00.000Z",
   },
   {
     id: -2,
-    name: "Rina & Keluarga",
+    name: "Contoh Tamu 2 (Pratinjau)",
     message:
-      "Turut berbahagia atas pernikahan kalian. Semoga selalu diberikan kebahagiaan dan keberkahan.",
+      "[Ucapan asli dari tamu undangan akan otomatis muncul di daftar ini setelah dikirim.]",
     createdAt: "2026-12-19T14:15:00.000Z",
   },
 ];
@@ -108,13 +108,43 @@ export function WishesSection({
     previewMode ? PREVIEW_WISHES.length : 0
   );
   const [isLoading, setIsLoading] = useState(!previewMode);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{
     type: "success" | "error";
     text: string;
+    field?: "name" | "message";
   } | null>(null);
 
   const nameValue = hasEditedName ? customName : urlGuestName;
+
+  const reloadWishes = async () => {
+    if (previewMode) {
+      return;
+    }
+    setIsLoading(true);
+    setLoadError(null);
+    try {
+      const response = await fetch(apiEndpoint, { cache: "no-store" });
+      const data = (await response.json()) as WishesGetResponse;
+      if (!response.ok) {
+        setLoadError(data.error ?? "Gagal memuat ucapan tamu. Silakan coba lagi.");
+        return;
+      }
+      if (Array.isArray(data.wishes)) {
+        setWishesList(data.wishes);
+        setTotalCount(
+          typeof data.total === "number" ? data.total : data.wishes.length
+        );
+      }
+    } catch {
+      setLoadError(
+        "Tidak dapat memuat ucapan tamu. Periksa koneksi internet Anda lalu coba lagi."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (previewMode) {
@@ -123,11 +153,18 @@ export function WishesSection({
 
     let cancelled = false;
     fetch(apiEndpoint, { cache: "no-store" })
-      .then((res) => res.json() as Promise<WishesGetResponse>)
-      .then((data) => {
+      .then(async (res) => {
+        const data = (await res.json()) as WishesGetResponse;
         if (cancelled) {
           return;
         }
+        if (!res.ok) {
+          setLoadError(
+            data.error ?? "Gagal memuat ucapan tamu. Silakan coba lagi."
+          );
+          return;
+        }
+        setLoadError(null);
         if (Array.isArray(data.wishes)) {
           setWishesList(data.wishes);
           setTotalCount(
@@ -136,7 +173,11 @@ export function WishesSection({
         }
       })
       .catch(() => {
-        // Biarkan daftar kosong jika gagal mengambil sementara
+        if (!cancelled) {
+          setLoadError(
+            "Tidak dapat memuat ucapan tamu. Periksa koneksi internet Anda lalu coba lagi."
+          );
+        }
       })
       .finally(() => {
         if (!cancelled) {
@@ -164,19 +205,35 @@ export function WishesSection({
     const trimmedMessage = message.trim();
 
     if (!trimmedName) {
-      setFeedback({ type: "error", text: "Mohon isi nama Anda terlebih dahulu." });
+      setFeedback({
+        type: "error",
+        text: "Mohon isi nama Anda terlebih dahulu.",
+        field: "name",
+      });
       return;
     }
     if (trimmedName.length > 50) {
-      setFeedback({ type: "error", text: "Nama maksimal 50 karakter." });
+      setFeedback({
+        type: "error",
+        text: "Nama maksimal 50 karakter.",
+        field: "name",
+      });
       return;
     }
     if (!trimmedMessage) {
-      setFeedback({ type: "error", text: "Mohon tulis ucapan atau doa Anda." });
+      setFeedback({
+        type: "error",
+        text: "Mohon tulis ucapan atau doa Anda.",
+        field: "message",
+      });
       return;
     }
     if (trimmedMessage.length > 300) {
-      setFeedback({ type: "error", text: "Ucapan maksimal 300 karakter." });
+      setFeedback({
+        type: "error",
+        text: "Ucapan maksimal 300 karakter.",
+        field: "message",
+      });
       return;
     }
 
@@ -235,7 +292,7 @@ export function WishesSection({
     >
       <Reveal>
         <p
-          className="text-xs font-medium tracking-[0.2em] uppercase"
+          className="text-xs font-medium tracking-wider"
           style={{ color: "var(--color-accent)" }}
         >
           Doa &amp; Harapan
@@ -262,7 +319,6 @@ export function WishesSection({
               "color-mix(in srgb, var(--color-primary) 40%, transparent)",
           }}
         >
-          {/* Field honeypot anti-bot */}
           <div className="sr-only" aria-hidden="true">
             <label htmlFor="wish-website">Situs Web</label>
             <input
@@ -281,7 +337,7 @@ export function WishesSection({
               <label htmlFor="wish-name" className="text-xs font-semibold">
                 Nama Anda
               </label>
-              <span className="text-[11px] opacity-60">
+              <span className="text-[11px] opacity-75">
                 {nameValue.length}/50
               </span>
             </div>
@@ -292,13 +348,17 @@ export function WishesSection({
               maxLength={50}
               required
               disabled={isSubmitting}
+              aria-invalid={feedback?.field === "name" ? true : undefined}
+              aria-describedby={
+                feedback?.field === "name" ? "wish-form-feedback" : undefined
+              }
               value={nameValue}
               onChange={(event) => {
                 setHasEditedName(true);
                 setCustomName(event.target.value);
               }}
               placeholder="Tulis nama Anda"
-              className="mt-1.5 min-h-11 w-full rounded-xl border px-3.5 text-sm outline-none focus:ring-2"
+              className="mt-1.5 min-h-11 w-full rounded-xl border px-3.5 text-sm"
               style={{
                 backgroundColor: "var(--color-background)",
                 borderColor:
@@ -313,7 +373,7 @@ export function WishesSection({
               <label htmlFor="wish-message" className="text-xs font-semibold">
                 Ucapan &amp; Doa
               </label>
-              <span className="text-[11px] opacity-60">
+              <span className="text-[11px] opacity-75">
                 {message.length}/300
               </span>
             </div>
@@ -324,10 +384,14 @@ export function WishesSection({
               maxLength={300}
               required
               disabled={isSubmitting}
+              aria-invalid={feedback?.field === "message" ? true : undefined}
+              aria-describedby={
+                feedback?.field === "message" ? "wish-form-feedback" : undefined
+              }
               value={message}
               onChange={(event) => setMessage(event.target.value)}
               placeholder="Tulis ucapan dan doa restu untuk kedua mempelai..."
-              className="mt-1.5 w-full rounded-xl border px-3.5 py-2.5 text-sm outline-none focus:ring-2"
+              className="mt-1.5 w-full rounded-xl border px-3.5 py-2.5 text-sm"
               style={{
                 backgroundColor: "var(--color-background)",
                 borderColor:
@@ -339,6 +403,7 @@ export function WishesSection({
 
           {feedback ? (
             <p
+              id="wish-form-feedback"
               role={feedback.type === "error" ? "alert" : "status"}
               className="rounded-xl border px-3.5 py-2.5 text-xs font-medium"
               style={{
@@ -363,7 +428,7 @@ export function WishesSection({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full px-6 text-sm font-semibold transition-transform duration-150 hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-full px-6 text-sm font-semibold transition-opacity duration-150 hover:opacity-90 active:opacity-80 disabled:opacity-60"
             style={{
               backgroundColor: "var(--color-primary)",
               color: "var(--color-background)",
@@ -375,11 +440,11 @@ export function WishesSection({
 
         <div className="mt-6 text-left">
           <div className="mb-3 flex items-center justify-between">
-            <p className="text-xs font-semibold tracking-wider uppercase opacity-75">
+            <p className="text-xs font-semibold tracking-wider opacity-75">
               Daftar Ucapan
             </p>
             <span
-              className="rounded-full px-2.5 py-0.5 text-xs font-medium"
+              className="rounded-md px-2.5 py-0.5 text-xs font-medium"
               style={{
                 backgroundColor: "var(--color-background)",
                 color: "var(--color-accent)",
@@ -391,7 +456,7 @@ export function WishesSection({
 
           {isLoading ? (
             <div
-              className="rounded-2xl border px-5 py-6 text-center text-sm opacity-70"
+              className="rounded-2xl border px-5 py-6 text-center text-sm opacity-75"
               style={{
                 backgroundColor: "var(--color-background)",
                 borderColor:
@@ -399,6 +464,31 @@ export function WishesSection({
               }}
             >
               Memuat ucapan tamu...
+            </div>
+          ) : loadError ? (
+            <div
+              role="alert"
+              className="rounded-2xl border px-5 py-6 text-center text-sm"
+              style={{
+                backgroundColor: "var(--color-background)",
+                borderColor: "var(--color-accent)",
+              }}
+            >
+              <p className="font-medium" style={{ color: "var(--color-accent)" }}>
+                {loadError}
+              </p>
+              <button
+                type="button"
+                onClick={() => void reloadWishes()}
+                className="mt-3 inline-flex min-h-11 items-center justify-center rounded-xl border px-5 text-xs font-semibold transition-opacity hover:opacity-85 active:opacity-75"
+                style={{
+                  backgroundColor: "var(--color-secondary)",
+                  borderColor: "var(--color-primary)",
+                  color: "var(--color-text)",
+                }}
+              >
+                Coba Muat Ulang
+              </button>
             </div>
           ) : wishesList.length === 0 ? (
             <div
@@ -430,7 +520,7 @@ export function WishesSection({
                     >
                       {item.name}
                     </h3>
-                    <time className="text-[11px] opacity-60">
+                    <time className="text-[11px] opacity-75">
                       {formatWishDate(item.createdAt)} WIB
                     </time>
                   </div>

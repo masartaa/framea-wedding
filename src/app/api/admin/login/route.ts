@@ -157,7 +157,6 @@ export async function POST(request: NextRequest) {
     return response;
   }
 
-  // Mode Super Admin
   if (!isAuthConfigured()) {
     return NextResponse.json(
       {

@@ -139,7 +139,7 @@ export function EventsManager({
   };
 
   const inputClassName =
-    "mt-1.5 min-h-11 w-full rounded-xl border px-3.5 py-2.5 text-sm outline-none transition-colors focus:ring-2";
+    "mt-1.5 min-h-11 w-full rounded-xl border px-3.5 py-2.5 text-sm transition-colors";
   const inputStyle = {
     backgroundColor: "var(--color-background)",
     borderColor: "color-mix(in srgb, var(--color-primary) 45%, transparent)",
@@ -149,7 +149,7 @@ export function EventsManager({
   return (
     <section
       aria-label="Pengaturan Rangkaian Acara"
-      className="space-y-5 rounded-3xl border px-5 py-6 sm:px-6"
+      className="space-y-5 rounded-2xl border px-5 py-6 sm:px-6"
       style={{
         backgroundColor: "var(--color-background)",
         borderColor:
@@ -167,7 +167,7 @@ export function EventsManager({
           </p>
         </div>
         <span
-          className="rounded-full px-3 py-1 text-xs font-medium"
+          className="rounded-md px-2.5 py-1 text-xs font-medium"
           style={{
             backgroundColor: "var(--color-secondary)",
             color: "var(--color-accent)",
@@ -177,7 +177,6 @@ export function EventsManager({
         </span>
       </div>
 
-      {/* Tombol Tambah Acara */}
       <div
         className="rounded-2xl border p-4"
         style={{
@@ -195,7 +194,7 @@ export function EventsManager({
               type="button"
               disabled={events.length >= MAX_EVENTS}
               onClick={() => addEvent(preset)}
-              className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-4 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-semibold transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-50"
               style={{
                 backgroundColor: "var(--color-background)",
                 borderColor: "var(--color-primary)",
@@ -208,7 +207,6 @@ export function EventsManager({
         </div>
       </div>
 
-      {/* Daftar Kartu Acara */}
       <div className="space-y-5">
         {events.map((item, index) => {
           const isFirst = index === 0;
@@ -221,6 +219,15 @@ export function EventsManager({
             (isPrimary && generalFallback
               ? fieldErrors[generalFallback]
               : undefined);
+
+          const titleErr = getErr("title", "general.eventTitle");
+          const dateErr = getErr("date", "general.eventDate");
+          const startErr = getErr("timeStart", "general.eventTimeStart");
+          const endErr = getErr("timeEnd", "general.eventTimeEnd");
+          const tzErr = getErr("timezone", "general.eventTimezone");
+          const venueErr = getErr("venueName", "general.venueName");
+          const addressErr = getErr("venueAddress", "general.venueAddress");
+          const mapsErr = getErr("mapsUrl", "general.mapsUrl");
 
           return (
             <article
@@ -235,7 +242,8 @@ export function EventsManager({
                   : "color-mix(in srgb, var(--color-primary) 32%, transparent)",
               }}
             >
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3"
+              <div
+                className="flex flex-wrap items-center justify-between gap-2 border-b pb-3"
                 style={{
                   borderColor:
                     "color-mix(in srgb, var(--color-primary) 25%, transparent)",
@@ -243,7 +251,7 @@ export function EventsManager({
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <span
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold"
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-md text-xs font-semibold"
                     style={{
                       backgroundColor: "var(--color-secondary)",
                       color: "var(--color-accent)",
@@ -256,7 +264,7 @@ export function EventsManager({
                   </h3>
                   {isPrimary ? (
                     <span
-                      className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
+                      className="rounded-md px-2.5 py-0.5 text-[11px] font-semibold"
                       style={{
                         backgroundColor: "var(--color-primary)",
                         color: "var(--color-background)",
@@ -272,7 +280,7 @@ export function EventsManager({
                     <button
                       type="button"
                       onClick={() => setPrimary(index)}
-                      className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-3.5 text-xs font-medium"
+                      className="inline-flex min-h-11 items-center justify-center rounded-xl border px-3.5 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
                       style={{
                         backgroundColor: "var(--color-background)",
                         borderColor: "var(--color-primary)",
@@ -287,7 +295,7 @@ export function EventsManager({
                     disabled={isFirst}
                     onClick={() => moveEvent(index, -1)}
                     aria-label={`Naikkan urutan ${item.title}`}
-                    className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-xl border text-base disabled:opacity-40"
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border text-base transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-40"
                     style={{
                       backgroundColor: "var(--color-background)",
                       borderColor:
@@ -302,7 +310,7 @@ export function EventsManager({
                     disabled={isLast}
                     onClick={() => moveEvent(index, 1)}
                     aria-label={`Turunkan urutan ${item.title}`}
-                    className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-xl border text-base disabled:opacity-40"
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border text-base transition-colors hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-40"
                     style={{
                       backgroundColor: "var(--color-background)",
                       borderColor:
@@ -316,7 +324,7 @@ export function EventsManager({
                     <button
                       type="button"
                       onClick={() => removeEvent(index)}
-                      className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border px-3.5 text-xs font-medium"
+                      className="inline-flex min-h-11 items-center justify-center rounded-xl border px-3.5 text-xs font-medium transition-colors hover:bg-zinc-100 active:bg-zinc-200"
                       style={{
                         backgroundColor: "var(--color-background)",
                         borderColor:
@@ -342,6 +350,10 @@ export function EventsManager({
                     id={`event-title-${item.id}`}
                     type="text"
                     maxLength={80}
+                    aria-invalid={titleErr ? true : undefined}
+                    aria-describedby={
+                      titleErr ? `event-title-${item.id}-err` : undefined
+                    }
                     placeholder="Contoh: Akad Nikah / Resepsi / Ngunduh Mantu"
                     value={item.title}
                     onChange={(event) =>
@@ -351,7 +363,8 @@ export function EventsManager({
                     style={inputStyle}
                   />
                   <ErrorText
-                    message={getErr("title", "general.eventTitle")}
+                    id={`event-title-${item.id}-err`}
+                    message={titleErr}
                   />
                 </div>
 
@@ -365,6 +378,10 @@ export function EventsManager({
                   <input
                     id={`event-date-${item.id}`}
                     type="date"
+                    aria-invalid={dateErr ? true : undefined}
+                    aria-describedby={
+                      dateErr ? `event-date-${item.id}-err` : undefined
+                    }
                     value={item.date}
                     onChange={(event) =>
                       updateField(index, "date", event.target.value)
@@ -372,7 +389,10 @@ export function EventsManager({
                     className={inputClassName}
                     style={inputStyle}
                   />
-                  <ErrorText message={getErr("date", "general.eventDate")} />
+                  <ErrorText
+                    id={`event-date-${item.id}-err`}
+                    message={dateErr}
+                  />
                 </div>
               </div>
 
@@ -388,6 +408,10 @@ export function EventsManager({
                     id={`event-start-${item.id}`}
                     type="text"
                     maxLength={20}
+                    aria-invalid={startErr ? true : undefined}
+                    aria-describedby={
+                      startErr ? `event-start-${item.id}-err` : undefined
+                    }
                     placeholder="08.00"
                     value={item.timeStart}
                     onChange={(event) =>
@@ -397,7 +421,8 @@ export function EventsManager({
                     style={inputStyle}
                   />
                   <ErrorText
-                    message={getErr("timeStart", "general.eventTimeStart")}
+                    id={`event-start-${item.id}-err`}
+                    message={startErr}
                   />
                 </div>
 
@@ -412,6 +437,10 @@ export function EventsManager({
                     id={`event-end-${item.id}`}
                     type="text"
                     maxLength={20}
+                    aria-invalid={endErr ? true : undefined}
+                    aria-describedby={
+                      endErr ? `event-end-${item.id}-err` : undefined
+                    }
                     placeholder="10.00 / Selesai"
                     value={item.timeEnd}
                     onChange={(event) =>
@@ -420,9 +449,7 @@ export function EventsManager({
                     className={inputClassName}
                     style={inputStyle}
                   />
-                  <ErrorText
-                    message={getErr("timeEnd", "general.eventTimeEnd")}
-                  />
+                  <ErrorText id={`event-end-${item.id}-err`} message={endErr} />
                 </div>
 
                 <div>
@@ -434,6 +461,10 @@ export function EventsManager({
                   </label>
                   <select
                     id={`event-tz-${item.id}`}
+                    aria-invalid={tzErr ? true : undefined}
+                    aria-describedby={
+                      tzErr ? `event-tz-${item.id}-err` : undefined
+                    }
                     value={item.timezone}
                     onChange={(event) =>
                       updateField(index, "timezone", event.target.value)
@@ -447,9 +478,7 @@ export function EventsManager({
                       </option>
                     ))}
                   </select>
-                  <ErrorText
-                    message={getErr("timezone", "general.eventTimezone")}
-                  />
+                  <ErrorText id={`event-tz-${item.id}-err`} message={tzErr} />
                 </div>
               </div>
 
@@ -464,7 +493,11 @@ export function EventsManager({
                   id={`event-venue-${item.id}`}
                   type="text"
                   maxLength={120}
-                  placeholder="Contoh: Masjid Agung / Koffie Goen Tuntang"
+                  aria-invalid={venueErr ? true : undefined}
+                  aria-describedby={
+                    venueErr ? `event-venue-${item.id}-err` : undefined
+                  }
+                  placeholder="Contoh: Gedung Serbaguna / Nama Tempat Acara"
                   value={item.venueName}
                   onChange={(event) =>
                     updateField(index, "venueName", event.target.value)
@@ -473,7 +506,8 @@ export function EventsManager({
                   style={inputStyle}
                 />
                 <ErrorText
-                  message={getErr("venueName", "general.venueName")}
+                  id={`event-venue-${item.id}-err`}
+                  message={venueErr}
                 />
               </div>
 
@@ -488,6 +522,10 @@ export function EventsManager({
                   id={`event-address-${item.id}`}
                   rows={2}
                   maxLength={300}
+                  aria-invalid={addressErr ? true : undefined}
+                  aria-describedby={
+                    addressErr ? `event-address-${item.id}-err` : undefined
+                  }
                   value={item.venueAddress}
                   onChange={(event) =>
                     updateField(index, "venueAddress", event.target.value)
@@ -496,7 +534,8 @@ export function EventsManager({
                   style={inputStyle}
                 />
                 <ErrorText
-                  message={getErr("venueAddress", "general.venueAddress")}
+                  id={`event-address-${item.id}-err`}
+                  message={addressErr}
                 />
               </div>
 
@@ -510,6 +549,10 @@ export function EventsManager({
                 <input
                   id={`event-maps-${item.id}`}
                   type="url"
+                  aria-invalid={mapsErr ? true : undefined}
+                  aria-describedby={
+                    mapsErr ? `event-maps-${item.id}-err` : undefined
+                  }
                   placeholder="https://maps.google.com/..."
                   value={item.mapsUrl}
                   onChange={(event) =>
@@ -518,11 +561,11 @@ export function EventsManager({
                   className={inputClassName}
                   style={inputStyle}
                 />
-                <p className="mt-1 text-xs opacity-65">
+                <p className="mt-1 text-xs opacity-75">
                   Kosongkan jika tombol Google Maps untuk acara ini ingin
                   disembunyikan.
                 </p>
-                <ErrorText message={getErr("mapsUrl", "general.mapsUrl")} />
+                <ErrorText id={`event-maps-${item.id}-err`} message={mapsErr} />
               </div>
             </article>
           );
@@ -532,13 +575,14 @@ export function EventsManager({
   );
 }
 
-function ErrorText({ message }: { message?: string }) {
+function ErrorText({ id, message }: { id: string; message?: string }) {
   if (!message) {
     return null;
   }
 
   return (
     <p
+      id={id}
       role="alert"
       className="mt-1 text-xs font-medium"
       style={{ color: "var(--color-accent)" }}

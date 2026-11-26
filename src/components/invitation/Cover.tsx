@@ -43,13 +43,15 @@ export function Cover({
     getGuestNameFromUrl,
     getServerGuestName
   );
-  const guestName = previewMode ? "Budi Santoso" : urlGuestName;
+  const guestName = previewMode ? "Nama Tamu (Pratinjau)" : urlGuestName;
 
   const layout = config.theme.layout.cover;
   const formattedDate = formatEventDateShort(config.general.eventDate);
   const heroPhoto = config.media.heroPhotoUrl.trim();
   const groomNick = config.couple.groom.nickname;
   const brideNick = config.couple.bride.nickname;
+  const isHidden = !previewMode && isOpened;
+  const CoupleHeading = isHidden ? "p" : "h1";
 
   const positionClass = previewMode
     ? "relative min-h-[640px] w-full"
@@ -61,8 +63,8 @@ export function Cover({
     <button
       type="button"
       onClick={onOpen}
-      disabled={!previewMode && isOpened}
-      className="mt-7 inline-flex min-h-11 min-w-44 cursor-pointer items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-medium tracking-wide transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+      disabled={isHidden}
+      className="mt-7 inline-flex min-h-11 min-w-44 items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-medium tracking-wide transition-opacity duration-200 hover:opacity-90 active:opacity-80"
       style={{
         backgroundColor: "var(--color-primary)",
         color: "var(--color-background)",
@@ -86,12 +88,12 @@ export function Cover({
     </button>
   );
 
-  // Variasi 5: Foto Penuh (Full-Bleed Backdrop)
   if (layout === "full-bleed") {
     return (
       <section
         aria-label="Sampul Undangan"
-        aria-hidden={!previewMode && isOpened}
+        aria-hidden={isHidden}
+        inert={isHidden}
         className={`flex flex-col justify-end overflow-y-auto px-5 py-10 ${positionClass}`}
         style={{
           backgroundColor: "var(--color-background)",
@@ -106,7 +108,8 @@ export function Cover({
               src={heroPhoto}
               alt=""
               fill
-              priority
+              preload
+              fetchPriority="high"
               sizes="100vw"
               className="object-cover"
             />
@@ -122,13 +125,13 @@ export function Cover({
 
         <div className="relative z-10 mx-auto mt-auto flex w-full max-w-sm flex-col items-center pt-32 text-center">
           <p
-            className="text-xs font-medium tracking-[0.22em] uppercase"
+            className="text-xs font-medium tracking-wider"
             style={{ color: "var(--color-accent)" }}
           >
             Undangan Pernikahan
           </p>
 
-          <h1 className="font-heading mt-2 text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">
+          <CoupleHeading className="font-heading mt-2 text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">
             <span>{groomNick}</span>
             <span
               className="mx-2 inline-block font-normal"
@@ -137,7 +140,7 @@ export function Cover({
               &amp;
             </span>
             <span>{brideNick}</span>
-          </h1>
+          </CoupleHeading>
 
           <p className="mt-2 text-sm tracking-wide opacity-85">
             {formattedDate}
@@ -154,9 +157,7 @@ export function Cover({
                 "color-mix(in srgb, var(--color-primary) 45%, transparent)",
             }}
           >
-            <p className="text-xs tracking-wider uppercase opacity-70">
-              Kepada Yth.
-            </p>
+            <p className="text-xs font-medium opacity-75">Kepada Yth.</p>
             <p className="mt-1.5 text-base font-medium break-words">
               {guestName}
             </p>
@@ -164,7 +165,7 @@ export function Cover({
 
           {openButton}
 
-          <p className="mt-4 text-xs opacity-70">
+          <p className="mt-4 text-xs opacity-75">
             Mohon maaf apabila ada kesalahan penulisan nama atau gelar
           </p>
         </div>
@@ -172,12 +173,12 @@ export function Cover({
     );
   }
 
-  // Variasi 4: Kubah Foto (Arch Photo)
   if (layout === "arch-photo") {
     return (
       <section
         aria-label="Sampul Undangan"
-        aria-hidden={!previewMode && isOpened}
+        aria-hidden={isHidden}
+        inert={isHidden}
         className={`flex items-center justify-center overflow-y-auto px-5 py-10 ${positionClass}`}
         style={{
           backgroundColor: "var(--color-background)",
@@ -195,7 +196,7 @@ export function Cover({
           }}
         >
           <p
-            className="text-xs font-medium tracking-[0.22em] uppercase"
+            className="text-xs font-medium tracking-wider"
             style={{ color: "var(--color-accent)" }}
           >
             Undangan Pernikahan
@@ -213,7 +214,8 @@ export function Cover({
                 src={heroPhoto}
                 alt={`Foto ${groomNick} dan ${brideNick}`}
                 fill
-                priority
+                preload
+                fetchPriority="high"
                 sizes="160px"
                 className="object-cover"
               />
@@ -229,7 +231,7 @@ export function Cover({
             )}
           </div>
 
-          <h1 className="font-heading mt-5 text-3xl leading-tight font-semibold tracking-tight">
+          <CoupleHeading className="font-heading mt-5 text-3xl leading-tight font-semibold tracking-tight">
             <span>{groomNick}</span>
             <span
               className="mx-2 inline-block font-normal"
@@ -238,7 +240,7 @@ export function Cover({
               &amp;
             </span>
             <span>{brideNick}</span>
-          </h1>
+          </CoupleHeading>
 
           <p className="mt-2 text-sm tracking-wide opacity-80">
             {formattedDate}
@@ -254,9 +256,7 @@ export function Cover({
                 "color-mix(in srgb, var(--color-primary) 35%, transparent)",
             }}
           >
-            <p className="text-xs tracking-wider uppercase opacity-70">
-              Kepada Yth.
-            </p>
+            <p className="text-xs font-medium opacity-75">Kepada Yth.</p>
             <p className="mt-1 text-base font-medium break-words">
               {guestName}
             </p>
@@ -264,7 +264,7 @@ export function Cover({
 
           {openButton}
 
-          <p className="mt-4 text-xs opacity-65">
+          <p className="mt-4 text-xs opacity-75">
             Mohon maaf apabila ada kesalahan penulisan nama atau gelar
           </p>
         </div>
@@ -272,7 +272,6 @@ export function Cover({
     );
   }
 
-  // Variasi 1 (center), 2 (minimal), dan 3 (framed)
   const isMinimal = layout === "minimal";
   const isFramed = layout === "framed";
 
@@ -285,7 +284,8 @@ export function Cover({
   return (
     <section
       aria-label="Sampul Undangan"
-      aria-hidden={!previewMode && isOpened}
+      aria-hidden={isHidden}
+      inert={isHidden}
       className={`flex items-center justify-center overflow-y-auto px-5 py-10 ${positionClass}`}
       style={{
         backgroundColor: "var(--color-background)",
@@ -327,7 +327,7 @@ export function Cover({
         ) : null}
 
         <p
-          className="text-xs font-medium tracking-[0.22em] uppercase"
+          className="text-xs font-medium tracking-wider"
           style={{ color: "var(--color-accent)" }}
         >
           Undangan Pernikahan
@@ -335,7 +335,7 @@ export function Cover({
 
         <Ornament enabled={config.theme.ornaments} className="my-4" />
 
-        <h1
+        <CoupleHeading
           className={`font-heading leading-tight font-semibold tracking-tight ${
             isMinimal ? "text-4xl sm:text-5xl" : "text-3xl sm:text-4xl"
           }`}
@@ -348,7 +348,7 @@ export function Cover({
             &amp;
           </span>
           <span>{brideNick}</span>
-        </h1>
+        </CoupleHeading>
 
         <p className="mt-3 text-sm tracking-wide opacity-80">{formattedDate}</p>
 
@@ -364,9 +364,7 @@ export function Cover({
               "color-mix(in srgb, var(--color-primary) 35%, transparent)",
           }}
         >
-          <p className="text-xs tracking-wider uppercase opacity-70">
-            Kepada Yth.
-          </p>
+          <p className="text-xs font-medium opacity-75">Kepada Yth.</p>
           <p className="mt-1.5 text-base font-medium break-words">
             {guestName}
           </p>
@@ -374,7 +372,7 @@ export function Cover({
 
         {openButton}
 
-        <p className="mt-4 text-xs opacity-65">
+        <p className="mt-4 text-xs opacity-75">
           Mohon maaf apabila ada kesalahan penulisan nama atau gelar
         </p>
       </div>

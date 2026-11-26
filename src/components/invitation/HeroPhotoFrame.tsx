@@ -77,51 +77,31 @@ export function HeroPhotoFrame({
   return (
     <div className="relative mx-auto flex w-full items-center justify-center py-2">
       <div className={`relative w-full ${wrapperClass}`}>
-        {/* Dekorasi Pendar Lembut di belakang foto */}
         {decoration === "soft-glow" ? (
           <>
             <div
               aria-hidden="true"
-              className={`pointer-events-none absolute -inset-3 opacity-55 blur-xl ${radiusClass}`}
+              className={`pointer-events-none absolute -inset-2.5 ${radiusClass}`}
               style={{
-                background:
-                  "radial-gradient(circle, var(--color-primary) 0%, var(--color-secondary) 60%, transparent 100%)",
+                backgroundColor:
+                  "color-mix(in srgb, var(--color-secondary) 85%, transparent)",
+                border:
+                  "1px solid color-mix(in srgb, var(--color-primary) 28%, transparent)",
               }}
             />
-            <svg
+            <span
               aria-hidden="true"
-              width="28"
-              height="28"
-              viewBox="0 0 24 24"
-              fill="none"
-              className="pointer-events-none absolute -top-2 -right-1 z-20"
-              style={{ color: "var(--color-primary)" }}
-            >
-              <path
-                d="M12 2L14 9.5L21.5 11.5L14 13.5L12 21L10 13.5L2.5 11.5L10 9.5L12 2Z"
-                fill="currentColor"
-                opacity="0.9"
-              />
-            </svg>
-            <svg
+              className="pointer-events-none absolute -top-2 -left-2 z-20 h-6 w-6 border-t-2 border-l-2"
+              style={{ borderColor: "var(--color-primary)" }}
+            />
+            <span
               aria-hidden="true"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              className="pointer-events-none absolute -bottom-1 -left-1 z-20"
-              style={{ color: "var(--color-accent)" }}
-            >
-              <path
-                d="M12 2L14 9.5L21.5 11.5L14 13.5L12 21L10 13.5L2.5 11.5L10 9.5L12 2Z"
-                fill="currentColor"
-                opacity="0.85"
-              />
-            </svg>
+              className="pointer-events-none absolute -right-2 -bottom-2 z-20 h-6 w-6 border-r-2 border-b-2"
+              style={{ borderColor: "var(--color-primary)" }}
+            />
           </>
         ) : null}
 
-        {/* Dekorasi Bingkai Ganda */}
         {decoration === "double-frame" ? (
           <div
             aria-hidden="true"
@@ -133,7 +113,6 @@ export function HeroPhotoFrame({
           />
         ) : null}
 
-        {/* Bingkai Utama Foto */}
         <div
           className={`relative z-10 h-full w-full overflow-hidden border-2 shadow-sm ${radiusClass}`}
           style={{
@@ -149,7 +128,8 @@ export function HeroPhotoFrame({
               src={trimmedPhoto}
               alt={`Foto ${groomNickname} dan ${brideNickname}`}
               fill
-              priority
+              preload
+              fetchPriority="high"
               sizes="(max-width: 640px) 88vw, 360px"
               className="object-cover"
             />
@@ -161,7 +141,7 @@ export function HeroPhotoFrame({
               >
                 {getInitials(groomNickname)} &amp; {getInitials(brideNickname)}
               </span>
-              <p className="mt-3 text-xs tracking-[0.2em] uppercase opacity-70">
+              <p className="mt-3 text-xs tracking-wider opacity-75">
                 {shortDate}
               </p>
             </div>
@@ -179,7 +159,6 @@ export function HeroPhotoFrame({
           ) : null}
         </div>
 
-        {/* Dekorasi Ornamen Daun & Bunga di sudut atas-kiri dan bawah-kanan */}
         {decoration === "floral-corner" ? (
           <>
             <FloralCornerSvg className="pointer-events-none absolute -top-4 -left-4 z-20 h-20 w-20" />

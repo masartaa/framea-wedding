@@ -18,7 +18,7 @@ export async function generateMetadata({
 
   if (!invitation) {
     return {
-      title: "Undangan Tidak Ditemukan — Framea",
+      title: "Undangan Tidak Ditemukan | Framea",
       robots: {
         index: false,
         follow: false,

@@ -116,7 +116,7 @@ export function ThemeEditor({
   return (
     <section
       aria-label="Pengaturan Tema"
-      className="space-y-6 rounded-3xl border px-5 py-6 sm:px-6"
+      className="space-y-6 rounded-2xl border px-5 py-6 sm:px-6"
       style={{
         backgroundColor: "var(--color-background)",
         borderColor:
@@ -149,7 +149,7 @@ export function ThemeEditor({
                 type="button"
                 onClick={() => applyPreset(preset)}
                 aria-pressed={isSelected}
-                className="flex min-h-11 cursor-pointer flex-col items-start rounded-2xl border p-3.5 text-left transition-transform duration-150 hover:scale-[1.01]"
+                className="flex min-h-11 flex-col items-start rounded-2xl border p-3.5 text-left transition-opacity duration-150 hover:opacity-90 active:opacity-80"
                 style={{
                   backgroundColor: isSelected
                     ? "var(--color-secondary)"
@@ -164,7 +164,7 @@ export function ThemeEditor({
                   <span className="text-sm font-semibold">{preset.name}</span>
                   {isSelected ? (
                     <span
-                      className="rounded-full px-2 py-0.5 text-[11px] font-medium"
+                      className="rounded-md px-2 py-0.5 text-[11px] font-medium"
                       style={{
                         backgroundColor: "var(--color-primary)",
                         color: "var(--color-background)",
@@ -199,7 +199,7 @@ export function ThemeEditor({
         <div className="mt-5">
           <div className="flex items-center justify-between gap-2">
             <h3 className="text-sm font-semibold">Kustomisasi Warna Manual</h3>
-            <span className="text-xs opacity-70">
+            <span className="text-xs opacity-75">
               Mode:{" "}
               <strong className="font-medium">
                 {theme.preset === "custom" ? "Kustom" : theme.preset}
@@ -227,7 +227,7 @@ export function ThemeEditor({
                   >
                     {item.label}
                   </label>
-                  <p className="text-xs opacity-65">{item.hint}</p>
+                  <p className="text-xs opacity-75">{item.hint}</p>
 
                   <div className="mt-2.5 flex items-center gap-2">
                     <input
@@ -237,24 +237,29 @@ export function ThemeEditor({
                       onChange={(event) =>
                         updateColor(item.key, event.target.value.toUpperCase())
                       }
-                      className="h-11 w-12 shrink-0 cursor-pointer rounded-xl border p-1"
+                      className="h-11 w-12 shrink-0 rounded-xl border p-1"
                       style={inputStyle}
                     />
                     <input
                       id={`color-${item.key}`}
                       type="text"
                       maxLength={7}
+                      aria-invalid={error ? true : undefined}
+                      aria-describedby={
+                        error ? `err-color-${item.key}` : undefined
+                      }
                       value={currentValue}
                       onChange={(event) =>
                         updateColor(item.key, event.target.value)
                       }
                       placeholder="#FFFFFF"
-                      className="min-h-11 w-full rounded-xl border px-3 font-mono text-sm uppercase outline-none focus:ring-2"
+                      className="min-h-11 w-full rounded-xl border px-3 font-mono text-sm uppercase"
                       style={inputStyle}
                     />
                   </div>
                   {error ? (
                     <p
+                      id={`err-color-${item.key}`}
                       role="alert"
                       className="mt-1 text-xs font-medium"
                       style={{ color: "var(--color-accent)" }}
@@ -271,7 +276,7 @@ export function ThemeEditor({
         {contrastWarnings.length > 0 ? (
           <div
             role="alert"
-            className="mt-4 rounded-2xl border px-4 py-3.5 text-sm"
+            className="mt-4 rounded-xl border px-4 py-3.5 text-sm"
             style={{
               backgroundColor:
                 "color-mix(in srgb, var(--color-accent) 12%, var(--color-background))",
@@ -323,7 +328,7 @@ export function ThemeEditor({
                 type="button"
                 onClick={() => updateFonts(pair.heading, pair.body)}
                 aria-pressed={isSelected}
-                className="flex min-h-11 cursor-pointer flex-col items-start rounded-2xl border p-3.5 text-left transition-colors"
+                className="flex min-h-11 flex-col items-start rounded-2xl border p-3.5 text-left transition-opacity hover:opacity-90 active:opacity-80"
                 style={{
                   backgroundColor: isSelected
                     ? "var(--color-secondary)"
@@ -334,14 +339,14 @@ export function ThemeEditor({
                   borderWidth: isSelected ? "2px" : "1px",
                 }}
               >
-                <span className="text-xs font-medium opacity-70">
+                <span className="text-xs font-medium opacity-75">
                   {pair.name}
                 </span>
                 <span
                   className="mt-1 text-lg font-semibold"
                   style={{ fontFamily: HEADING_FONT_CSS_MAP[pair.heading] }}
                 >
-                  Andi &amp; Sari
+                  Nama Mempelai
                 </span>
                 <span
                   className="mt-0.5 text-xs opacity-75"
@@ -371,7 +376,7 @@ export function ThemeEditor({
                   theme.fonts.body
                 )
               }
-              className="mt-1.5 min-h-11 w-full rounded-xl border px-3.5 text-sm outline-none focus:ring-2"
+              className="mt-1.5 min-h-11 w-full rounded-xl border px-3.5 text-sm"
               style={inputStyle}
             >
               {HEADING_FONT_OPTIONS.map((font) => (
@@ -398,7 +403,7 @@ export function ThemeEditor({
                   event.target.value as BodyFontOption
                 )
               }
-              className="mt-1.5 min-h-11 w-full rounded-xl border px-3.5 text-sm outline-none focus:ring-2"
+              className="mt-1.5 min-h-11 w-full rounded-xl border px-3.5 text-sm"
               style={inputStyle}
             >
               {BODY_FONT_OPTIONS.map((font) => (
@@ -425,7 +430,7 @@ export function ThemeEditor({
         <div className="mt-4 space-y-5">
           <div>
             <p className="text-sm font-medium">Layout Sampul (Cover)</p>
-            <p className="mt-0.5 text-xs opacity-70">
+            <p className="mt-0.5 text-xs opacity-75">
               Pilih 1 dari 5 variasi tampilan sampul yang dilihat tamu sebelum
               menekan Buka Undangan.
             </p>
@@ -438,7 +443,7 @@ export function ThemeEditor({
                     type="button"
                     onClick={() => updateCoverLayout(option.id)}
                     aria-pressed={isSelected}
-                    className="flex min-h-11 cursor-pointer flex-col items-start rounded-2xl border p-3 text-left"
+                    className="flex min-h-11 flex-col items-start rounded-2xl border p-3 text-left transition-opacity hover:opacity-90 active:opacity-80"
                     style={{
                       backgroundColor: isSelected
                         ? "var(--color-secondary)"
@@ -473,7 +478,7 @@ export function ThemeEditor({
                     type="button"
                     onClick={() => updateHeroLayout(option.id)}
                     aria-pressed={isSelected}
-                    className="flex min-h-11 cursor-pointer flex-col items-start rounded-2xl border p-3.5 text-left"
+                    className="flex min-h-11 flex-col items-start rounded-2xl border p-3.5 text-left transition-opacity hover:opacity-90 active:opacity-80"
                     style={{
                       backgroundColor: isSelected
                         ? "var(--color-secondary)"
@@ -498,7 +503,7 @@ export function ThemeEditor({
 
           <div>
             <p className="text-sm font-medium">Bentuk Foto Hero</p>
-            <p className="mt-0.5 text-xs opacity-70">
+            <p className="mt-0.5 text-xs opacity-75">
               Menentukan bentuk bingkai foto utama (oval, lingkaran, lengkung
               kubah, atau persegi).
             </p>
@@ -523,7 +528,7 @@ export function ThemeEditor({
                     type="button"
                     onClick={() => updateHeroShape(option.id)}
                     aria-pressed={isSelected}
-                    className="flex min-h-11 cursor-pointer flex-col items-start rounded-2xl border p-3 text-left"
+                    className="flex min-h-11 flex-col items-start rounded-2xl border p-3 text-left transition-opacity hover:opacity-90 active:opacity-80"
                     style={{
                       backgroundColor: isSelected
                         ? "var(--color-secondary)"
@@ -557,9 +562,9 @@ export function ThemeEditor({
 
           <div>
             <p className="text-sm font-medium">Dekorasi Foto Hero</p>
-            <p className="mt-0.5 text-xs opacity-70">
-              Tambahkan bingkai ganda, ornamen daun &amp; bunga, atau pendar
-              lembut di sekitar foto Hero.
+            <p className="mt-0.5 text-xs opacity-75">
+              Tambahkan bingkai ganda, ornamen daun &amp; bunga, atau bingkai
+              sudut di sekitar foto Hero.
             </p>
             <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {HERO_DECORATION_OPTIONS.map((option) => {
@@ -573,7 +578,7 @@ export function ThemeEditor({
                     type="button"
                     onClick={() => updateHeroDecoration(option.id)}
                     aria-pressed={isSelected}
-                    className="flex min-h-11 cursor-pointer flex-col items-start rounded-2xl border p-3.5 text-left"
+                    className="flex min-h-11 flex-col items-start rounded-2xl border p-3.5 text-left transition-opacity hover:opacity-90 active:opacity-80"
                     style={{
                       backgroundColor: isSelected
                         ? "var(--color-secondary)"
@@ -615,10 +620,11 @@ export function ThemeEditor({
               type="button"
               role="switch"
               aria-checked={theme.ornaments}
+              aria-label="Aktifkan ornamen pemisah"
               onClick={() =>
                 onChange({ ...theme, ornaments: !theme.ornaments })
               }
-              className="inline-flex min-h-11 min-w-28 cursor-pointer items-center justify-center rounded-full border px-4 text-xs font-semibold transition-colors"
+              className="inline-flex min-h-11 min-w-28 items-center justify-center rounded-xl border px-4 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80"
               style={{
                 backgroundColor: theme.ornaments
                   ? "var(--color-primary)"
