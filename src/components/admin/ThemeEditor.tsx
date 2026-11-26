@@ -11,6 +11,7 @@ import {
   COVER_LAYOUT_OPTIONS,
   detectMatchingPreset,
   FONT_PAIRINGS,
+  GALLERY_TRANSITION_OPTIONS,
   getThemeContrastWarnings,
   HEADING_FONT_OPTIONS,
   HERO_DECORATION_OPTIONS,
@@ -19,6 +20,7 @@ import {
   THEME_PRESETS,
   type BodyFontOption,
   type CoverLayoutOption,
+  type GalleryTransitionOption,
   type HeadingFontOption,
   type HeroDecorationOption,
   type HeroLayoutOption,
@@ -104,6 +106,15 @@ export function ThemeEditor({
     onChange({
       ...theme,
       layout: { ...theme.layout, heroDecoration },
+    });
+  };
+
+  const updateGalleryTransition = (
+    galleryTransition: GalleryTransitionOption
+  ) => {
+    onChange({
+      ...theme,
+      layout: { ...theme.layout, galleryTransition },
     });
   };
 
@@ -592,6 +603,60 @@ export function ThemeEditor({
                     <span className="text-sm font-semibold">
                       {option.label}
                     </span>
+                    <span className="mt-1 text-xs leading-relaxed opacity-75">
+                      {option.description}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-sm font-medium">Transisi Galeri Foto</p>
+            <p className="mt-0.5 text-xs opacity-75">
+              Pilih gaya perpindahan slide pada bagian Galeri Foto. Bisa diuji
+              langsung di tab Pratinjau.
+            </p>
+            <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {GALLERY_TRANSITION_OPTIONS.map((option) => {
+                const currentTransition =
+                  theme.layout.galleryTransition ?? "fade";
+                const isSelected = currentTransition === option.id;
+
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => updateGalleryTransition(option.id)}
+                    aria-pressed={isSelected}
+                    className="flex min-h-11 flex-col items-start rounded-2xl border p-3.5 text-left transition-opacity hover:opacity-90 active:opacity-80"
+                    style={{
+                      backgroundColor: isSelected
+                        ? "var(--color-secondary)"
+                        : "var(--color-background)",
+                      borderColor: isSelected
+                        ? "var(--color-primary)"
+                        : "color-mix(in srgb, var(--color-primary) 30%, transparent)",
+                      borderWidth: isSelected ? "2px" : "1px",
+                    }}
+                  >
+                    <div className="flex w-full items-center justify-between gap-2">
+                      <span className="text-sm font-semibold">
+                        {option.label}
+                      </span>
+                      {isSelected ? (
+                        <span
+                          className="rounded-md px-2 py-0.5 text-[11px] font-medium"
+                          style={{
+                            backgroundColor: "var(--color-primary)",
+                            color: "var(--color-background)",
+                          }}
+                        >
+                          Aktif
+                        </span>
+                      ) : null}
+                    </div>
                     <span className="mt-1 text-xs leading-relaxed opacity-75">
                       {option.description}
                     </span>

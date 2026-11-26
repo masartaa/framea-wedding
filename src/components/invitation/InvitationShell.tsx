@@ -105,6 +105,7 @@ export function InvitationShell({
             key="galeri"
             photoUrls={config.media.galleryPhotoUrls}
             ornaments={config.theme.ornaments}
+            transition={config.theme.layout.galleryTransition ?? "fade"}
           />
         );
       case "rsvp":

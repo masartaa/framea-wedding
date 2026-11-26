@@ -4,23 +4,44 @@ import {
   useEffect,
   useRef,
   useState,
+  type CSSProperties,
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import Image from "next/image";
+import type { SiteConfig } from "@/lib/config-schema";
 import { Ornament } from "./Ornament";
 import { Reveal } from "./Reveal";
+
+type GalleryTransition = SiteConfig["theme"]["layout"]["galleryTransition"];
 
 interface GallerySectionProps {
   photoUrls: string[];
   ornaments: boolean;
+  transition?: GalleryTransition;
+}
+
+interface SlideState {
+  current: number;
+  previous: number | null;
+  direction: 1 | -1;
+  step: number;
 }
 
 const AUTOPLAY_INTERVAL_MS = 4500;
 const SWIPE_THRESHOLD_PX = 40;
 
-export function GallerySection({ photoUrls, ornaments }: GallerySectionProps) {
+export function GallerySection({
+  photoUrls,
+  ornaments,
+  transition = "fade",
+}: GallerySectionProps) {
   const photos = photoUrls.filter((url) => url.trim().length > 0).slice(0, 6);
-  const [currentSlide, setCurrentSlide] = useState(0);
+  const [slideState, setSlideState] = useState<SlideState>({
+    current: 0,
+    previous: null,
+    direction: 1,
+    step: 0,
+  });
   const [isPaused, setIsPaused] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
@@ -28,13 +49,31 @@ export function GallerySection({ photoUrls, ornaments }: GallerySectionProps) {
   const swipeStartXRef = useRef<number | null>(null);
 
   const safeSlideIndex =
-    photos.length > 0 ? currentSlide % photos.length : 0;
+    photos.length > 0 ? slideState.current % photos.length : 0;
+  const safePrevIndex =
+    slideState.previous !== null && photos.length > 0
+      ? slideState.previous % photos.length
+      : null;
 
-  const goToSlide = (nextIndex: number) => {
+  const goToSlide = (nextIndex: number, explicitDirection?: 1 | -1) => {
     if (photos.length === 0) {
       return;
     }
-    setCurrentSlide((nextIndex + photos.length) % photos.length);
+    setSlideState((prev) => {
+      const current = prev.current % photos.length;
+      const target = (nextIndex + photos.length) % photos.length;
+      if (target === current) {
+        return prev;
+      }
+      const direction: 1 | -1 =
+        explicitDirection ?? (target > current ? 1 : -1);
+      return {
+        current: target,
+        previous: current,
+        direction,
+        step: prev.step + 1,
+      };
+    });
   };
 
   const closeLightbox = () => {
@@ -59,7 +98,15 @@ export function GallerySection({ photoUrls, ornaments }: GallerySectionProps) {
     }
 
     const timer = window.setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % photos.length);
+      setSlideState((prev) => {
+        const current = prev.current % photos.length;
+        return {
+          current: (current + 1) % photos.length,
+          previous: current,
+          direction: 1,
+          step: prev.step + 1,
+        };
+      });
     }, AUTOPLAY_INTERVAL_MS);
 
     return () => window.clearInterval(timer);
@@ -125,7 +172,11 @@ export function GallerySection({ photoUrls, ornaments }: GallerySectionProps) {
     const deltaX = event.clientX - startX;
     if (Math.abs(deltaX) >= SWIPE_THRESHOLD_PX) {
       setIsPaused(true);
-      goToSlide(deltaX < 0 ? safeSlideIndex + 1 : safeSlideIndex - 1);
+      if (deltaX < 0) {
+        goToSlide(safeSlideIndex + 1, 1);
+      } else {
+        goToSlide(safeSlideIndex - 1, -1);
+      }
     }
   };
 
@@ -191,16 +242,125 @@ export function GallerySection({ photoUrls, ornaments }: GallerySectionProps) {
                 aria-label={`Perbesar foto ${safeSlideIndex + 1} dari ${photos.length}`}
                 className="group relative block aspect-[4/5] w-full overflow-hidden"
               >
-                <Image
-                  key={photos[safeSlideIndex]}
-                  src={photos[safeSlideIndex]}
-                  alt={`Foto galeri pernikahan ${safeSlideIndex + 1}`}
-                  fill
-                  sizes="(max-width: 640px) 90vw, 448px"
-                  className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-                />
+                {transition === "slide" ? (
+                  <div
+                    className="flex h-full w-full transition-transform duration-500 ease-out"
+                    style={{
+                      transform: `translate3d(-${safeSlideIndex * 100}%, 0, 0)`,
+                    }}
+                  >
+                    {photos.map((url, index) => (
+                      <div
+                        key={`${url}-${index}`}
+                        aria-hidden={index !== safeSlideIndex}
+                        className="relative h-full w-full shrink-0"
+                      >
+                        <Image
+                          src={url}
+                          alt={`Foto galeri pernikahan ${index + 1}`}
+                          fill
+                          sizes="(max-width: 640px) 90vw, 448px"
+                          className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  photos.map((url, index) => {
+                    const isActive = index === safeSlideIndex;
+                    const isPrevious =
+                      safePrevIndex !== null &&
+                      index === safePrevIndex &&
+                      safePrevIndex !== safeSlideIndex;
+
+                    let wrapperClass = "absolute inset-0";
+                    let wrapperStyle: CSSProperties = {};
+                    let imageClass =
+                      "object-cover transition-transform duration-500 group-hover:scale-[1.02]";
+                    let imageStyle: CSSProperties | undefined;
+
+                    if (transition === "fade") {
+                      wrapperClass =
+                        "absolute inset-0 transition-opacity duration-700 ease-out";
+                      wrapperStyle = {
+                        opacity: isActive ? 1 : 0,
+                        zIndex: isActive ? 20 : 10,
+                      };
+                    } else if (transition === "ken-burns") {
+                      wrapperClass =
+                        "absolute inset-0 overflow-hidden transition-opacity duration-700 ease-out";
+                      wrapperStyle = {
+                        opacity: isActive ? 1 : 0,
+                        zIndex: isActive ? 20 : 10,
+                      };
+                      imageClass = isActive
+                        ? slideState.step % 2 === 0
+                          ? "object-cover gallery-ken-burns-a"
+                          : "object-cover gallery-ken-burns-b"
+                        : "object-cover";
+                      imageStyle = isActive
+                        ? {
+                            animationPlayState: isPaused
+                              ? "paused"
+                              : "running",
+                          }
+                        : undefined;
+                    } else if (transition === "card-depth") {
+                      const offsetX =
+                        index < safeSlideIndex
+                          ? "-18%"
+                          : index > safeSlideIndex
+                            ? "18%"
+                            : "0%";
+                      wrapperClass =
+                        "absolute inset-0 transition-[transform,opacity] duration-500 ease-out";
+                      wrapperStyle = {
+                        opacity: isActive ? 1 : 0,
+                        transform: isActive
+                          ? "translate3d(0, 0, 0) scale(1)"
+                          : `translate3d(${offsetX}, 0, 0) scale(0.92)`,
+                        zIndex: isActive ? 20 : isPrevious ? 15 : 10,
+                      };
+                    } else if (transition === "curtain") {
+                      const shouldAnimateCurtain =
+                        isActive && slideState.step > 0;
+                      const curtainAnimClass = shouldAnimateCurtain
+                        ? slideState.direction === 1
+                          ? slideState.step % 2 === 0
+                            ? "gallery-curtain-next-a"
+                            : "gallery-curtain-next-b"
+                          : slideState.step % 2 === 0
+                            ? "gallery-curtain-prev-a"
+                            : "gallery-curtain-prev-b"
+                        : "";
+                      wrapperClass = `absolute inset-0 ${curtainAnimClass}`;
+                      wrapperStyle = {
+                        opacity: isActive || isPrevious ? 1 : 0,
+                        zIndex: isActive ? 20 : isPrevious ? 15 : 10,
+                      };
+                    }
+
+                    return (
+                      <div
+                        key={`${url}-${index}`}
+                        aria-hidden={!isActive}
+                        className={wrapperClass}
+                        style={wrapperStyle}
+                      >
+                        <Image
+                          src={url}
+                          alt={`Foto galeri pernikahan ${index + 1}`}
+                          fill
+                          sizes="(max-width: 640px) 90vw, 448px"
+                          className={imageClass}
+                          style={imageStyle}
+                        />
+                      </div>
+                    );
+                  })
+                )}
                 <span
-                  className="pointer-events-none absolute right-3 bottom-3 rounded-md px-2.5 py-1 text-xs font-medium"
+                  className="pointer-events-none absolute right-3 bottom-3 z-30 rounded-md px-2.5 py-1 text-xs font-medium"
                   style={{
                     backgroundColor: "var(--color-background)",
                     color: "var(--color-text)",
@@ -218,7 +378,7 @@ export function GallerySection({ photoUrls, ornaments }: GallerySectionProps) {
                     type="button"
                     onClick={() => {
                       setIsPaused(true);
-                      goToSlide(safeSlideIndex - 1);
+                      goToSlide(safeSlideIndex - 1, -1);
                     }}
                     aria-label="Foto sebelumnya"
                     className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border px-3.5 text-xs font-semibold transition-opacity hover:opacity-85 active:opacity-75"
@@ -254,7 +414,7 @@ export function GallerySection({ photoUrls, ornaments }: GallerySectionProps) {
                     type="button"
                     onClick={() => {
                       setIsPaused(true);
-                      goToSlide(safeSlideIndex + 1);
+                      goToSlide(safeSlideIndex + 1, 1);
                     }}
                     aria-label="Foto berikutnya"
                     className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl px-3.5 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80"
@@ -282,7 +442,7 @@ export function GallerySection({ photoUrls, ornaments }: GallerySectionProps) {
                         aria-current={isCurrent ? "true" : undefined}
                         onClick={() => {
                           setIsPaused(true);
-                          setCurrentSlide(index);
+                          goToSlide(index);
                         }}
                         className="relative aspect-square min-h-11 w-full overflow-hidden rounded-xl border transition-opacity hover:opacity-95"
                         style={{

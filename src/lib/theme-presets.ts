@@ -8,6 +8,8 @@ export type HeroLayoutOption = SiteConfig["theme"]["layout"]["hero"];
 export type HeroShapeOption = SiteConfig["theme"]["layout"]["heroShape"];
 export type HeroDecorationOption =
   SiteConfig["theme"]["layout"]["heroDecoration"];
+export type GalleryTransitionOption =
+  SiteConfig["theme"]["layout"]["galleryTransition"];
 
 export interface ThemePresetDefinition {
   id: ThemePresetKey;
@@ -253,6 +255,38 @@ export const HERO_DECORATION_OPTIONS: ReadonlyArray<{
     id: "soft-glow",
     label: "Bingkai Sudut",
     description: "Lapisan tonal lembut di belakang foto dengan siku sudut tipis.",
+  },
+];
+
+export const GALLERY_TRANSITION_OPTIONS: ReadonlyArray<{
+  id: GalleryTransitionOption;
+  label: string;
+  description: string;
+}> = [
+  {
+    id: "fade",
+    label: "Crossfade Halus",
+    description: "Foto lama memudar pelan bersamaan dengan foto baru muncul.",
+  },
+  {
+    id: "slide",
+    label: "Slide Horizontal",
+    description: "Foto bergeser mendatar kanan dan kiri seperti album geser.",
+  },
+  {
+    id: "ken-burns",
+    label: "Fade + Zoom Pelan",
+    description: "Crossfade romantis dengan efek zoom sangat halus.",
+  },
+  {
+    id: "card-depth",
+    label: "Slide + Scale",
+    description: "Foto masuk dari samping sementara foto lama mengecil lembut.",
+  },
+  {
+    id: "curtain",
+    label: "Reveal Tirai Lembut",
+    description: "Foto baru tersingkap perlahan seperti membalik lembar album.",
   },
 ];
 

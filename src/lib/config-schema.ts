@@ -62,6 +62,13 @@ export const heroDecorationSchema = z.enum([
   "floral-corner",
   "soft-glow",
 ]);
+export const galleryTransitionSchema = z.enum([
+  "fade",
+  "slide",
+  "ken-burns",
+  "card-depth",
+  "curtain",
+]);
 
 export const sectionIdSchema = z.enum([
   "hero",
@@ -313,6 +320,7 @@ export const siteConfigSchema = z.object({
       hero: heroLayoutSchema,
       heroShape: heroShapeSchema.optional().default("rounded"),
       heroDecoration: heroDecorationSchema.optional().default("floral-corner"),
+      galleryTransition: galleryTransitionSchema.optional().default("fade"),
     }),
     ornaments: z.boolean(),
   }),
@@ -521,6 +529,7 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
       hero: "full-photo",
       heroShape: "rounded",
       heroDecoration: "floral-corner",
+      galleryTransition: "fade",
     },
     ornaments: true,
   },
