@@ -143,6 +143,7 @@ export const storyItemSchema = z.object({
     .trim()
     .min(1, "Cerita momen wajib diisi.")
     .max(400, "Cerita momen maksimal 400 karakter."),
+  photoUrl: optionalMediaUrlSchema.optional().default(""),
 });
 
 export const DEFAULT_STORY_CONFIG = {
@@ -156,6 +157,7 @@ export const DEFAULT_STORY_CONFIG = {
       title: "Awal Pertemuan",
       description:
         "Ceritakan secara singkat bagaimana kalian pertama kali bertemu dan saling mengenal.",
+      photoUrl: "",
     },
     {
       id: "kisah-2",
@@ -163,6 +165,7 @@ export const DEFAULT_STORY_CONFIG = {
       title: "Menjalani Bersama",
       description:
         "Bagikan momen penting yang membuat kalian semakin yakin untuk melangkah bersama.",
+      photoUrl: "",
     },
     {
       id: "kisah-3",
@@ -170,6 +173,7 @@ export const DEFAULT_STORY_CONFIG = {
       title: "Menuju Pernikahan",
       description:
         "Dengan doa restu kedua keluarga, kami memantapkan hati menuju ikatan pernikahan.",
+      photoUrl: "",
     },
   ],
 };
@@ -180,6 +184,19 @@ export const DEFAULT_RSVP_CONFIG = {
     "Mohon konfirmasi kehadiran Bapak/Ibu/Saudara/i agar kami dapat mempersiapkan penyambutan dengan baik.",
   maxGuests: 5,
 };
+
+function isValidInstagramInput(value: string): boolean {
+  if (!value) {
+    return true;
+  }
+  const cleaned = value
+    .replace(/^https?:\/\/(www\.)?instagram\.com\//i, "")
+    .replace(/^(www\.)?instagram\.com\//i, "")
+    .split(/[/?#]/)[0]
+    ?.replace(/^@+/, "")
+    .trim();
+  return Boolean(cleaned && /^[A-Za-z0-9._]{1,30}$/.test(cleaned));
+}
 
 export const personSchema = z.object({
   nickname: z
@@ -201,6 +218,17 @@ export const personSchema = z.object({
     .trim()
     .max(120, "Nama ibu maksimal 120 karakter."),
   photoUrl: optionalMediaUrlSchema,
+  showInstagram: z.boolean().optional().default(false),
+  instagram: z
+    .string()
+    .trim()
+    .max(60, "Username Instagram maksimal 60 karakter.")
+    .refine(
+      isValidInstagramInput,
+      "Username Instagram hanya boleh berisi huruf, angka, titik, atau garis bawah."
+    )
+    .optional()
+    .default(""),
 });
 
 export const eventItemSchema = z.object({
@@ -540,6 +568,8 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
       fatherName: "Bapak Nama Ayah Pria",
       motherName: "Ibu Nama Ibu Pria",
       photoUrl: "",
+      showInstagram: false,
+      instagram: "",
     },
     bride: {
       nickname: "Mempelai Wanita",
@@ -547,6 +577,8 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
       fatherName: "Bapak Nama Ayah Wanita",
       motherName: "Ibu Nama Ibu Wanita",
       photoUrl: "",
+      showInstagram: false,
+      instagram: "",
     },
   },
   story: DEFAULT_STORY_CONFIG,

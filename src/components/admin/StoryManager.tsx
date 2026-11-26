@@ -1,27 +1,61 @@
 "use client";
 
+import { useRef, useState, type ChangeEvent } from "react";
+import Image from "next/image";
 import type { SiteConfig, StoryItem } from "@/lib/config-schema";
+import { formatFileSize, MAX_IMAGE_BYTES } from "@/lib/media-utils";
+import { ImageCropModal, type CropSpec } from "./ImageCropModal";
 
 interface StoryManagerProps {
+  invitationSlug: string;
   story: SiteConfig["story"];
   fieldErrors: Record<string, string>;
   onChangeStory: (nextStory: SiteConfig["story"]) => void;
   onClearError: (key: string) => void;
 }
 
+interface UploadResponseBody {
+  ok?: boolean;
+  url?: string;
+  error?: string;
+}
+
+interface StoryCropState {
+  itemId: string;
+  file: File;
+  sessionKey: number;
+}
+
 const MAX_STORY_ITEMS = 8;
+
+const STORY_CROP_SPEC: CropSpec = {
+  title: "Potong Foto Momen Kisah",
+  aspectLabel: "4:3 (Kartu Linimasa)",
+  aspectRatio: 4 / 3,
+  outputWidth: 1200,
+  outputHeight: 900,
+  circularGuide: false,
+};
 
 function generateStoryId(): string {
   return `kisah-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
 export function StoryManager({
+  invitationSlug,
   story,
   fieldErrors,
   onChangeStory,
   onClearError,
 }: StoryManagerProps) {
   const items = story.items;
+  const [cropState, setCropState] = useState<StoryCropState | null>(null);
+  const [uploadingItemId, setUploadingItemId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{
+    type: "info" | "error";
+    message: string;
+  } | null>(null);
+  const cropSessionRef = useRef(0);
 
   const updateMeta = <K extends "title" | "introText">(
     key: K,
@@ -45,12 +79,106 @@ export function StoryManager({
       period: `Tahap ${nextNumber}`,
       title: "",
       description: "",
+      photoUrl: "",
     };
 
     onChangeStory({
       ...story,
       items: [...items, newItem],
     });
+  };
+
+  const handlePhotoSelect = (
+    itemId: string,
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) {
+      return;
+    }
+    cropSessionRef.current += 1;
+    setNotice(null);
+    setCropState({
+      itemId,
+      file,
+      sessionKey: cropSessionRef.current,
+    });
+  };
+
+  const handleCropConfirm = async (cropped: {
+    file: File;
+    originalSize: number;
+    compressedSize: number;
+  }) => {
+    if (!cropState) {
+      return;
+    }
+
+    const targetItemId = cropState.itemId;
+    const targetIndex = items.findIndex((item) => item.id === targetItemId);
+    if (targetIndex === -1) {
+      setCropState(null);
+      return;
+    }
+
+    if (cropped.file.size > MAX_IMAGE_BYTES) {
+      setNotice({
+        type: "error",
+        message:
+          "Ukuran foto masih melebihi 2 MB setelah dipotong. Coba pilih foto lain.",
+      });
+      return;
+    }
+
+    setUploadingItemId(targetItemId);
+    try {
+      const formData = new FormData();
+      formData.append("file", cropped.file);
+      formData.append("kind", "kisah");
+      formData.append("slug", invitationSlug);
+      formData.append("sortOrder", String(targetIndex));
+
+      const response = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = (await response.json()) as UploadResponseBody;
+      if (!response.ok || !data.url) {
+        throw new Error(data.error ?? "Gagal mengunggah foto momen.");
+      }
+
+      const nextItems = items.map((item) =>
+        item.id === targetItemId ? { ...item, photoUrl: data.url ?? "" } : item
+      );
+      onChangeStory({
+        ...story,
+        items: nextItems,
+      });
+      onClearError(`story.items.${targetIndex}.photoUrl`);
+
+      const sizeInfo =
+        cropped.compressedSize < cropped.originalSize
+          ? `${formatFileSize(cropped.originalSize)} -> ${formatFileSize(cropped.compressedSize)}`
+          : formatFileSize(cropped.compressedSize);
+
+      setNotice({
+        type: "info",
+        message: `Foto momen berhasil diunggah (${sizeInfo}). Klik "Simpan" untuk menayangkan.`,
+      });
+      setCropState(null);
+    } catch (error) {
+      setNotice({
+        type: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Gagal mengunggah foto momen. Silakan coba lagi.",
+      });
+    } finally {
+      setUploadingItemId(null);
+    }
   };
 
   const updateItemField = <K extends keyof StoryItem>(
@@ -205,6 +333,29 @@ export function StoryManager({
         </button>
       </div>
 
+      {notice ? (
+        <div
+          role={notice.type === "error" ? "alert" : "status"}
+          className="rounded-xl border px-4 py-3 text-xs font-medium"
+          style={{
+            backgroundColor:
+              notice.type === "info"
+                ? "var(--color-secondary)"
+                : "color-mix(in srgb, var(--color-accent) 12%, var(--color-background))",
+            borderColor:
+              notice.type === "info"
+                ? "var(--color-primary)"
+                : "var(--color-accent)",
+            color:
+              notice.type === "info"
+                ? "var(--color-text)"
+                : "var(--color-accent)",
+          }}
+        >
+          {notice.message}
+        </div>
+      ) : null}
+
       {items.length === 0 ? (
         <div
           className="rounded-2xl border border-dashed px-5 py-8 text-center text-sm opacity-75"
@@ -224,6 +375,9 @@ export function StoryManager({
             const periodErr = fieldErrors[`story.items.${index}.period`];
             const titleErr = fieldErrors[`story.items.${index}.title`];
             const descErr = fieldErrors[`story.items.${index}.description`];
+            const photoErr = fieldErrors[`story.items.${index}.photoUrl`];
+            const photoUrl = item.photoUrl?.trim() ?? "";
+            const isUploadingThis = uploadingItemId === item.id;
 
             return (
               <article
@@ -398,11 +552,120 @@ export function StoryManager({
                     message={descErr}
                   />
                 </div>
+
+                <div
+                  className="rounded-xl border p-3.5"
+                  style={{
+                    backgroundColor: "var(--color-background)",
+                    borderColor:
+                      "color-mix(in srgb, var(--color-primary) 28%, transparent)",
+                  }}
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="relative h-16 w-20 shrink-0 overflow-hidden rounded-lg border"
+                        style={{
+                          backgroundColor: "var(--color-secondary)",
+                          borderColor:
+                            "color-mix(in srgb, var(--color-primary) 30%, transparent)",
+                        }}
+                      >
+                        {photoUrl ? (
+                          <Image
+                            src={photoUrl}
+                            alt={`Foto momen ${item.title.trim() || index + 1}`}
+                            fill
+                            sizes="80px"
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center px-1 text-center text-[10px] opacity-70">
+                            Tanpa foto
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <p className="text-sm font-medium">
+                          Foto Momen (Opsional)
+                        </p>
+                        <p className="mt-0.5 text-xs opacity-75">
+                          Format JPG, PNG, atau WebP (rasio 4:3, maks. 2 MB).
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label
+                        className={`inline-flex min-h-11 items-center justify-center rounded-xl border px-3.5 text-xs font-semibold transition-colors hover:bg-[var(--color-secondary)] active:opacity-80 ${
+                          isUploadingThis ? "pointer-events-none opacity-60" : ""
+                        }`}
+                        style={{
+                          backgroundColor: "var(--color-background)",
+                          borderColor: "var(--color-primary)",
+                          color: "var(--color-text)",
+                        }}
+                      >
+                        <span>
+                          {isUploadingThis
+                            ? "Mengunggah..."
+                            : photoUrl
+                              ? "Ganti Foto"
+                              : "Unggah Foto"}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          disabled={uploadingItemId !== null}
+                          onChange={(event) => handlePhotoSelect(item.id, event)}
+                          className="sr-only"
+                        />
+                      </label>
+
+                      {photoUrl ? (
+                        <button
+                          type="button"
+                          disabled={uploadingItemId !== null}
+                          onClick={() => updateItemField(index, "photoUrl", "")}
+                          className="inline-flex min-h-11 items-center justify-center rounded-xl border px-3.5 text-xs font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80 disabled:opacity-50"
+                          style={{
+                            backgroundColor: "var(--color-background)",
+                            borderColor:
+                              "color-mix(in srgb, var(--color-accent) 45%, transparent)",
+                            color: "var(--color-accent)",
+                          }}
+                        >
+                          Hapus Foto
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                  <ErrorText
+                    id={`err-story-photo-${item.id}`}
+                    message={photoErr}
+                  />
+                </div>
               </article>
             );
           })}
         </div>
       )}
+
+      {cropState ? (
+        <ImageCropModal
+          key={cropState.sessionKey}
+          file={cropState.file}
+          spec={STORY_CROP_SPEC}
+          isSubmitting={uploadingItemId !== null}
+          onCancel={() => {
+            if (uploadingItemId === null) {
+              setCropState(null);
+            }
+          }}
+          onConfirm={handleCropConfirm}
+        />
+      ) : null}
     </section>
   );
 }

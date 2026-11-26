@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { SiteConfig } from "@/lib/config-schema";
 import { Ornament } from "./Ornament";
 import { Reveal } from "./Reveal";
@@ -79,7 +80,7 @@ export function StorySection({ story, ornaments }: StorySectionProps) {
                 </span>
 
                 <article
-                  className="rounded-2xl border px-5 py-4"
+                  className="overflow-hidden rounded-2xl border"
                   style={{
                     backgroundColor:
                       index % 2 === 0
@@ -89,23 +90,44 @@ export function StorySection({ story, ornaments }: StorySectionProps) {
                       "color-mix(in srgb, var(--color-primary) 35%, transparent)",
                   }}
                 >
-                  <span
-                    className="inline-block rounded-md px-2.5 py-0.5 text-xs font-semibold"
-                    style={{
-                      backgroundColor: "var(--color-secondary)",
-                      color: "var(--color-accent)",
-                    }}
-                  >
-                    {item.period}
-                  </span>
+                  {item.photoUrl?.trim() ? (
+                    <div
+                      className="relative aspect-[4/3] w-full overflow-hidden border-b"
+                      style={{
+                        backgroundColor: "var(--color-secondary)",
+                        borderColor:
+                          "color-mix(in srgb, var(--color-primary) 25%, transparent)",
+                      }}
+                    >
+                      <Image
+                        src={item.photoUrl}
+                        alt={item.title || `Foto kisah ${index + 1}`}
+                        fill
+                        sizes="(max-width: 640px) 82vw, 400px"
+                        className="object-cover"
+                      />
+                    </div>
+                  ) : null}
 
-                  <h3 className="font-heading mt-2 text-lg font-semibold leading-snug">
-                    {item.title}
-                  </h3>
+                  <div className="px-5 py-4">
+                    <span
+                      className="inline-block rounded-md px-2.5 py-0.5 text-xs font-semibold"
+                      style={{
+                        backgroundColor: "var(--color-secondary)",
+                        color: "var(--color-accent)",
+                      }}
+                    >
+                      {item.period}
+                    </span>
 
-                  <p className="mt-1.5 whitespace-pre-line break-words text-sm leading-relaxed opacity-85">
-                    {item.description}
-                  </p>
+                    <h3 className="font-heading mt-2 text-lg font-semibold leading-snug">
+                      {item.title}
+                    </h3>
+
+                    <p className="mt-1.5 whitespace-pre-line break-words text-sm leading-relaxed opacity-85">
+                      {item.description}
+                    </p>
+                  </div>
                 </article>
               </li>
             ))}

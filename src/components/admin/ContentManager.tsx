@@ -135,7 +135,9 @@ function getTabForFieldPath(path: string): ActiveTab {
     path.startsWith("couple.introText") ||
     path.includes(".fullName") ||
     path.includes(".fatherName") ||
-    path.includes(".motherName")
+    path.includes(".motherName") ||
+    path.includes(".instagram") ||
+    path.includes(".showInstagram")
   ) {
     return "mempelai";
   }
@@ -149,6 +151,7 @@ function collectBlobUrls(config: SiteConfig): Set<string> {
     config.couple.groom.photoUrl,
     config.couple.bride.photoUrl,
     ...config.media.galleryPhotoUrls,
+    ...config.story.items.map((item) => item.photoUrl ?? ""),
   ];
   return new Set(urls.filter((url) => isVercelBlobUrl(url)));
 }
@@ -1072,6 +1075,86 @@ export function ContentManager({
                       message={fieldErrors[`couple.${key}.motherName`]}
                     />
                   </div>
+
+                  <div
+                    className="space-y-3 rounded-xl border p-3"
+                    style={{
+                      backgroundColor: "var(--color-background)",
+                      borderColor:
+                        "color-mix(in srgb, var(--color-primary) 28%, transparent)",
+                    }}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-medium">Akun Instagram</p>
+                        <p className="text-xs opacity-75">
+                          Tampilkan tautan Instagram di kartu mempelai.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={Boolean(person.showInstagram)}
+                        aria-label={`Tampilkan akun Instagram ${title}`}
+                        onClick={() =>
+                          updatePerson(
+                            key,
+                            "showInstagram",
+                            !person.showInstagram
+                          )
+                        }
+                        className="inline-flex min-h-11 min-w-24 shrink-0 items-center justify-center rounded-xl border px-3 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80"
+                        style={{
+                          backgroundColor: person.showInstagram
+                            ? "var(--color-primary)"
+                            : "var(--color-background)",
+                          borderColor: "var(--color-primary)",
+                          color: person.showInstagram
+                            ? "var(--color-background)"
+                            : "var(--color-text)",
+                        }}
+                      >
+                        {person.showInstagram ? "Aktif" : "Nonaktif"}
+                      </button>
+                    </div>
+
+                    {person.showInstagram ? (
+                      <div>
+                        <label
+                          htmlFor={`couple-${key}-instagram`}
+                          className="block text-xs font-medium"
+                        >
+                          Username Instagram
+                        </label>
+                        <input
+                          id={`couple-${key}-instagram`}
+                          type="text"
+                          maxLength={60}
+                          placeholder="@namaakun"
+                          aria-invalid={
+                            fieldErrors[`couple.${key}.instagram`]
+                              ? true
+                              : undefined
+                          }
+                          aria-describedby={
+                            fieldErrors[`couple.${key}.instagram`]
+                              ? `err-couple-${key}-instagram`
+                              : undefined
+                          }
+                          value={person.instagram ?? ""}
+                          onChange={(event) =>
+                            updatePerson(key, "instagram", event.target.value)
+                          }
+                          className={inputClassName}
+                          style={inputStyle}
+                        />
+                        <FieldError
+                          id={`err-couple-${key}-instagram`}
+                          message={fieldErrors[`couple.${key}.instagram`]}
+                        />
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               );
             })}
@@ -1081,6 +1164,7 @@ export function ContentManager({
 
       {effectiveActiveTab === "kisah" ? (
         <StoryManager
+          invitationSlug={invitationSlug}
           story={draft.story}
           fieldErrors={fieldErrors}
           onChangeStory={(nextStory) =>

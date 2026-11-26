@@ -21,7 +21,7 @@ import {
 
 const MAX_MEDIA_FILES_PER_INVITATION = 30;
 
-const mediaKindSchema = z.enum(["hero", "mempelai", "galeri", "musik"]);
+const mediaKindSchema = z.enum(["hero", "mempelai", "galeri", "kisah", "musik"]);
 
 const deleteBodySchema = z.object({
   url: z.string().url("URL media tidak valid."),
@@ -368,11 +368,12 @@ export async function POST(request: NextRequest) {
     if (process.env.DATABASE_URL) {
       try {
         const db = getDb();
+        const dbMediaKind = kind === "kisah" ? "galeri" : kind;
         const [inserted] = await db
           .insert(media)
           .values({
             invitationId: resolvedInvitationId,
-            kind,
+            kind: dbMediaKind,
             url: blob.url,
             sortOrder,
           })

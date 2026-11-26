@@ -11,6 +11,7 @@ import {
   getInitials,
   getInvitationEvents,
   isSafeExternalUrl,
+  normalizeInstagramHandle,
 } from "@/lib/format";
 import { Countdown } from "./Countdown";
 import { Cover } from "./Cover";
@@ -306,6 +307,9 @@ function CoupleSection({ config }: CoupleSectionProps) {
               .map((value) => value.trim())
               .filter(Boolean)
               .join(" & ");
+            const instagramHandle = person.showInstagram
+              ? normalizeInstagramHandle(person.instagram ?? "")
+              : "";
 
             return (
               <article
@@ -353,6 +357,47 @@ function CoupleSection({ config }: CoupleSectionProps) {
                     </span>
                     <span className="mt-0.5 block">{parents}</span>
                   </p>
+                ) : null}
+
+                {instagramHandle ? (
+                  <div className="mt-4">
+                    <a
+                      href={`https://instagram.com/${encodeURIComponent(instagramHandle)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`Instagram ${person.fullName} @${instagramHandle}`}
+                      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border px-4 text-xs font-semibold transition-opacity hover:opacity-85 active:opacity-75"
+                      style={{
+                        backgroundColor: "var(--color-secondary)",
+                        borderColor:
+                          "color-mix(in srgb, var(--color-primary) 40%, transparent)",
+                        color: "var(--color-text)",
+                      }}
+                    >
+                      <svg
+                        aria-hidden="true"
+                        width="15"
+                        height="15"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <rect x="2.5" y="2.5" width="19" height="19" rx="5" />
+                        <circle cx="12" cy="12" r="4.2" />
+                        <circle
+                          cx="17.5"
+                          cy="6.5"
+                          r="1"
+                          fill="currentColor"
+                          stroke="none"
+                        />
+                      </svg>
+                      <span>@{instagramHandle}</span>
+                    </a>
+                  </div>
                 ) : null}
               </article>
             );

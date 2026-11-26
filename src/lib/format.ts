@@ -128,3 +128,21 @@ export function isSafeExternalUrl(url: string): boolean {
     return false;
   }
 }
+
+export function normalizeInstagramHandle(raw: string): string {
+  let value = raw.trim();
+  if (!value) {
+    return "";
+  }
+
+  value = value.replace(/^https?:\/\/(www\.)?instagram\.com\//i, "");
+  value = value.replace(/^(www\.)?instagram\.com\//i, "");
+  value = value.split(/[/?#]/)[0] ?? "";
+  value = value.replace(/^@+/, "").trim();
+
+  if (!/^[A-Za-z0-9._]{1,30}$/.test(value)) {
+    return "";
+  }
+
+  return value;
+}
