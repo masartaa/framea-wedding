@@ -182,6 +182,7 @@ export function ContentManager({
   const tabButtonRefs = useRef<Partial<Record<ActiveTab, HTMLButtonElement | null>>>(
     {}
   );
+  const panelTopRef = useRef<HTMLDivElement | null>(null);
 
   const sectionEnabledMap = new Map(
     draft.sections.map((section) => [section.id, section.enabled])
@@ -209,6 +210,30 @@ export function ContentManager({
     ? "umum"
     : activeTab;
   const isAcaraDisabled = isTabDisabled("acara");
+
+  const selectTab = (nextTab: ActiveTab) => {
+    if (isTabDisabled(nextTab)) {
+      return;
+    }
+    setActiveTab(nextTab);
+    tabButtonRefs.current[nextTab]?.scrollIntoView({
+      inline: "nearest",
+      block: "nearest",
+    });
+
+    if (panelTopRef.current) {
+      const rect = panelTopRef.current.getBoundingClientRect();
+      if (rect.top < 16) {
+        const prefersReducedMotion = window.matchMedia(
+          "(prefers-reduced-motion: reduce)"
+        ).matches;
+        panelTopRef.current.scrollIntoView({
+          behavior: prefersReducedMotion ? "auto" : "smooth",
+          block: "start",
+        });
+      }
+    }
+  };
 
   const handleTabKeyDown = (
     event: ReactKeyboardEvent<HTMLButtonElement>,
@@ -246,10 +271,8 @@ export function ContentManager({
     event.preventDefault();
     const nextTab = enabledTabs[nextEnabledIndex];
     if (nextTab) {
-      setActiveTab(nextTab.id);
-      const nextButton = tabButtonRefs.current[nextTab.id];
-      nextButton?.focus();
-      nextButton?.scrollIntoView({ inline: "nearest", block: "nearest" });
+      selectTab(nextTab.id);
+      tabButtonRefs.current[nextTab.id]?.focus();
     }
   };
 
@@ -541,7 +564,7 @@ export function ContentManager({
   };
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-5">
+    <form onSubmit={handleSubmit} noValidate className="space-y-5 pb-28 sm:pb-24">
       <section
         className="rounded-2xl border px-5 py-5 sm:px-6"
         style={{
@@ -598,98 +621,27 @@ export function ContentManager({
           </div>
         </div>
 
-        <div
-          role="tablist"
-          aria-label="Menu pengaturan undangan"
-          className="mt-5 -mx-1 flex items-center gap-1 overflow-x-auto border-b px-1"
-          style={{
-            borderColor:
-              "color-mix(in srgb, var(--color-primary) 22%, transparent)",
-          }}
-        >
-          {TABS.map((tab) => {
-            const isDisabled = isTabDisabled(tab.id);
-            const isActive = !isDisabled && effectiveActiveTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                ref={(el) => {
-                  tabButtonRefs.current[tab.id] = el;
-                }}
-                id={`tab-${tab.id}`}
-                type="button"
-                role="tab"
-                disabled={isDisabled}
-                aria-selected={isActive}
-                aria-disabled={isDisabled || undefined}
-                aria-controls={`panel-${tab.id}`}
-                tabIndex={isActive ? 0 : -1}
-                title={
-                  isDisabled
-                    ? "Section ini sedang nonaktif. Aktifkan di tab Section untuk mengedit."
-                    : undefined
-                }
-                onKeyDown={(event) => handleTabKeyDown(event, tab.id)}
-                onClick={() => {
-                  if (!isDisabled) {
-                    setActiveTab(tab.id);
-                  }
-                }}
-                className={`-mb-px inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-t-xl border-b-2 px-3.5 text-sm transition-colors ${
-                  isActive
-                    ? "font-semibold"
-                    : "font-medium opacity-75 hover:bg-[var(--color-secondary)] hover:opacity-100"
-                } disabled:line-through disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:opacity-40`}
-                style={{
-                  borderBottomColor: isActive
-                    ? "var(--color-primary)"
-                    : "transparent",
-                  color: isActive
-                    ? "var(--color-primary)"
-                    : "var(--color-text)",
-                }}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-
         {disabledTabCount > 0 ? (
-          <p className="mt-2.5 text-xs opacity-75">
-            Menu yang dicoret sedang nonaktif mengikuti pengaturan di tab
-            Section. Aktifkan kembali di tab Section untuk mengeditnya.
+          <p
+            className="mt-4 border-t pt-3 text-xs opacity-75"
+            style={{
+              borderColor:
+                "color-mix(in srgb, var(--color-primary) 20%, transparent)",
+            }}
+          >
+            Menu yang dicoret pada navigasi bawah sedang nonaktif mengikuti
+            pengaturan di tab Section. Aktifkan kembali di tab Section untuk
+            mengeditnya.
           </p>
         ) : null}
       </section>
 
-      {statusBanner && !isDirectActionTab ? (
-        <div
-          role={statusBanner.type === "error" ? "alert" : "status"}
-          className="rounded-xl border px-4 py-3.5 text-sm font-medium"
-          style={{
-            backgroundColor:
-              statusBanner.type === "success"
-                ? "var(--color-secondary)"
-                : "color-mix(in srgb, var(--color-accent) 12%, var(--color-background))",
-            borderColor:
-              statusBanner.type === "success"
-                ? "var(--color-primary)"
-                : "var(--color-accent)",
-            color:
-              statusBanner.type === "success"
-                ? "var(--color-text)"
-                : "var(--color-accent)",
-          }}
-        >
-          {statusBanner.message}
-        </div>
-      ) : null}
-
       <div
+        ref={panelTopRef}
         role="tabpanel"
         id={`panel-${effectiveActiveTab}`}
         aria-labelledby={`tab-${effectiveActiveTab}`}
+        className="scroll-mt-4"
       >
       {effectiveActiveTab === "umum" ? (
         <section
@@ -811,7 +763,7 @@ export function ContentManager({
                   ? "Section Acara sedang nonaktif. Aktifkan di tab Section terlebih dahulu."
                   : undefined
               }
-              onClick={() => setActiveTab("acara")}
+              onClick={() => selectTab("acara")}
               className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border px-4 text-xs font-semibold transition-colors hover:bg-[var(--color-secondary)] active:opacity-80 disabled:opacity-45 disabled:hover:bg-[var(--color-background)]"
               style={{
                 backgroundColor: "var(--color-background)",
@@ -1495,6 +1447,154 @@ export function ContentManager({
           disimpan di tab lain.
         </div>
       ) : null}
+
+      <div
+        className="pointer-events-none fixed inset-x-0 bottom-3 z-30 px-3 sm:bottom-4 sm:px-6"
+        style={{
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        }}
+      >
+        <div className="mx-auto flex w-full max-w-4xl flex-col gap-2">
+          {statusBanner ? (
+            <div
+              role={statusBanner.type === "error" ? "alert" : "status"}
+              className="pointer-events-auto flex items-center justify-between gap-3 rounded-xl border px-4 py-2 text-xs font-medium shadow-md backdrop-blur-md sm:text-sm"
+              style={{
+                backgroundColor:
+                  statusBanner.type === "success"
+                    ? "var(--color-secondary)"
+                    : "color-mix(in srgb, var(--color-accent) 14%, var(--color-background))",
+                borderColor:
+                  statusBanner.type === "success"
+                    ? "var(--color-primary)"
+                    : "var(--color-accent)",
+                color:
+                  statusBanner.type === "success"
+                    ? "var(--color-text)"
+                    : "var(--color-accent)",
+              }}
+            >
+              <span>{statusBanner.message}</span>
+              <button
+                type="button"
+                onClick={() => setStatusBanner(null)}
+                aria-label="Tutup pemberitahuan"
+                className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg px-2.5 text-xs font-semibold transition-opacity hover:opacity-80"
+              >
+                Tutup
+              </button>
+            </div>
+          ) : null}
+
+          <div
+            className="pointer-events-auto flex w-full items-center gap-2 rounded-2xl border px-2 py-1.5 backdrop-blur-md sm:gap-3 sm:px-3"
+            style={{
+              backgroundColor:
+                "color-mix(in srgb, var(--color-background) 94%, transparent)",
+              borderColor:
+                "color-mix(in srgb, var(--color-primary) 38%, transparent)",
+              boxShadow:
+                "0 12px 32px -12px color-mix(in srgb, var(--color-primary) 30%, transparent)",
+            }}
+          >
+            <div
+              role="tablist"
+              aria-label="Menu pengaturan undangan"
+              className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto border-b"
+              style={{
+                borderColor:
+                  "color-mix(in srgb, var(--color-primary) 20%, transparent)",
+              }}
+            >
+              {TABS.map((tab) => {
+                const isDisabled = isTabDisabled(tab.id);
+                const isActive = !isDisabled && effectiveActiveTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    ref={(el) => {
+                      tabButtonRefs.current[tab.id] = el;
+                    }}
+                    id={`tab-${tab.id}`}
+                    type="button"
+                    role="tab"
+                    disabled={isDisabled}
+                    aria-selected={isActive}
+                    aria-disabled={isDisabled || undefined}
+                    aria-controls={`panel-${tab.id}`}
+                    tabIndex={isActive ? 0 : -1}
+                    title={
+                      isDisabled
+                        ? "Section ini sedang nonaktif. Aktifkan di tab Section untuk mengedit."
+                        : undefined
+                    }
+                    onKeyDown={(event) => handleTabKeyDown(event, tab.id)}
+                    onClick={() => selectTab(tab.id)}
+                    className={`-mb-px inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-t-xl border-b-2 px-3 text-xs transition-colors sm:px-3.5 sm:text-sm ${
+                      isActive
+                        ? "font-semibold"
+                        : "font-medium opacity-75 hover:bg-[var(--color-secondary)] hover:opacity-100"
+                    } disabled:line-through disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:opacity-40`}
+                    style={{
+                      borderBottomColor: isActive
+                        ? "var(--color-primary)"
+                        : "transparent",
+                      color: isActive
+                        ? "var(--color-primary)"
+                        : "var(--color-text)",
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {!isDirectActionTab || isDirty ? (
+              <div
+                className="shrink-0 border-l pl-2 sm:pl-3"
+                style={{
+                  borderColor:
+                    "color-mix(in srgb, var(--color-primary) 22%, transparent)",
+                }}
+              >
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  aria-label={
+                    isSaving
+                      ? "Menyimpan perubahan"
+                      : isDirty
+                        ? "Simpan perubahan yang belum tersimpan"
+                        : "Simpan dan publikasikan"
+                  }
+                  className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border px-3.5 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80 disabled:opacity-60 sm:px-4 sm:text-sm"
+                  style={{
+                    backgroundColor: isDirty
+                      ? "var(--color-primary)"
+                      : "var(--color-secondary)",
+                    borderColor: isDirty
+                      ? "var(--color-primary)"
+                      : "color-mix(in srgb, var(--color-primary) 35%, transparent)",
+                    color: isDirty
+                      ? "var(--color-background)"
+                      : "var(--color-text)",
+                  }}
+                >
+                  {isDirty ? (
+                    <span
+                      aria-hidden="true"
+                      className="h-2 w-2 rounded-full"
+                      style={{ backgroundColor: "var(--color-secondary)" }}
+                    />
+                  ) : null}
+                  <span>{isSaving ? "Menyimpan..." : "Simpan"}</span>
+                </button>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
     </form>
   );
 }
