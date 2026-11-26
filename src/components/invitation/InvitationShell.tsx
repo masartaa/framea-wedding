@@ -13,6 +13,7 @@ import {
   isSafeExternalUrl,
   normalizeInstagramHandle,
 } from "@/lib/format";
+import { BackgroundDecoration } from "./BackgroundDecoration";
 import { Countdown } from "./Countdown";
 import { Cover } from "./Cover";
 import { GallerySection } from "./GallerySection";
@@ -154,11 +155,16 @@ export function InvitationShell({
           />
         ) : (
           <div
-            className="mx-auto w-full max-w-lg shadow-sm"
+            className="relative mx-auto w-full max-w-lg overflow-hidden shadow-sm"
             style={{ backgroundColor: "var(--color-background)" }}
           >
-            {enabledSections.map((section) => renderSection(section))}
-            <ClosingSection config={config} />
+            <BackgroundDecoration
+              variant={config.theme.layout.backgroundPattern ?? "none"}
+            />
+            <div className="relative z-10">
+              {enabledSections.map((section) => renderSection(section))}
+              <ClosingSection config={config} />
+            </div>
           </div>
         )
       ) : (
@@ -166,12 +172,17 @@ export function InvitationShell({
           <Cover config={config} isOpened={isOpened} onOpen={handleOpen} />
 
           <main
-            className="mx-auto min-h-dvh w-full max-w-lg shadow-sm"
+            className="relative mx-auto min-h-dvh w-full max-w-lg overflow-hidden shadow-sm"
             style={{ backgroundColor: "var(--color-background)" }}
           >
-            {enabledSections.map((section) => renderSection(section))}
+            <BackgroundDecoration
+              variant={config.theme.layout.backgroundPattern ?? "none"}
+            />
+            <div className="relative z-10">
+              {enabledSections.map((section) => renderSection(section))}
 
-            <ClosingSection config={config} />
+              <ClosingSection config={config} />
+            </div>
           </main>
 
           <MusicPlayer
@@ -208,7 +219,7 @@ function HeroSection({
       className="px-5 pt-10 pb-14 text-center"
       style={{
         backgroundImage:
-          "linear-gradient(180deg, color-mix(in srgb, var(--color-secondary) 75%, var(--color-background)) 0%, var(--color-background) 100%)",
+          "linear-gradient(180deg, color-mix(in srgb, var(--color-secondary) 60%, transparent) 0%, transparent 100%)",
       }}
     >
       <div className={animateEntrance ? "hero-enter-photo" : "opacity-0"}>
@@ -283,7 +294,7 @@ function CoupleSection({ config }: CoupleSectionProps) {
       className="px-5 py-14 text-center"
       style={{
         backgroundColor:
-          "color-mix(in srgb, var(--color-secondary) 45%, var(--color-background))",
+          "color-mix(in srgb, var(--color-secondary) 38%, transparent)",
       }}
     >
       <Reveal>

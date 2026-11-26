@@ -115,6 +115,15 @@ export const galleryTransitionSchema = z.enum([
   "card-depth",
   "curtain",
 ]);
+export const backgroundPatternSchema = z.enum([
+  "none",
+  "botanical-corners",
+  "paper-linen",
+  "editorial-frame",
+  "kawung-classic",
+  "layered-arch",
+  "celestial-dots",
+]);
 
 export const sectionIdSchema = z.enum([
   "hero",
@@ -360,7 +369,7 @@ export const siteConfigSchema = z.object({
         .number()
         .int("Batas tamu harus berupa angka bulat.")
         .min(1, "Minimal 1 tamu.")
-        .max(400, "Maksimal 400 tamu per konfirmasi."),
+        .max(10, "Maksimal 10 tamu per konfirmasi."),
     })
     .optional()
     .default(DEFAULT_RSVP_CONFIG),
@@ -395,6 +404,7 @@ export const siteConfigSchema = z.object({
       heroShape: heroShapeSchema.optional().default("rounded"),
       heroDecoration: heroDecorationSchema.optional().default("floral-corner"),
       galleryTransition: galleryTransitionSchema.optional().default("fade"),
+      backgroundPattern: backgroundPatternSchema.optional().default("none"),
     }),
     ornaments: z.boolean(),
   }),
@@ -608,6 +618,7 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
       heroShape: "rounded",
       heroDecoration: "floral-corner",
       galleryTransition: "fade",
+      backgroundPattern: "none",
     },
     ornaments: true,
   },

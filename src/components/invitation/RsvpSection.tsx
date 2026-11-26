@@ -54,7 +54,7 @@ export function RsvpSection({
   const introText =
     rsvpConfig?.introText?.trim() ||
     "Mohon konfirmasi kehadiran Bapak/Ibu/Saudara/i agar kami dapat mempersiapkan penyambutan dengan baik.";
-  const maxGuests = Math.max(1, Math.min(400, rsvpConfig?.maxGuests ?? 5));
+  const maxGuests = Math.max(1, Math.min(10, rsvpConfig?.maxGuests ?? 5));
 
   const urlGuestName = useSyncExternalStore(
     subscribeToLocation,
@@ -184,7 +184,7 @@ export function RsvpSection({
       className="px-5 py-14 text-center"
       style={{
         backgroundColor:
-          "color-mix(in srgb, var(--color-secondary) 45%, var(--color-background))",
+          "color-mix(in srgb, var(--color-secondary) 38%, transparent)",
       }}
     >
       <Reveal>

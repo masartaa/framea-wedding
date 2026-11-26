@@ -10,6 +10,8 @@ export type HeroDecorationOption =
   SiteConfig["theme"]["layout"]["heroDecoration"];
 export type GalleryTransitionOption =
   SiteConfig["theme"]["layout"]["galleryTransition"];
+export type BackgroundPatternOption =
+  SiteConfig["theme"]["layout"]["backgroundPattern"];
 
 export interface ThemePresetDefinition {
   id: ThemePresetKey;
@@ -287,6 +289,48 @@ export const GALLERY_TRANSITION_OPTIONS: ReadonlyArray<{
     id: "curtain",
     label: "Reveal Tirai Lembut",
     description: "Foto baru tersingkap perlahan seperti membalik lembar album.",
+  },
+];
+
+export const BACKGROUND_PATTERN_OPTIONS: ReadonlyArray<{
+  id: BackgroundPatternOption;
+  label: string;
+  description: string;
+}> = [
+  {
+    id: "none",
+    label: "Polos",
+    description: "Latar bersih tanpa motif tambahan.",
+  },
+  {
+    id: "botanical-corners",
+    label: "Ranting Botani Sudut",
+    description: "Ilustrasi garis halus daun dan kelopak di sudut undangan.",
+  },
+  {
+    id: "paper-linen",
+    label: "Tekstur Kertas Halus",
+    description: "Serat kain linen samar layaknya kertas undangan cetak.",
+  },
+  {
+    id: "editorial-frame",
+    label: "Bingkai Garis Ganda",
+    description: "Garis bingkai rangkap elegan dengan aksen bintang sudut.",
+  },
+  {
+    id: "kawung-classic",
+    label: "Motif Kawung Klasik",
+    description: "Pola geometris kawung Nusantara tipis sebagai watermark.",
+  },
+  {
+    id: "layered-arch",
+    label: "Lengkung Kubah",
+    description: "Garis lengkung arch berlapis di bagian atas dan bawah.",
+  },
+  {
+    id: "celestial-dots",
+    label: "Titik & Bintang Samar",
+    description: "Taburan bintang kecil dan titik halus di sepanjang latar.",
   },
 ];
 

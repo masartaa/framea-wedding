@@ -47,8 +47,32 @@ export interface InvitationSummary {
   updatedAt: string;
 }
 
+function clampLegacyStoredConfig(raw: unknown): unknown {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    return raw;
+  }
+  const record = raw as Record<string, unknown>;
+  const rawRsvp = record.rsvp;
+  if (
+    rawRsvp &&
+    typeof rawRsvp === "object" &&
+    !Array.isArray(rawRsvp) &&
+    typeof (rawRsvp as Record<string, unknown>).maxGuests === "number" &&
+    ((rawRsvp as Record<string, unknown>).maxGuests as number) > 10
+  ) {
+    return {
+      ...record,
+      rsvp: {
+        ...(rawRsvp as Record<string, unknown>),
+        maxGuests: 10,
+      },
+    };
+  }
+  return raw;
+}
+
 function parseStoredConfig(raw: unknown): SiteConfig {
-  const parsed = siteConfigSchema.safeParse(raw);
+  const parsed = siteConfigSchema.safeParse(clampLegacyStoredConfig(raw));
   if (parsed.success) {
     return {
       ...parsed.data,

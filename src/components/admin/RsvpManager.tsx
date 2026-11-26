@@ -295,7 +295,7 @@ export function RsvpManager({
               type="number"
               inputMode="numeric"
               min={1}
-              max={400}
+              max={10}
               step={1}
               aria-invalid={fieldErrors["rsvp.maxGuests"] ? true : undefined}
               aria-describedby={
@@ -303,12 +303,12 @@ export function RsvpManager({
                   ? "err-rsvp-max-guests"
                   : undefined
               }
-              value={rsvpConfig.maxGuests}
+              value={Math.min(10, rsvpConfig.maxGuests)}
               onChange={(event) => {
                 const raw = Number.parseInt(event.target.value, 10);
                 const nextValue = Number.isNaN(raw)
                   ? 1
-                  : Math.max(1, Math.min(400, raw));
+                  : Math.max(1, Math.min(10, raw));
                 onChangeRsvpConfig({
                   ...rsvpConfig,
                   maxGuests: nextValue,
@@ -319,7 +319,7 @@ export function RsvpManager({
               style={inputStyle}
             />
             <p className="mt-1 text-xs opacity-75">
-              Rentang yang diizinkan: 1 sampai 400 orang per konfirmasi.
+              Rentang yang diizinkan: 1 sampai 10 orang per konfirmasi.
             </p>
             {fieldErrors["rsvp.maxGuests"] ? (
               <p

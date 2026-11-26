@@ -6,6 +6,7 @@ import {
   HEADING_FONT_CSS_MAP,
 } from "@/lib/font-variables";
 import {
+  BACKGROUND_PATTERN_OPTIONS,
   BODY_FONT_OPTIONS,
   COLOR_FIELD_META,
   COVER_LAYOUT_OPTIONS,
@@ -18,6 +19,7 @@ import {
   HERO_LAYOUT_OPTIONS,
   HERO_SHAPE_OPTIONS,
   THEME_PRESETS,
+  type BackgroundPatternOption,
   type BodyFontOption,
   type CoverLayoutOption,
   type GalleryTransitionOption,
@@ -115,6 +117,15 @@ export function ThemeEditor({
     onChange({
       ...theme,
       layout: { ...theme.layout, galleryTransition },
+    });
+  };
+
+  const updateBackgroundPattern = (
+    backgroundPattern: BackgroundPatternOption
+  ) => {
+    onChange({
+      ...theme,
+      layout: { ...theme.layout, backgroundPattern },
     });
   };
 
@@ -666,6 +677,62 @@ export function ThemeEditor({
             </div>
           </div>
 
+          <div>
+            <p className="text-sm font-medium">Dekorasi Latar Undangan</p>
+            <p className="mt-0.5 text-xs opacity-75">
+              Tambahkan motif halus di latar belakang undangan agar tidak polos.
+              Warna motif otomatis menyesuaikan palet tema aktif.
+            </p>
+            <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {BACKGROUND_PATTERN_OPTIONS.map((option) => {
+                const currentPattern = theme.layout.backgroundPattern ?? "none";
+                const isSelected = currentPattern === option.id;
+
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => updateBackgroundPattern(option.id)}
+                    aria-pressed={isSelected}
+                    className="flex min-h-11 items-start gap-3 rounded-2xl border p-3.5 text-left transition-opacity hover:opacity-90 active:opacity-80"
+                    style={{
+                      backgroundColor: isSelected
+                        ? "var(--color-secondary)"
+                        : "var(--color-background)",
+                      borderColor: isSelected
+                        ? "var(--color-primary)"
+                        : "color-mix(in srgb, var(--color-primary) 30%, transparent)",
+                      borderWidth: isSelected ? "2px" : "1px",
+                    }}
+                  >
+                    <BackgroundPatternIcon variant={option.id} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-semibold">
+                          {option.label}
+                        </span>
+                        {isSelected ? (
+                          <span
+                            className="shrink-0 rounded-md px-2 py-0.5 text-[11px] font-medium"
+                            style={{
+                              backgroundColor: "var(--color-primary)",
+                              color: "var(--color-background)",
+                            }}
+                          >
+                            Aktif
+                          </span>
+                        ) : null}
+                      </div>
+                      <span className="mt-1 block text-xs leading-relaxed opacity-75">
+                        {option.description}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <div
             className="flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between"
             style={{
@@ -810,6 +877,108 @@ function CoverLayoutIcon({ variant }: { variant: CoverLayoutOption }) {
         className="h-2.5 w-5 rounded-[3px] border"
         style={{ borderColor: "var(--color-primary)" }}
       />
+    </span>
+  );
+}
+
+function BackgroundPatternIcon({
+  variant,
+}: {
+  variant: BackgroundPatternOption;
+}) {
+  return (
+    <span
+      aria-hidden="true"
+      className="flex h-10 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md border"
+      style={{
+        borderColor: "color-mix(in srgb, var(--color-primary) 45%, transparent)",
+        backgroundColor: "var(--color-background)",
+        color: "var(--color-primary)",
+      }}
+    >
+      {variant === "botanical-corners" ? (
+        <svg viewBox="0 0 32 40" className="h-full w-full" fill="none">
+          <path
+            d="M2 2C10 6 14 12 18 19"
+            stroke="currentColor"
+            strokeWidth="1.2"
+          />
+          <path
+            d="M8 7C5 11 5 15 8 17C11 15 12 11 11 8"
+            stroke="currentColor"
+            strokeWidth="1"
+          />
+          <path
+            d="M30 38C22 34 18 28 14 21"
+            stroke="currentColor"
+            strokeWidth="1.2"
+          />
+        </svg>
+      ) : variant === "paper-linen" ? (
+        <svg viewBox="0 0 32 40" className="h-full w-full" fill="none">
+          <path
+            d="M0 10H32M0 20H32M0 30H32M8 0V40M16 0V40M24 0V40"
+            stroke="currentColor"
+            strokeWidth="0.7"
+            strokeDasharray="2 3"
+            opacity="0.75"
+          />
+        </svg>
+      ) : variant === "editorial-frame" ? (
+        <svg viewBox="0 0 32 40" className="h-full w-full" fill="none">
+          <rect
+            x="3"
+            y="3"
+            width="26"
+            height="34"
+            rx="2"
+            stroke="currentColor"
+            strokeWidth="1"
+          />
+          <rect
+            x="6"
+            y="6"
+            width="20"
+            height="28"
+            rx="1"
+            stroke="currentColor"
+            strokeWidth="0.7"
+            opacity="0.7"
+          />
+        </svg>
+      ) : variant === "kawung-classic" ? (
+        <svg viewBox="0 0 32 40" className="h-full w-full" fill="none">
+          <ellipse cx="16" cy="12" rx="3.5" ry="6.5" stroke="currentColor" strokeWidth="1" />
+          <ellipse cx="16" cy="28" rx="3.5" ry="6.5" stroke="currentColor" strokeWidth="1" />
+          <ellipse cx="8" cy="20" rx="6.5" ry="3.5" stroke="currentColor" strokeWidth="1" />
+          <ellipse cx="24" cy="20" rx="6.5" ry="3.5" stroke="currentColor" strokeWidth="1" />
+          <circle cx="16" cy="20" r="1.4" fill="currentColor" />
+        </svg>
+      ) : variant === "layered-arch" ? (
+        <svg viewBox="0 0 32 40" className="h-full w-full" fill="none">
+          <path
+            d="M5 36V16C5 9 10 4 16 4C22 4 27 9 27 16V36"
+            stroke="currentColor"
+            strokeWidth="1.1"
+          />
+          <path
+            d="M8.5 36V17C8.5 11.5 11.8 7.5 16 7.5C20.2 7.5 23.5 11.5 23.5 17V36"
+            stroke="currentColor"
+            strokeWidth="0.8"
+            strokeDasharray="2 2"
+          />
+        </svg>
+      ) : variant === "celestial-dots" ? (
+        <svg viewBox="0 0 32 40" className="h-full w-full" fill="currentColor">
+          <path d="M11 8L12 11L15 12L12 13L11 16L10 13L7 12L10 11Z" />
+          <path d="M22 24L22.8 26.2L25 27L22.8 27.8L22 30L21.2 27.8L19 27L21.2 26.2Z" />
+          <circle cx="23" cy="11" r="1.2" opacity="0.7" />
+          <circle cx="10" cy="29" r="1.2" opacity="0.7" />
+          <circle cx="16" cy="20" r="1" opacity="0.55" />
+        </svg>
+      ) : (
+        <span className="h-2 w-2 rounded-full opacity-25" style={{ backgroundColor: "currentColor" }} />
+      )}
     </span>
   );
 }
