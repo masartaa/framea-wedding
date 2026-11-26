@@ -1,5 +1,5 @@
 import { del, put } from "@vercel/blob";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { getDb } from "@/db";
@@ -13,6 +13,13 @@ import {
   MAX_AUDIO_BYTES,
   MAX_IMAGE_BYTES,
 } from "@/lib/media-utils";
+import {
+  checkUploadRateLimit,
+  getClientIp,
+  recordUploadSubmission,
+} from "@/lib/rate-limit";
+
+const MAX_MEDIA_FILES_PER_INVITATION = 30;
 
 const mediaKindSchema = z.enum(["hero", "mempelai", "galeri", "musik"]);
 
@@ -137,6 +144,27 @@ export async function POST(request: NextRequest) {
   const auth = await requireAdminSession();
   if (!auth.ok) {
     return auth.response;
+  }
+
+  const clientIp = getClientIp(request.headers);
+  const uploadRateLimit = await checkUploadRateLimit(clientIp);
+  if (!uploadRateLimit.allowed) {
+    const minutes = Math.max(
+      1,
+      Math.ceil(uploadRateLimit.retryAfterSeconds / 60)
+    );
+    return NextResponse.json(
+      {
+        error: `Terlalu banyak unggahan dalam waktu singkat. Coba lagi dalam ${minutes} menit.`,
+      },
+      {
+        status: 429,
+        headers: {
+          "Cache-Control": "no-store",
+          "Retry-After": String(uploadRateLimit.retryAfterSeconds),
+        },
+      }
+    );
   }
 
   if (!isBlobConfigured()) {
@@ -304,11 +332,37 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    if (
+      auth.session.role === "couple" &&
+      resolvedInvitationId !== null &&
+      process.env.DATABASE_URL
+    ) {
+      const db = getDb();
+      const [countRow] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(media)
+        .where(eq(media.invitationId, resolvedInvitationId));
+
+      if ((countRow?.count ?? 0) >= MAX_MEDIA_FILES_PER_INVITATION) {
+        return NextResponse.json(
+          {
+            error: `Batas maksimal ${MAX_MEDIA_FILES_PER_INVITATION} berkas media per undangan tercapai. Hapus berkas yang tidak terpakai terlebih dahulu.`,
+          },
+          {
+            status: 400,
+            headers: { "Cache-Control": "no-store" },
+          }
+        );
+      }
+    }
+
     const blob = await put(pathname, Buffer.from(arrayBuffer), {
       access: "public",
       contentType: normalizedContentType,
       addRandomSuffix: true,
     });
+
+    await recordUploadSubmission(clientIp);
 
     let insertedId: number | null = null;
     if (process.env.DATABASE_URL) {

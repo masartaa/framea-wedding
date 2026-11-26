@@ -25,10 +25,48 @@ function applyAdminSecurityHeaders(response: NextResponse): NextResponse {
   return response;
 }
 
-function forbiddenJsonResponse(): NextResponse {
+const MUTATING_HTTP_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+function isAllowedAdminMutationOrigin(request: NextRequest): boolean {
+  if (!MUTATING_HTTP_METHODS.has(request.method.toUpperCase())) {
+    return true;
+  }
+
+  const secFetchSite = request.headers.get("sec-fetch-site")?.trim().toLowerCase();
+  if (secFetchSite === "cross-site") {
+    return false;
+  }
+
+  const origin = request.headers.get("origin")?.trim();
+  if (!origin) {
+    return true;
+  }
+
+  let originUrl: URL;
+  try {
+    originUrl = new URL(origin);
+  } catch {
+    return false;
+  }
+
+  const rawHost =
+    request.headers.get("x-forwarded-host") ??
+    request.headers.get("host") ??
+    request.nextUrl.host;
+  const expectedHost = rawHost.split(",")[0]?.trim().toLowerCase();
+  if (!expectedHost) {
+    return false;
+  }
+
+  return originUrl.host.toLowerCase() === expectedHost;
+}
+
+function forbiddenJsonResponse(
+  message = "Akses ditolak. Anda tidak memiliki izin untuk halaman ini."
+): NextResponse {
   return applyAdminSecurityHeaders(
     NextResponse.json(
-      { error: "Akses ditolak. Anda tidak memiliki izin untuk halaman ini." },
+      { error: message },
       {
         status: 403,
         headers: { "Cache-Control": "no-store" },
@@ -43,6 +81,12 @@ export async function proxy(request: NextRequest) {
   const session = await verifySessionToken(token);
 
   if (pathname.startsWith("/api/admin")) {
+    if (!isAllowedAdminMutationOrigin(request)) {
+      return forbiddenJsonResponse(
+        "Permintaan lintas-origin tidak diizinkan."
+      );
+    }
+
     if (PUBLIC_ADMIN_API_PATHS.has(pathname)) {
       return applyAdminSecurityHeaders(NextResponse.next());
     }
@@ -81,13 +125,6 @@ export async function proxy(request: NextRequest) {
   }
 
   if (pathname === "/login" || pathname === "/admin/login") {
-    if (session) {
-      const targetPath =
-        session.role === "couple" ? `/admin/${session.slug}` : "/admin";
-      return applyAdminSecurityHeaders(
-        NextResponse.redirect(new URL(targetPath, request.url))
-      );
-    }
     return applyAdminSecurityHeaders(NextResponse.next());
   }
 

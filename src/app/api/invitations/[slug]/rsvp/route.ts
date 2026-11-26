@@ -118,7 +118,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   }
 
   const clientIp = getClientIp(request.headers);
-  const rateLimit = checkRsvpRateLimit(clientIp);
+  const rateLimit = await checkRsvpRateLimit(clientIp);
   if (!rateLimit.allowed) {
     const minutes = Math.max(1, Math.ceil(rateLimit.retryAfterSeconds / 60));
     return NextResponse.json(
@@ -174,7 +174,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         createdAt: rsvps.createdAt,
       });
 
-    recordRsvpSubmission(clientIp);
+    await recordRsvpSubmission(clientIp);
 
     return NextResponse.json(
       {

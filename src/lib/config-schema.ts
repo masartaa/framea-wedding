@@ -1,18 +1,64 @@
 import { z } from "zod";
 
 const hexColorRegex = /^#[0-9A-Fa-f]{6}$/;
+const MAX_URL_LENGTH = 2048;
 
-const optionalUrlSchema = z
+export function isSafeLocalPath(value: string): boolean {
+  return (
+    value.startsWith("/") && !value.startsWith("//") && !value.includes("\\")
+  );
+}
+
+export function isTrustedMediaUrl(value: string): boolean {
+  if (value === "") {
+    return true;
+  }
+  if (value.length > MAX_URL_LENGTH) {
+    return false;
+  }
+  if (isSafeLocalPath(value)) {
+    return true;
+  }
+  try {
+    const parsed = new URL(value);
+    return (
+      parsed.protocol === "https:" &&
+      parsed.hostname.endsWith(".blob.vercel-storage.com")
+    );
+  } catch {
+    return false;
+  }
+}
+
+function isSafeHttpsUrl(value: string): boolean {
+  if (value === "") {
+    return true;
+  }
+  if (value.length > MAX_URL_LENGTH) {
+    return false;
+  }
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+const optionalMediaUrlSchema = z
   .string()
   .trim()
+  .max(MAX_URL_LENGTH, "URL media terlalu panjang.")
   .refine(
-    (value) =>
-      value === "" ||
-      value.startsWith("https://") ||
-      value.startsWith("http://") ||
-      value.startsWith("/"),
-    "URL harus diawali https://, http://, atau /"
+    isTrustedMediaUrl,
+    "URL media harus berupa berkas Vercel Blob (https://*.blob.vercel-storage.com) atau path lokal yang aman."
   );
+
+const optionalExternalHttpsUrlSchema = z
+  .string()
+  .trim()
+  .max(MAX_URL_LENGTH, "URL tautan terlalu panjang.")
+  .refine(isSafeHttpsUrl, "URL peta harus berupa tautan https:// yang valid.");
 
 export const themePresetIdSchema = z.enum([
   "putih-emas",
@@ -154,7 +200,7 @@ export const personSchema = z.object({
     .string()
     .trim()
     .max(120, "Nama ibu maksimal 120 karakter."),
-  photoUrl: optionalUrlSchema,
+  photoUrl: optionalMediaUrlSchema,
 });
 
 export const eventItemSchema = z.object({
@@ -192,7 +238,7 @@ export const eventItemSchema = z.object({
     .trim()
     .min(1, "Alamat lengkap wajib diisi.")
     .max(300, "Alamat maksimal 300 karakter."),
-  mapsUrl: optionalUrlSchema,
+  mapsUrl: optionalExternalHttpsUrlSchema,
   isPrimary: z.boolean().optional().default(false),
 });
 
@@ -231,7 +277,7 @@ export const siteConfigSchema = z.object({
       .trim()
       .min(1, "Alamat lengkap wajib diisi.")
       .max(300, "Alamat maksimal 300 karakter."),
-    mapsUrl: optionalUrlSchema,
+    mapsUrl: optionalExternalHttpsUrlSchema,
     openingText: z
       .string()
       .trim()
@@ -291,11 +337,11 @@ export const siteConfigSchema = z.object({
     .optional()
     .default(DEFAULT_RSVP_CONFIG),
   media: z.object({
-    heroPhotoUrl: optionalUrlSchema,
+    heroPhotoUrl: optionalMediaUrlSchema,
     galleryPhotoUrls: z
-      .array(optionalUrlSchema)
+      .array(optionalMediaUrlSchema)
       .max(6, "Galeri maksimal 6 foto."),
-    musicUrl: optionalUrlSchema,
+    musicUrl: optionalMediaUrlSchema,
     musicPreset: z.string().trim().max(60),
   }),
   theme: z.object({

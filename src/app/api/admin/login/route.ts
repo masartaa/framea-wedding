@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import {
+  computePasswordFingerprint,
   getSessionCookieOptions,
   isAuthConfigured,
   isSessionSecretConfigured,
@@ -43,7 +44,7 @@ const loginRequestSchema = z.union([coupleLoginSchema, superAdminLoginSchema]);
 
 export async function POST(request: NextRequest) {
   const clientIp = getClientIp(request.headers);
-  const rateLimit = checkLoginRateLimit(clientIp);
+  const rateLimit = await checkLoginRateLimit(clientIp);
   if (!rateLimit.allowed) {
     const minutes = Math.max(1, Math.ceil(rateLimit.retryAfterSeconds / 60));
     return NextResponse.json(
@@ -116,7 +117,7 @@ export async function POST(request: NextRequest) {
 
     if (!validCouple || !authRecord) {
       await delayFailedLogin();
-      const { remainingAttempts } = recordFailedLogin(clientIp);
+      const { remainingAttempts } = await recordFailedLogin(clientIp);
       const detail =
         remainingAttempts > 0
           ? `Slug undangan atau sandi salah. Sisa percobaan: ${remainingAttempts}.`
@@ -131,11 +132,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    resetLoginRateLimit(clientIp);
+    const pwdFp = authRecord.passwordHash
+      ? computePasswordFingerprint(authRecord.passwordHash)
+      : null;
+    if (!pwdFp) {
+      return NextResponse.json(
+        { error: "Konfigurasi sesi login belum lengkap." },
+        { status: 503, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
+    await resetLoginRateLimit(clientIp);
     const token = await createSessionToken({
       role: "couple",
       slug: authRecord.slug,
       invitationId: authRecord.id,
+      pwdFp,
     });
 
     const response = NextResponse.json(
@@ -173,7 +185,7 @@ export async function POST(request: NextRequest) {
   const isValid = verifyAdminPassword(parsed.data.password);
   if (!isValid) {
     await delayFailedLogin();
-    const { remainingAttempts } = recordFailedLogin(clientIp);
+    const { remainingAttempts } = await recordFailedLogin(clientIp);
     const detail =
       remainingAttempts > 0
         ? `Sandi Super Admin salah. Sisa percobaan: ${remainingAttempts}.`
@@ -188,7 +200,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  resetLoginRateLimit(clientIp);
+  await resetLoginRateLimit(clientIp);
   const token = await createSessionToken({ role: "superadmin" });
   const response = NextResponse.json(
     {

@@ -87,9 +87,10 @@ export function WishesSection({
   previewMode = false,
   invitationSlug,
 }: WishesSectionProps) {
+  const isPreview = previewMode || !invitationSlug;
   const apiEndpoint = invitationSlug
     ? `/api/invitations/${encodeURIComponent(invitationSlug)}/wishes`
-    : "/api/wishes";
+    : null;
 
   const urlGuestName = useSyncExternalStore(
     subscribeToLocation,
@@ -102,12 +103,12 @@ export function WishesSection({
   const [message, setMessage] = useState("");
   const [website, setWebsite] = useState(""); // honeypot anti-bot
   const [wishesList, setWishesList] = useState<PublicWish[]>(() =>
-    previewMode ? [...PREVIEW_WISHES] : []
+    isPreview ? [...PREVIEW_WISHES] : []
   );
   const [totalCount, setTotalCount] = useState<number>(() =>
-    previewMode ? PREVIEW_WISHES.length : 0
+    isPreview ? PREVIEW_WISHES.length : 0
   );
-  const [isLoading, setIsLoading] = useState(!previewMode);
+  const [isLoading, setIsLoading] = useState(!isPreview);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{
@@ -119,7 +120,7 @@ export function WishesSection({
   const nameValue = hasEditedName ? customName : urlGuestName;
 
   const reloadWishes = async () => {
-    if (previewMode) {
+    if (isPreview || !apiEndpoint) {
       return;
     }
     setIsLoading(true);
@@ -147,7 +148,7 @@ export function WishesSection({
   };
 
   useEffect(() => {
-    if (previewMode) {
+    if (isPreview || !apiEndpoint) {
       return;
     }
 
@@ -188,11 +189,11 @@ export function WishesSection({
     return () => {
       cancelled = true;
     };
-  }, [apiEndpoint, previewMode]);
+  }, [apiEndpoint, isPreview]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (previewMode) {
+    if (isPreview || !apiEndpoint) {
       setFeedback({
         type: "success",
         text: "Mode pratinjau: form ucapan siap digunakan di halaman undangan.",

@@ -1,7 +1,8 @@
-import { createHash, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { normalizeInvitationSlug } from "@/lib/invitation-slug";
+import { getInvitationAuthRecordBySlug } from "@/lib/invitations";
 import {
   ADMIN_SESSION_COOKIE,
   ADMIN_SESSION_MAX_AGE_SECONDS,
@@ -47,10 +48,68 @@ export function getSessionCookieOptions(
   };
 }
 
+export function computePasswordFingerprint(
+  passwordHash: string
+): string | null {
+  const secret = process.env.SESSION_SECRET?.trim();
+  if (!secret || secret.length < 16 || !passwordHash) {
+    return null;
+  }
+
+  return createHmac("sha256", secret)
+    .update(passwordHash, "utf8")
+    .digest("hex")
+    .slice(0, 24);
+}
+
+function verifyPasswordFingerprint(
+  passwordHash: string | null | undefined,
+  expectedFp: string
+): boolean {
+  if (!passwordHash || !expectedFp) {
+    return false;
+  }
+
+  const actualFp = computePasswordFingerprint(passwordHash);
+  if (!actualFp || actualFp.length !== expectedFp.length) {
+    return false;
+  }
+
+  return timingSafeEqual(
+    Buffer.from(actualFp, "utf8"),
+    Buffer.from(expectedFp, "utf8")
+  );
+}
+
 export async function getAdminSession(): Promise<AdminSession | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_SESSION_COOKIE)?.value;
-  return verifySessionToken(token);
+  const session = await verifySessionToken(token);
+  if (!session) {
+    return null;
+  }
+
+  if (session.role === "couple") {
+    if (!process.env.DATABASE_URL) {
+      return null;
+    }
+
+    try {
+      const authRecord = await getInvitationAuthRecordBySlug(session.slug);
+      if (
+        !authRecord ||
+        authRecord.id !== session.invitationId ||
+        authRecord.slug !== session.slug ||
+        !verifyPasswordFingerprint(authRecord.passwordHash, session.pwdFp)
+      ) {
+        return null;
+      }
+    } catch {
+      return null;
+    }
+  }
+
+  return session;
 }
 
 export function canAccessInvitation(

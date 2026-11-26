@@ -118,5 +118,13 @@ export function createThemeVariables(
 }
 
 export function isSafeExternalUrl(url: string): boolean {
-  return url.startsWith("https://") || url.startsWith("http://");
+  if (!url || url.length > 2048) {
+    return false;
+  }
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
 }

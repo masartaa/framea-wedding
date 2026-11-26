@@ -175,7 +175,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   }
 
   const clientIp = getClientIp(request.headers);
-  const rateLimit = checkWishRateLimit(clientIp);
+  const rateLimit = await checkWishRateLimit(clientIp);
   if (!rateLimit.allowed) {
     const minutes = Math.max(1, Math.ceil(rateLimit.retryAfterSeconds / 60));
     return NextResponse.json(
@@ -219,7 +219,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         createdAt: wishes.createdAt,
       });
 
-    recordWishSubmission(clientIp);
+    await recordWishSubmission(clientIp);
 
     return NextResponse.json(
       {

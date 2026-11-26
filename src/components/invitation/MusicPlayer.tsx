@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
+import { isTrustedMediaUrl } from "@/lib/config-schema";
 import { isValidMusicPreset } from "@/lib/media-utils";
 import type { PresetSynthController } from "@/lib/preset-synth";
 
@@ -21,7 +22,11 @@ export function MusicPlayer({
   musicPreset,
   isOpened,
 }: MusicPlayerProps) {
-  const trimmedUrl = musicUrl.trim();
+  const rawTrimmedUrl = musicUrl.trim();
+  const trimmedUrl =
+    rawTrimmedUrl.length > 0 && isTrustedMediaUrl(rawTrimmedUrl)
+      ? rawTrimmedUrl
+      : "";
   const validPreset = isValidMusicPreset(musicPreset) ? musicPreset : null;
   const hasMusic = trimmedUrl.length > 0 || validPreset !== null;
 

@@ -13,12 +13,13 @@ export type AdminSession =
       role: "couple";
       slug: string;
       invitationId: number;
+      pwdFp: string;
       expiresAt: string;
     };
 
 export type SessionTokenPayload =
   | { role: "superadmin" }
-  | { role: "couple"; slug: string; invitationId: number };
+  | { role: "couple"; slug: string; invitationId: number; pwdFp: string };
 
 function getEncodedSecret(): Uint8Array | null {
   const secret = process.env.SESSION_SECRET?.trim();
@@ -80,12 +81,15 @@ export async function verifySessionToken(
       isValidInvitationSlug(payload.slug) &&
       typeof payload.invitationId === "number" &&
       Number.isInteger(payload.invitationId) &&
-      payload.invitationId > 0
+      payload.invitationId > 0 &&
+      typeof payload.pwdFp === "string" &&
+      /^[a-f0-9]{24}$/.test(payload.pwdFp)
     ) {
       return {
         role: "couple",
         slug: payload.slug,
         invitationId: payload.invitationId,
+        pwdFp: payload.pwdFp,
         expiresAt,
       };
     }
