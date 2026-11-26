@@ -10,7 +10,12 @@ Framea memiliki dua karakter visual yang terpisah secara jelas sesuai fungsinya:
    - **Dial:** `ENERGY 2 / RHYTHM 2 / MOTION 2` (sampul tirai buka, transisi masuk hero bertahap, scroll-reveal halus, seluruhnya berhenti di `prefers-reduced-motion: reduce`).
    - **Motif identitas:** Tipografi serif kontras pada nama mempelai, garis pemisah tipis, bingkai foto kubah/lingkaran, dan kartu acara berpusat pada jadwal.
 
-2. **Platform & Dashboard Admin (`/`, `/login`, `/admin/login`, `/admin`, `/admin/[slug]`, `/[slug]/not-found`)**
+2. **Halaman Awal & Masuk (`/`, `/login`, `/admin/login`, `/[slug]/not-found`)**
+   - **Peran:** Pintu gerbang editorial monokrom bergaya cetak (*Print Editorial*) untuk menyambut tamu dan mengarahkan pemilik undangan atau Super Admin ke ruang kerjanya.
+   - **Gaya visual:** Kontras tinta hitam pekat (`#18181B`) dan kertas putih (`#FFFFFF` / `#F4F4F5`) dengan tipografi serif `Playfair Display` ekspresif, pembagi garis tipis `1px`, dan motif bingkai kubah (arch) monokrom.
+   - **Dial:** `ENERGY 2 / RHYTHM 3 / MOTION 1` (komposisi asimetris dan split-screen pada desktop, merapat rapi di HP 375 px tanpa animasi dekoratif berlebih).
+
+3. **Dashboard Admin (`/admin`, `/admin/[slug]`)**
    - **Peran:** Ruang kerja monokrom yang tenang dan fokus agar pemilik undangan dan Super Admin dapat mengelola konten tanpa bias warna tema tertentu.
    - **Gaya visual:** Studio editorial monokrom dengan tinta gelap (`#18181B`), permukaan putih bersih (`#FFFFFF`), permukaan sekunder halus (`#F4F4F5`), dan aksen abu gelap (`#3F3F46`).
    - **Dial:** `ENERGY 1 / RHYTHM 2 / MOTION 1` (fokus kejelasan alur kerja, tanpa animasi dekoratif).
