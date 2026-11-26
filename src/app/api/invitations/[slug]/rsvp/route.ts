@@ -27,7 +27,7 @@ const createRsvpSchema = z.object({
     .number()
     .int("Jumlah tamu harus berupa angka bulat.")
     .min(0, "Jumlah tamu tidak valid.")
-    .max(10, "Jumlah tamu maksimal 10 orang."),
+    .max(400, "Jumlah tamu maksimal 400 orang."),
   note: z
     .string()
     .trim()

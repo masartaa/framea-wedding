@@ -277,9 +277,9 @@ export const siteConfigSchema = z.object({
         .max(300, "Teks pengantar RSVP maksimal 300 karakter."),
       maxGuests: z
         .number()
-        .int()
+        .int("Batas tamu harus berupa angka bulat.")
         .min(1, "Minimal 1 tamu.")
-        .max(10, "Maksimal 10 tamu per konfirmasi."),
+        .max(400, "Maksimal 400 tamu per konfirmasi."),
     })
     .optional()
     .default(DEFAULT_RSVP_CONFIG),

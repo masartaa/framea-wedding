@@ -54,7 +54,7 @@ export function RsvpSection({
   const introText =
     rsvpConfig?.introText?.trim() ||
     "Mohon konfirmasi kehadiran Bapak/Ibu/Saudara/i agar kami dapat mempersiapkan penyambutan dengan baik.";
-  const maxGuests = Math.max(1, Math.min(10, rsvpConfig?.maxGuests ?? 5));
+  const maxGuests = Math.max(1, Math.min(400, rsvpConfig?.maxGuests ?? 5));
 
   const urlGuestName = useSyncExternalStore(
     subscribeToLocation,
@@ -65,7 +65,7 @@ export function RsvpSection({
   const [hasEditedName, setHasEditedName] = useState(false);
   const [customName, setCustomName] = useState("");
   const [attendance, setAttendance] = useState<AttendanceStatus>("hadir");
-  const [guestCount, setGuestCount] = useState(1);
+  const [guestCountInput, setGuestCountInput] = useState("1");
   const [note, setNote] = useState("");
   const [website, setWebsite] = useState(""); // honeypot anti-bot
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -74,11 +74,14 @@ export function RsvpSection({
   const [feedback, setFeedback] = useState<{
     type: "success" | "error";
     text: string;
-    field?: "name";
+    field?: "name" | "guestCount";
   } | null>(null);
 
   const nameValue = hasEditedName ? customName : urlGuestName;
-  const clampedGuestCount = Math.max(1, Math.min(maxGuests, guestCount));
+  const parsedGuestCount = Number.parseInt(guestCountInput, 10);
+  const currentGuestNumber = Number.isNaN(parsedGuestCount)
+    ? 1
+    : Math.max(1, Math.min(maxGuests, parsedGuestCount));
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -109,6 +112,23 @@ export function RsvpSection({
       return;
     }
 
+    let finalGuestCount = 0;
+    if (attendance !== "tidak_hadir") {
+      if (
+        !Number.isInteger(parsedGuestCount) ||
+        parsedGuestCount < 1 ||
+        parsedGuestCount > maxGuests
+      ) {
+        setFeedback({
+          type: "error",
+          text: `Masukkan jumlah tamu antara 1 sampai ${maxGuests} orang.`,
+          field: "guestCount",
+        });
+        return;
+      }
+      finalGuestCount = parsedGuestCount;
+    }
+
     setIsSubmitting(true);
     try {
       const response = await fetch(
@@ -119,7 +139,7 @@ export function RsvpSection({
           body: JSON.stringify({
             name: trimmedName,
             attendance,
-            guestCount: attendance === "tidak_hadir" ? 0 : clampedGuestCount,
+            guestCount: finalGuestCount,
             note: note.trim(),
             website,
           }),
@@ -142,7 +162,7 @@ export function RsvpSection({
         type: "success",
         text:
           attendance === "hadir"
-            ? `Terima kasih ${trimmedName}, konfirmasi kehadiran (${clampedGuestCount} orang) telah tercatat.`
+            ? `Terima kasih ${trimmedName}, konfirmasi kehadiran (${finalGuestCount} orang) telah tercatat.`
             : attendance === "tidak_hadir"
               ? `Terima kasih ${trimmedName}, informasi ketidakhadiran Anda telah tercatat.`
               : `Terima kasih ${trimmedName}, tanggapan Anda telah kami catat.`,
@@ -286,31 +306,100 @@ export function RsvpSection({
 
           {attendance !== "tidak_hadir" ? (
             <div>
-              <label htmlFor="rsvp-guests" className="block text-xs font-semibold">
-                Perkiraan Jumlah Tamu
-              </label>
-              <select
-                id="rsvp-guests"
-                name="guestCount"
-                disabled={isSubmitting}
-                value={clampedGuestCount}
-                onChange={(event) => setGuestCount(Number(event.target.value))}
-                className="mt-1.5 min-h-11 w-full rounded-xl border px-3.5 text-sm"
-                style={{
-                  backgroundColor: "var(--color-background)",
-                  borderColor:
-                    "color-mix(in srgb, var(--color-primary) 45%, transparent)",
-                  color: "var(--color-text)",
-                }}
-              >
-                {Array.from({ length: maxGuests }, (_, idx) => idx + 1).map(
-                  (num) => (
-                    <option key={num} value={num}>
-                      {num} orang
-                    </option>
-                  )
-                )}
-              </select>
+              <div className="flex items-center justify-between gap-2">
+                <label
+                  htmlFor="rsvp-guests"
+                  className="block text-xs font-semibold"
+                >
+                  Perkiraan Jumlah Tamu
+                </label>
+                <span className="text-[11px] opacity-75">
+                  Maks. {maxGuests} orang
+                </span>
+              </div>
+              <div className="mt-1.5 flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={isSubmitting || currentGuestNumber <= 1}
+                  onClick={() =>
+                    setGuestCountInput(String(Math.max(1, currentGuestNumber - 1)))
+                  }
+                  aria-label="Kurangi jumlah tamu"
+                  className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-xl border text-base font-semibold transition-opacity hover:opacity-85 active:opacity-75 disabled:opacity-40"
+                  style={{
+                    backgroundColor: "var(--color-secondary)",
+                    borderColor:
+                      "color-mix(in srgb, var(--color-primary) 40%, transparent)",
+                    color: "var(--color-text)",
+                  }}
+                >
+                  −
+                </button>
+                <input
+                  id="rsvp-guests"
+                  name="guestCount"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={maxGuests}
+                  step={1}
+                  disabled={isSubmitting}
+                  aria-invalid={
+                    feedback?.field === "guestCount" ? true : undefined
+                  }
+                  aria-describedby={
+                    feedback?.field === "guestCount"
+                      ? "rsvp-feedback"
+                      : undefined
+                  }
+                  value={guestCountInput}
+                  onChange={(event) => {
+                    const digitsOnly = event.target.value.replace(/[^\d]/g, "");
+                    if (digitsOnly === "") {
+                      setGuestCountInput("");
+                      return;
+                    }
+                    const numeric = Math.min(
+                      maxGuests,
+                      Number.parseInt(digitsOnly, 10)
+                    );
+                    setGuestCountInput(String(numeric));
+                  }}
+                  onBlur={() => {
+                    if (!guestCountInput.trim() || parsedGuestCount < 1) {
+                      setGuestCountInput("1");
+                    } else if (parsedGuestCount > maxGuests) {
+                      setGuestCountInput(String(maxGuests));
+                    }
+                  }}
+                  className="min-h-11 w-full rounded-xl border px-3.5 text-center text-sm font-medium tabular-nums"
+                  style={{
+                    backgroundColor: "var(--color-background)",
+                    borderColor:
+                      "color-mix(in srgb, var(--color-primary) 45%, transparent)",
+                    color: "var(--color-text)",
+                  }}
+                />
+                <button
+                  type="button"
+                  disabled={isSubmitting || currentGuestNumber >= maxGuests}
+                  onClick={() =>
+                    setGuestCountInput(
+                      String(Math.min(maxGuests, currentGuestNumber + 1))
+                    )
+                  }
+                  aria-label="Tambah jumlah tamu"
+                  className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-xl border text-base font-semibold transition-opacity hover:opacity-85 active:opacity-75 disabled:opacity-40"
+                  style={{
+                    backgroundColor: "var(--color-secondary)",
+                    borderColor:
+                      "color-mix(in srgb, var(--color-primary) 40%, transparent)",
+                    color: "var(--color-text)",
+                  }}
+                >
+                  +
+                </button>
+              </div>
             </div>
           ) : null}
 

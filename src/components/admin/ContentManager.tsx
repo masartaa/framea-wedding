@@ -16,6 +16,7 @@ import {
   siteConfigSchema,
   syncPrimaryEventToGeneral,
   type EventItem,
+  type SectionId,
   type SiteConfig,
 } from "@/lib/config-schema";
 import { formatEventDateFull } from "@/lib/format";
@@ -58,17 +59,21 @@ interface SaveResponseBody {
   fieldErrors?: Record<string, string>;
 }
 
-const TABS: ReadonlyArray<{ id: ActiveTab; label: string }> = [
+const TABS: ReadonlyArray<{
+  id: ActiveTab;
+  label: string;
+  sectionId?: SectionId;
+}> = [
   { id: "umum", label: "Umum" },
-  { id: "acara", label: "Acara" },
-  { id: "mempelai", label: "Mempelai" },
-  { id: "kisah", label: "Kisah" },
+  { id: "acara", label: "Acara", sectionId: "acara" },
+  { id: "mempelai", label: "Mempelai", sectionId: "mempelai" },
+  { id: "kisah", label: "Kisah", sectionId: "kisah" },
   { id: "media", label: "Media" },
   { id: "tema", label: "Tema" },
   { id: "section", label: "Section" },
   { id: "tamu", label: "Tamu" },
-  { id: "rsvp", label: "RSVP" },
-  { id: "ucapan", label: "Ucapan" },
+  { id: "rsvp", label: "RSVP", sectionId: "rsvp" },
+  { id: "ucapan", label: "Ucapan", sectionId: "ucapan" },
   { id: "pratinjau", label: "Pratinjau" },
 ];
 
@@ -178,37 +183,81 @@ export function ContentManager({
     {}
   );
 
+  const sectionEnabledMap = new Map(
+    draft.sections.map((section) => [section.id, section.enabled])
+  );
+
+  const isTabDisabled = (
+    tabId: ActiveTab,
+    sectionsSource: SiteConfig["sections"] = draft.sections
+  ): boolean => {
+    const tab = TABS.find((item) => item.id === tabId);
+    if (!tab?.sectionId) {
+      return false;
+    }
+    if (sectionsSource === draft.sections) {
+      return sectionEnabledMap.get(tab.sectionId) === false;
+    }
+    return (
+      sectionsSource.find((section) => section.id === tab.sectionId)
+        ?.enabled === false
+    );
+  };
+
+  const disabledTabCount = TABS.filter((tab) => isTabDisabled(tab.id)).length;
+  const effectiveActiveTab: ActiveTab = isTabDisabled(activeTab)
+    ? "umum"
+    : activeTab;
+  const isAcaraDisabled = isTabDisabled("acara");
+
   const handleTabKeyDown = (
     event: ReactKeyboardEvent<HTMLButtonElement>,
-    index: number
+    tabId: ActiveTab
   ) => {
-    let nextIndex: number | null = null;
-    if (event.key === "ArrowRight") {
-      nextIndex = (index + 1) % TABS.length;
-    } else if (event.key === "ArrowLeft") {
-      nextIndex = (index - 1 + TABS.length) % TABS.length;
-    } else if (event.key === "Home") {
-      nextIndex = 0;
-    } else if (event.key === "End") {
-      nextIndex = TABS.length - 1;
+    const enabledTabs = TABS.filter((tab) => !isTabDisabled(tab.id));
+    if (enabledTabs.length === 0) {
+      return;
     }
 
-    if (nextIndex === null) {
+    const currentEnabledIndex = enabledTabs.findIndex(
+      (tab) => tab.id === tabId
+    );
+    let nextEnabledIndex: number | null = null;
+    if (event.key === "ArrowRight") {
+      nextEnabledIndex =
+        currentEnabledIndex === -1
+          ? 0
+          : (currentEnabledIndex + 1) % enabledTabs.length;
+    } else if (event.key === "ArrowLeft") {
+      nextEnabledIndex =
+        currentEnabledIndex === -1
+          ? enabledTabs.length - 1
+          : (currentEnabledIndex - 1 + enabledTabs.length) % enabledTabs.length;
+    } else if (event.key === "Home") {
+      nextEnabledIndex = 0;
+    } else if (event.key === "End") {
+      nextEnabledIndex = enabledTabs.length - 1;
+    }
+
+    if (nextEnabledIndex === null) {
       return;
     }
 
     event.preventDefault();
-    const nextTab = TABS[nextIndex];
+    const nextTab = enabledTabs[nextEnabledIndex];
     if (nextTab) {
       setActiveTab(nextTab.id);
-      tabButtonRefs.current[nextTab.id]?.focus();
+      const nextButton = tabButtonRefs.current[nextTab.id];
+      nextButton?.focus();
+      nextButton?.scrollIntoView({ inline: "nearest", block: "nearest" });
     }
   };
 
   const isDirty = JSON.stringify(draft) !== JSON.stringify(savedConfig);
   const formattedUpdated = formatUpdatedAt(updatedAt);
   const activeSectionCount = draft.sections.filter((s) => s.enabled).length;
-  const isDirectActionTab = activeTab === "tamu" || activeTab === "ucapan";
+  const isDirectActionTab =
+    effectiveActiveTab === "tamu" || effectiveActiveTab === "ucapan";
 
   const clearFieldError = (key: string) => {
     setFieldErrors((prev) => {
@@ -336,7 +385,12 @@ export function ContentManager({
       }
       setFieldErrors(errors);
       const firstPath = Object.keys(errors)[0] ?? "";
-      setActiveTab(getTabForFieldPath(firstPath));
+      const errorTab = getTabForFieldPath(firstPath);
+      setActiveTab(
+        isTabDisabled(errorTab, normalizedPayload.sections)
+          ? "section"
+          : errorTab
+      );
       setStatusBanner({
         type: "error",
         message:
@@ -363,7 +417,12 @@ export function ContentManager({
         if (data.fieldErrors) {
           setFieldErrors(data.fieldErrors);
           const firstPath = Object.keys(data.fieldErrors)[0] ?? "";
-          setActiveTab(getTabForFieldPath(firstPath));
+          const errorTab = getTabForFieldPath(firstPath);
+          setActiveTab(
+            isTabDisabled(errorTab, normalizedPayload.sections)
+              ? "section"
+              : errorTab
+          );
         }
         setStatusBanner({
           type: "error",
@@ -542,13 +601,15 @@ export function ContentManager({
         <div
           role="tablist"
           aria-label="Menu pengaturan undangan"
-          className="mt-5 grid grid-cols-3 gap-2 rounded-2xl p-1.5 sm:grid-cols-4 lg:grid-cols-6"
+          className="mt-5 -mx-1 flex items-center gap-1 overflow-x-auto border-b px-1"
           style={{
-            backgroundColor: "var(--color-secondary)",
+            borderColor:
+              "color-mix(in srgb, var(--color-primary) 22%, transparent)",
           }}
         >
-          {TABS.map((tab, index) => {
-            const isActive = activeTab === tab.id;
+          {TABS.map((tab) => {
+            const isDisabled = isTabDisabled(tab.id);
+            const isActive = !isDisabled && effectiveActiveTab === tab.id;
             return (
               <button
                 key={tab.id}
@@ -558,18 +619,33 @@ export function ContentManager({
                 id={`tab-${tab.id}`}
                 type="button"
                 role="tab"
+                disabled={isDisabled}
                 aria-selected={isActive}
+                aria-disabled={isDisabled || undefined}
                 aria-controls={`panel-${tab.id}`}
                 tabIndex={isActive ? 0 : -1}
-                onKeyDown={(event) => handleTabKeyDown(event, index)}
-                onClick={() => setActiveTab(tab.id)}
-                className="min-h-11 rounded-xl px-2 text-xs font-medium transition-opacity hover:opacity-90 active:opacity-80 sm:text-sm"
+                title={
+                  isDisabled
+                    ? "Section ini sedang nonaktif. Aktifkan di tab Section untuk mengedit."
+                    : undefined
+                }
+                onKeyDown={(event) => handleTabKeyDown(event, tab.id)}
+                onClick={() => {
+                  if (!isDisabled) {
+                    setActiveTab(tab.id);
+                  }
+                }}
+                className={`-mb-px inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-t-xl border-b-2 px-3.5 text-sm transition-colors ${
+                  isActive
+                    ? "font-semibold"
+                    : "font-medium opacity-75 hover:bg-[var(--color-secondary)] hover:opacity-100"
+                } disabled:line-through disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:opacity-40`}
                 style={{
-                  backgroundColor: isActive
+                  borderBottomColor: isActive
                     ? "var(--color-primary)"
                     : "transparent",
                   color: isActive
-                    ? "var(--color-background)"
+                    ? "var(--color-primary)"
                     : "var(--color-text)",
                 }}
               >
@@ -578,6 +654,13 @@ export function ContentManager({
             );
           })}
         </div>
+
+        {disabledTabCount > 0 ? (
+          <p className="mt-2.5 text-xs opacity-75">
+            Menu yang dicoret sedang nonaktif mengikuti pengaturan di tab
+            Section. Aktifkan kembali di tab Section untuk mengeditnya.
+          </p>
+        ) : null}
       </section>
 
       {statusBanner && !isDirectActionTab ? (
@@ -605,10 +688,10 @@ export function ContentManager({
 
       <div
         role="tabpanel"
-        id={`panel-${activeTab}`}
-        aria-labelledby={`tab-${activeTab}`}
+        id={`panel-${effectiveActiveTab}`}
+        aria-labelledby={`tab-${effectiveActiveTab}`}
       >
-      {activeTab === "umum" ? (
+      {effectiveActiveTab === "umum" ? (
         <section
           aria-label="Pengaturan Umum"
           className="space-y-5 rounded-2xl border px-5 py-6 sm:px-6"
@@ -722,14 +805,20 @@ export function ContentManager({
 
             <button
               type="button"
+              disabled={isAcaraDisabled}
+              title={
+                isAcaraDisabled
+                  ? "Section Acara sedang nonaktif. Aktifkan di tab Section terlebih dahulu."
+                  : undefined
+              }
               onClick={() => setActiveTab("acara")}
-              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border px-4 text-xs font-semibold transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
+              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border px-4 text-xs font-semibold transition-colors hover:bg-[var(--color-secondary)] active:opacity-80 disabled:opacity-45 disabled:hover:bg-[var(--color-background)]"
               style={{
                 backgroundColor: "var(--color-background)",
                 borderColor: "var(--color-primary)",
               }}
             >
-              Atur Acara
+              {isAcaraDisabled ? "Section Acara Nonaktif" : "Atur Acara"}
             </button>
           </div>
 
@@ -809,7 +898,7 @@ export function ContentManager({
         </section>
       ) : null}
 
-      {activeTab === "acara" ? (
+      {effectiveActiveTab === "acara" ? (
         <EventsManager
           events={draft.events}
           fieldErrors={fieldErrors}
@@ -818,7 +907,7 @@ export function ContentManager({
         />
       ) : null}
 
-      {activeTab === "mempelai" ? (
+      {effectiveActiveTab === "mempelai" ? (
         <section
           aria-label="Pengaturan Mempelai"
           className="space-y-5 rounded-2xl border px-5 py-6 sm:px-6"
@@ -1038,7 +1127,7 @@ export function ContentManager({
         </section>
       ) : null}
 
-      {activeTab === "kisah" ? (
+      {effectiveActiveTab === "kisah" ? (
         <StoryManager
           story={draft.story}
           fieldErrors={fieldErrors}
@@ -1049,7 +1138,7 @@ export function ContentManager({
         />
       ) : null}
 
-      {activeTab === "media" ? (
+      {effectiveActiveTab === "media" ? (
         <MediaManager
           invitationSlug={invitationSlug}
           config={draft}
@@ -1075,7 +1164,7 @@ export function ContentManager({
         />
       ) : null}
 
-      {activeTab === "section" ? (
+      {effectiveActiveTab === "section" ? (
         <section
           aria-label="Pengaturan Section"
           className="space-y-4 rounded-2xl border px-5 py-6 sm:px-6"
@@ -1203,7 +1292,7 @@ export function ContentManager({
         </section>
       ) : null}
 
-      {activeTab === "tema" ? (
+      {effectiveActiveTab === "tema" ? (
         <ThemeEditor
           theme={draft.theme}
           fieldErrors={fieldErrors}
@@ -1214,11 +1303,11 @@ export function ContentManager({
         />
       ) : null}
 
-      {activeTab === "tamu" ? (
+      {effectiveActiveTab === "tamu" ? (
         <GuestsManager invitationSlug={invitationSlug} config={savedConfig} />
       ) : null}
 
-      {activeTab === "rsvp" ? (
+      {effectiveActiveTab === "rsvp" ? (
         <RsvpManager
           invitationSlug={invitationSlug}
           rsvpConfig={draft.rsvp}
@@ -1230,11 +1319,11 @@ export function ContentManager({
         />
       ) : null}
 
-      {activeTab === "ucapan" ? (
+      {effectiveActiveTab === "ucapan" ? (
         <WishesModerator invitationSlug={invitationSlug} />
       ) : null}
 
-      {activeTab === "pratinjau" ? <InvitationPreview config={draft} /> : null}
+      {effectiveActiveTab === "pratinjau" ? <InvitationPreview config={draft} /> : null}
       </div>
 
       {!isDirectActionTab ? (

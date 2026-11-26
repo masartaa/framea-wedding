@@ -290,25 +290,47 @@ export function RsvpManager({
             >
               Maksimal Jumlah Tamu per Konfirmasi
             </label>
-            <select
+            <input
               id="rsvp-config-max-guests"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={400}
+              step={1}
+              aria-invalid={fieldErrors["rsvp.maxGuests"] ? true : undefined}
+              aria-describedby={
+                fieldErrors["rsvp.maxGuests"]
+                  ? "err-rsvp-max-guests"
+                  : undefined
+              }
               value={rsvpConfig.maxGuests}
               onChange={(event) => {
+                const raw = Number.parseInt(event.target.value, 10);
+                const nextValue = Number.isNaN(raw)
+                  ? 1
+                  : Math.max(1, Math.min(400, raw));
                 onChangeRsvpConfig({
                   ...rsvpConfig,
-                  maxGuests: Number(event.target.value),
+                  maxGuests: nextValue,
                 });
                 onClearError("rsvp.maxGuests");
               }}
               className={inputClassName}
               style={inputStyle}
-            >
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                <option key={num} value={num}>
-                  Maksimal {num} orang
-                </option>
-              ))}
-            </select>
+            />
+            <p className="mt-1 text-xs opacity-75">
+              Rentang yang diizinkan: 1 sampai 400 orang per konfirmasi.
+            </p>
+            {fieldErrors["rsvp.maxGuests"] ? (
+              <p
+                id="err-rsvp-max-guests"
+                role="alert"
+                className="mt-1 text-xs font-medium"
+                style={{ color: "var(--color-accent)" }}
+              >
+                {fieldErrors["rsvp.maxGuests"]}
+              </p>
+            ) : null}
           </div>
         </div>
 
