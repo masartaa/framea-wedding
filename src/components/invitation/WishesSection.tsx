@@ -32,6 +32,7 @@ interface WishesPostResponse {
 interface WishesSectionProps {
   ornaments: boolean;
   previewMode?: boolean;
+  demoMode?: boolean;
   invitationSlug?: string;
 }
 
@@ -85,9 +86,10 @@ function formatWishDate(iso: string): string {
 export function WishesSection({
   ornaments,
   previewMode = false,
+  demoMode = false,
   invitationSlug,
 }: WishesSectionProps) {
-  const isPreview = previewMode || !invitationSlug;
+  const isPreview = previewMode || demoMode || !invitationSlug;
   const apiEndpoint = invitationSlug
     ? `/api/invitations/${encodeURIComponent(invitationSlug)}/wishes`
     : null;
@@ -193,7 +195,7 @@ export function WishesSection({
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (isPreview || !apiEndpoint) {
+    if (previewMode) {
       setFeedback({
         type: "success",
         text: "Mode pratinjau: form ucapan siap digunakan di halaman undangan.",
@@ -234,6 +236,24 @@ export function WishesSection({
         type: "error",
         text: "Ucapan maksimal 300 karakter.",
         field: "message",
+      });
+      return;
+    }
+
+    if (demoMode || !apiEndpoint) {
+      const simulatedWish: PublicWish = {
+        id: -Date.now(),
+        name: trimmedName,
+        message: trimmedMessage,
+        createdAt: new Date().toISOString(),
+      };
+      setWishesList((prev) => [simulatedWish, ...prev]);
+      setTotalCount((prev) => prev + 1);
+      setMessage("");
+      setWebsite("");
+      setFeedback({
+        type: "success",
+        text: "Simulasi contoh: ucapan Anda berhasil ditambahkan di sesi ini.",
       });
       return;
     }

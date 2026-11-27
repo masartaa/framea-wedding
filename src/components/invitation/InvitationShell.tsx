@@ -29,6 +29,7 @@ interface InvitationShellProps {
   config: SiteConfig;
   invitationSlug?: string;
   previewMode?: boolean;
+  demoMode?: boolean;
   previewView?: "cover" | "content";
   onPreviewOpen?: () => void;
 }
@@ -37,6 +38,7 @@ export function InvitationShell({
   config,
   invitationSlug,
   previewMode = false,
+  demoMode = false,
   previewView = "content",
   onPreviewOpen,
 }: InvitationShellProps) {
@@ -117,6 +119,7 @@ export function InvitationShell({
             rsvpConfig={config.rsvp}
             ornaments={config.theme.ornaments}
             previewMode={previewMode}
+            demoMode={demoMode}
             invitationSlug={invitationSlug}
           />
         );
@@ -126,6 +129,7 @@ export function InvitationShell({
             key="ucapan"
             ornaments={config.theme.ornaments}
             previewMode={previewMode}
+            demoMode={demoMode}
             invitationSlug={invitationSlug}
           />
         );
@@ -169,7 +173,12 @@ export function InvitationShell({
         )
       ) : (
         <>
-          <Cover config={config} isOpened={isOpened} onOpen={handleOpen} />
+          <Cover
+            config={config}
+            isOpened={isOpened}
+            onOpen={handleOpen}
+            demoMode={demoMode}
+          />
 
           <main
             className="relative mx-auto min-h-dvh w-full max-w-lg overflow-hidden shadow-sm"

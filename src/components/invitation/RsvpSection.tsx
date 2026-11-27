@@ -17,6 +17,7 @@ interface RsvpSectionProps {
   rsvpConfig: SiteConfig["rsvp"];
   ornaments: boolean;
   previewMode?: boolean;
+  demoMode?: boolean;
   invitationSlug?: string;
 }
 
@@ -48,6 +49,7 @@ export function RsvpSection({
   rsvpConfig,
   ornaments,
   previewMode = false,
+  demoMode = false,
   invitationSlug,
 }: RsvpSectionProps) {
   const title = rsvpConfig?.title?.trim() || "Konfirmasi Kehadiran";
@@ -85,7 +87,7 @@ export function RsvpSection({
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (previewMode || !invitationSlug) {
+    if (previewMode) {
       setFeedback({
         type: "success",
         text: "Mode pratinjau: formulir RSVP siap menerima konfirmasi tamu.",
@@ -127,6 +129,22 @@ export function RsvpSection({
         return;
       }
       finalGuestCount = parsedGuestCount;
+    }
+
+    if (demoMode || !invitationSlug) {
+      setSubmittedAttendance(attendance);
+      setNote("");
+      setWebsite("");
+      setFeedback({
+        type: "success",
+        text:
+          attendance === "hadir"
+            ? `Simulasi contoh: terima kasih ${trimmedName}, konfirmasi kehadiran (${finalGuestCount} orang) tercatat di sesi ini.`
+            : attendance === "tidak_hadir"
+              ? `Simulasi contoh: terima kasih ${trimmedName}, informasi ketidakhadiran Anda tercatat di sesi ini.`
+              : `Simulasi contoh: terima kasih ${trimmedName}, tanggapan Anda tercatat di sesi ini.`,
+      });
+      return;
     }
 
     setIsSubmitting(true);

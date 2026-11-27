@@ -16,6 +16,7 @@ interface CoverProps {
   isOpened: boolean;
   onOpen: () => void;
   previewMode?: boolean;
+  demoMode?: boolean;
 }
 
 function subscribeToLocation(callback: () => void): () => void {
@@ -37,6 +38,7 @@ export function Cover({
   isOpened,
   onOpen,
   previewMode = false,
+  demoMode = false,
 }: CoverProps) {
   const urlGuestName = useSyncExternalStore(
     subscribeToLocation,
@@ -55,7 +57,7 @@ export function Cover({
 
   const positionClass = previewMode
     ? "relative min-h-[640px] w-full"
-    : `fixed inset-0 z-50 cover-curtain ${
+    : `fixed inset-0 z-50 cover-curtain ${demoMode ? "pt-20 sm:pt-20" : ""} ${
         isOpened ? "cover-curtain-opened" : "translate-y-0 opacity-100"
       }`;
 

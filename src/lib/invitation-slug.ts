@@ -3,6 +3,7 @@ export const DEFAULT_INVITATION_SLUG = "utama";
 export const RESERVED_INVITATION_SLUGS = new Set([
   "admin",
   "api",
+  "contoh",
   "login",
   "logout",
   "robots.txt",
