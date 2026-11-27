@@ -12,6 +12,13 @@ export async function generateMetadata({
   params,
 }: AdminInvitationPageProps): Promise<Metadata> {
   const { slug } = await params;
+  const session = await getAdminSession();
+  if (!session || !canAccessInvitation(session, slug)) {
+    return {
+      title: "Framea Admin",
+    };
+  }
+
   const invitation = await getInvitationBySlugFresh(slug);
   if (!invitation) {
     return {

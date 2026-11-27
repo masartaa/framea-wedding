@@ -54,7 +54,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
   if (!process.env.DATABASE_URL) {
     return NextResponse.json(
-      { error: "Database belum dikonfigurasi (DATABASE_URL kosong)." },
+      { error: "Layanan penyimpanan data belum tersedia saat ini." },
       { status: 503, headers: { "Cache-Control": "no-store" } }
     );
   }

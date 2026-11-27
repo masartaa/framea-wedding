@@ -2,6 +2,27 @@ import type { SiteConfig } from "@/lib/config-schema";
 import { THEME_PRESETS } from "@/lib/theme-presets";
 
 const DEFAULT_ORDER_WHATSAPP = "6281215526343";
+const DEFAULT_SITE_ORIGIN = "https://frameainvitation.my.id";
+
+function normalizeSiteOrigin(raw: string | undefined): string {
+  const trimmed = (raw ?? "").trim();
+  if (!trimmed) {
+    return DEFAULT_SITE_ORIGIN;
+  }
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+      return DEFAULT_SITE_ORIGIN;
+    }
+    return parsed.origin;
+  } catch {
+    return DEFAULT_SITE_ORIGIN;
+  }
+}
+
+export const SITE_ORIGIN = normalizeSiteOrigin(
+  process.env.NEXT_PUBLIC_SITE_URL
+);
 
 function normalizeWhatsAppNumber(raw: string | undefined): string {
   const digits = (raw ?? "").replace(/\D/g, "");

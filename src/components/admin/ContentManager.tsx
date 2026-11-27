@@ -20,7 +20,7 @@ import {
   type SiteConfig,
 } from "@/lib/config-schema";
 import { formatEventDateFull } from "@/lib/format";
-import { isVercelBlobUrl } from "@/lib/media-utils";
+import { isManagedMediaUrl } from "@/lib/media-utils";
 import { EventsManager } from "./EventsManager";
 import { GuestsManager } from "./GuestsManager";
 import { InvitationPreview } from "./InvitationPreview";
@@ -144,7 +144,7 @@ function getTabForFieldPath(path: string): ActiveTab {
   return "umum";
 }
 
-function collectBlobUrls(config: SiteConfig): Set<string> {
+function collectManagedMediaUrls(config: SiteConfig): Set<string> {
   const urls = [
     config.media.heroPhotoUrl,
     config.media.musicUrl,
@@ -153,7 +153,7 @@ function collectBlobUrls(config: SiteConfig): Set<string> {
     ...config.media.galleryPhotoUrls,
     ...config.story.items.map((item) => item.photoUrl ?? ""),
   ];
-  return new Set(urls.filter((url) => isVercelBlobUrl(url)));
+  return new Set(urls.filter((url) => isManagedMediaUrl(url)));
 }
 
 export function ContentManager({
@@ -379,8 +379,8 @@ export function ContentManager({
   };
 
   const cleanupRemovedBlobs = (previous: SiteConfig, next: SiteConfig) => {
-    const prevUrls = collectBlobUrls(previous);
-    const nextUrls = collectBlobUrls(next);
+    const prevUrls = collectManagedMediaUrls(previous);
+    const nextUrls = collectManagedMediaUrls(next);
 
     for (const url of prevUrls) {
       if (!nextUrls.has(url)) {

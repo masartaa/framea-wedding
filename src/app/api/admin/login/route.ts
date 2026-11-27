@@ -91,8 +91,7 @@ export async function POST(request: NextRequest) {
     if (!isSessionSecretConfigured() || !process.env.DATABASE_URL) {
       return NextResponse.json(
         {
-          error:
-            "Layanan login pemilik undangan belum dikonfigurasi (DATABASE_URL / SESSION_SECRET).",
+          error: "Layanan login pemilik undangan belum tersedia saat ini.",
         },
         {
           status: 503,
@@ -172,8 +171,7 @@ export async function POST(request: NextRequest) {
   if (!isAuthConfigured()) {
     return NextResponse.json(
       {
-        error:
-          "Autentikasi Super Admin belum dikonfigurasi. Pastikan ADMIN_PASSWORD dan SESSION_SECRET (min. 16 karakter) sudah diatur.",
+        error: "Autentikasi Super Admin belum dikonfigurasi oleh pengelola server.",
       },
       {
         status: 503,

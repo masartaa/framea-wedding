@@ -419,6 +419,7 @@ export async function deleteInvitationBySlug(slug: string): Promise<{
     parsedConfig.couple.groom.photoUrl,
     parsedConfig.couple.bride.photoUrl,
     ...parsedConfig.media.galleryPhotoUrls,
+    ...parsedConfig.story.items.map((item) => item.photoUrl ?? ""),
   ]);
   urlSet.delete("");
 

@@ -8,6 +8,7 @@ import {
   parseGuestNamesInput,
   renderWhatsAppMessage,
 } from "@/lib/guest-utils";
+import { SITE_ORIGIN } from "@/lib/marketing";
 
 interface GuestItem {
   id: number;
@@ -78,7 +79,7 @@ export function GuestsManager({ invitationSlug, config }: GuestsManagerProps) {
   } | null>(null);
 
   const origin =
-    typeof window !== "undefined" ? window.location.origin : "https://example.com";
+    typeof window !== "undefined" ? window.location.origin : SITE_ORIGIN;
 
   useEffect(() => {
     let cancelled = false;
