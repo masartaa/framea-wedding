@@ -1,7 +1,7 @@
 import type { SiteConfig } from "@/lib/config-schema";
 import { THEME_PRESETS } from "@/lib/theme-presets";
 
-const DEFAULT_ORDER_WHATSAPP = "6281215526343";
+const DEFAULT_ORDER_WHATSAPP = "6285833223244";
 const DEFAULT_SITE_ORIGIN = "https://frameainvitation.my.id";
 
 function normalizeSiteOrigin(raw: string | undefined): string {
@@ -42,7 +42,7 @@ export const ORDER_WHATSAPP_NUMBER = normalizeWhatsAppNumber(
 export const CONTACT_INFO = {
   brandName: "Framea Wedding Invitation",
   email: "frameavisual.id@gmail.com",
-  whatsappDisplay: "0812-1552-6343",
+  whatsappDisplay: "+62858-3322-3244",
   country: "Indonesia",
 } as const;
 
