@@ -39,6 +39,13 @@ export const ORDER_WHATSAPP_NUMBER = normalizeWhatsAppNumber(
   process.env.NEXT_PUBLIC_ORDER_WHATSAPP
 );
 
+export const CONTACT_INFO = {
+  brandName: "Framea Wedding Invitation",
+  email: "frameavisual.id@gmail.com",
+  whatsappDisplay: "0812-1552-6343",
+  country: "Indonesia",
+} as const;
+
 export const PACKAGE_PRICING = {
   originalFormatted: "Rp100.000",
   promoFormatted: "Rp67.000",

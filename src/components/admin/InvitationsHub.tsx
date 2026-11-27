@@ -9,8 +9,47 @@ import {
 } from "@/lib/invitation-slug";
 import type { InvitationSummary } from "@/lib/invitations";
 
+import { SITE_ORIGIN } from "@/lib/marketing";
+
 interface InvitationsHubProps {
   initialInvitations: InvitationSummary[];
+}
+
+const DEFAULT_CLIENT_HANDOVER_TEMPLATE = [
+  "Halo Kak, undangan pernikahan digital untuk *{nama}* sudah aktif dan siap dikelola.",
+  "",
+  "Tautan Undangan Publik:",
+  "{link_undangan}",
+  "",
+  "Login Panel Pemilik:",
+  "{link_login}",
+  "Slug: {slug}",
+  "Sandi: {sandi}",
+  "",
+  "Panduan Cara Edit, Tambah Tamu & Sebar WA:",
+  "{link_panduan}",
+  "",
+  "Silakan login untuk mengubah teks, foto, tema, tanda kasih, serta membuat tautan nama tamu WhatsApp. Jika butuh langkah cepat, cek juga tab Panduan di dalam dashboard ya Kak.",
+].join("\n");
+
+function renderHandoverMessage(
+  template: string,
+  values: {
+    nama: string;
+    slug: string;
+    sandi: string;
+    linkUndangan: string;
+    linkLogin: string;
+    linkPanduan: string;
+  }
+): string {
+  return template
+    .replaceAll("{nama}", values.nama)
+    .replaceAll("{slug}", values.slug)
+    .replaceAll("{sandi}", values.sandi || "[Isi sandi klien di sini]")
+    .replaceAll("{link_undangan}", values.linkUndangan)
+    .replaceAll("{link_login}", values.linkLogin)
+    .replaceAll("{link_panduan}", values.linkPanduan);
 }
 
 interface CreateResponse {
@@ -74,6 +113,14 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
   );
   const [deletingSlug, setDeletingSlug] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [handoverTemplate, setHandoverTemplate] = useState(
+    DEFAULT_CLIENT_HANDOVER_TEMPLATE
+  );
+  const [isTemplateEditorOpen, setIsTemplateEditorOpen] = useState(false);
+  const [handoverSlug, setHandoverSlug] = useState<string | null>(null);
+  const [sessionPasswords, setSessionPasswords] = useState<
+    Record<string, string>
+  >({});
   const [notice, setNotice] = useState<{
     type: "success" | "error";
     message: string;
@@ -130,14 +177,23 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
         return;
       }
 
-      setItems((prev) => [...prev, data.invitation!]);
+      const createdInvitation = data.invitation;
+      const submittedPassword = password.trim();
+      setItems((prev) => [...prev, createdInvitation]);
+      if (submittedPassword) {
+        setSessionPasswords((prev) => ({
+          ...prev,
+          [createdInvitation.slug]: submittedPassword,
+        }));
+      }
+      setHandoverSlug(createdInvitation.slug);
       setLabel("");
       setSlug("");
       setHasEditedSlug(false);
       setPassword("");
       setNotice({
         type: "success",
-        message: `Undangan "${data.invitation.label}" (/${data.invitation.slug}) berhasil dibuat!`,
+        message: `Undangan "${createdInvitation.label}" (/${createdInvitation.slug}) berhasil dibuat! Pesan kirim slug dan sandi sudah siap disalin di bawah.`,
       });
     } catch {
       setNotice({
@@ -219,6 +275,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
       }
 
       const updated = data.invitation;
+      const submittedEditPassword = editPassword.trim();
       setItems((prev) =>
         prev.map((row) =>
           row.slug === currentSlug
@@ -232,6 +289,26 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
             : row
         )
       );
+      setSessionPasswords((prev) => {
+        const next = { ...prev };
+        const existingPassword = next[currentSlug];
+        if (currentSlug !== updated.slug) {
+          delete next[currentSlug];
+        }
+        if (clearPassword) {
+          delete next[updated.slug];
+        } else if (submittedEditPassword) {
+          next[updated.slug] = submittedEditPassword;
+        } else if (existingPassword) {
+          next[updated.slug] = existingPassword;
+        }
+        return next;
+      });
+      if (!clearPassword && submittedEditPassword) {
+        setHandoverSlug(updated.slug);
+      } else if (handoverSlug === currentSlug) {
+        setHandoverSlug(updated.slug);
+      }
       setEditingSlug(null);
       setEditPassword("");
       setNotice({
@@ -266,6 +343,14 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
       }
 
       setItems((prev) => prev.filter((row) => row.slug !== targetSlug));
+      setSessionPasswords((prev) => {
+        const next = { ...prev };
+        delete next[targetSlug];
+        return next;
+      });
+      if (handoverSlug === targetSlug) {
+        setHandoverSlug(null);
+      }
       setConfirmDeleteSlug(null);
       setNotice({
         type: "success",
@@ -281,10 +366,23 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
     }
   };
 
+  const getOrigin = () =>
+    typeof window !== "undefined" ? window.location.origin : SITE_ORIGIN;
+
+  const buildClientHandoverMessage = (item: InvitationSummary): string => {
+    const origin = getOrigin();
+    return renderHandoverMessage(handoverTemplate, {
+      nama: item.label,
+      slug: item.slug,
+      sandi: sessionPasswords[item.slug]?.trim() ?? "",
+      linkUndangan: `${origin}/${item.slug}`,
+      linkLogin: `${origin}/login?slug=${encodeURIComponent(item.slug)}`,
+      linkPanduan: `${origin}/panduan`,
+    });
+  };
+
   const handleCopyLoginLink = async (targetSlug: string) => {
-    const origin =
-      typeof window !== "undefined" ? window.location.origin : "";
-    const loginUrl = `${origin}/login?slug=${encodeURIComponent(targetSlug)}`;
+    const loginUrl = `${getOrigin()}/login?slug=${encodeURIComponent(targetSlug)}`;
     const ok = await copyText(loginUrl);
     if (ok) {
       const key = `login:${targetSlug}`;
@@ -296,28 +394,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
   };
 
   const handleCopyHandoverMessage = async (item: InvitationSummary) => {
-    const origin =
-      typeof window !== "undefined" ? window.location.origin : "";
-    const publicUrl = `${origin}/${item.slug}`;
-    const loginUrl = `${origin}/login?slug=${encodeURIComponent(item.slug)}`;
-    const guideUrl = `${origin}/panduan`;
-    const message = [
-      `Halo Kak, undangan pernikahan digital untuk *${item.label}* sudah aktif dan siap dikelola.`,
-      "",
-      `Tautan Undangan Publik:`,
-      publicUrl,
-      "",
-      `Login Panel Pemilik:`,
-      loginUrl,
-      `Slug: ${item.slug}`,
-      "(Gunakan sandi yang kami kirimkan terpisah)",
-      "",
-      `Panduan Cara Edit, Tambah Tamu & Sebar WA:`,
-      guideUrl,
-      "",
-      "Di dalam panel pemilik juga tersedia tab Panduan jika butuh langkah cepat.",
-    ].join("\n");
-
+    const message = buildClientHandoverMessage(item);
     const ok = await copyText(message);
     if (ok) {
       const key = `handover:${item.slug}`;
@@ -485,14 +562,90 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
       </section>
 
       <section aria-labelledby="judul-daftar-undangan" className="space-y-3">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2
             id="judul-daftar-undangan"
             className="font-heading text-xl font-semibold"
           >
             Daftar Undangan ({items.length})
           </h2>
+
+          <button
+            type="button"
+            aria-expanded={isTemplateEditorOpen}
+            aria-controls="panel-template-pesan-klien"
+            onClick={() => setIsTemplateEditorOpen((prev) => !prev)}
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-semibold transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
+            style={{
+              backgroundColor: isTemplateEditorOpen
+                ? "var(--color-secondary)"
+                : "var(--color-background)",
+              borderColor:
+                "color-mix(in srgb, var(--color-primary) 42%, transparent)",
+            }}
+          >
+            {isTemplateEditorOpen
+              ? "Tutup Template Pesan"
+              : "Atur Template Pesan Klien"}
+          </button>
         </div>
+
+        {isTemplateEditorOpen ? (
+          <div
+            id="panel-template-pesan-klien"
+            className="space-y-3 rounded-2xl border p-4 sm:p-5"
+            style={{
+              backgroundColor: "var(--color-background)",
+              borderColor:
+                "color-mix(in srgb, var(--color-primary) 35%, transparent)",
+            }}
+          >
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <h3 className="text-sm font-semibold">
+                  Template Pesan Kirim Slug &amp; Sandi ke Klien
+                </h3>
+                <p className="mt-0.5 text-xs leading-relaxed opacity-75">
+                  Variabel otomatis:{" "}
+                  <code className="font-mono">{"{nama}"}</code>,{" "}
+                  <code className="font-mono">{"{slug}"}</code>,{" "}
+                  <code className="font-mono">{"{sandi}"}</code>,{" "}
+                  <code className="font-mono">{"{link_undangan}"}</code>,{" "}
+                  <code className="font-mono">{"{link_login}"}</code>,{" "}
+                  <code className="font-mono">{"{link_panduan}"}</code>.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setHandoverTemplate(DEFAULT_CLIENT_HANDOVER_TEMPLATE)
+                }
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border px-3.5 text-xs font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
+                style={{
+                  backgroundColor: "var(--color-background)",
+                  borderColor:
+                    "color-mix(in srgb, var(--color-primary) 40%, transparent)",
+                }}
+              >
+                Reset Template
+              </button>
+            </div>
+
+            <div>
+              <label htmlFor="superadmin-handover-template" className="sr-only">
+                Isi template pesan serah terima klien
+              </label>
+              <textarea
+                id="superadmin-handover-template"
+                rows={10}
+                value={handoverTemplate}
+                onChange={(event) => setHandoverTemplate(event.target.value)}
+                className="w-full rounded-xl border px-3.5 py-2.5 text-xs leading-relaxed sm:text-sm"
+                style={inputStyle}
+              />
+            </div>
+          </div>
+        ) : null}
 
         {items.length === 0 ? (
           <div
@@ -510,7 +663,14 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
           <div className="space-y-4">
             {items.map((item) => {
               const isEditing = editingSlug === item.slug;
+              const isHandoverOpen = handoverSlug === item.slug;
               const isConfirmingDelete = confirmDeleteSlug === item.slug;
+              const renderedHandover = isHandoverOpen
+                ? buildClientHandoverMessage(item)
+                : "";
+              const whatsappShareHref = renderedHandover
+                ? `https://wa.me/?text=${encodeURIComponent(renderedHandover)}`
+                : "";
 
               return (
                 <article
@@ -616,24 +776,38 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
 
                     <button
                       type="button"
-                      onClick={() => void handleCopyHandoverMessage(item)}
-                      className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
+                      aria-expanded={isHandoverOpen}
+                      aria-controls={`handover-panel-${item.id}`}
+                      onClick={() => {
+                        setEditingSlug(null);
+                        setConfirmDeleteSlug(null);
+                        setHandoverSlug(isHandoverOpen ? null : item.slug);
+                      }}
+                      className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-semibold transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
                       style={{
-                        backgroundColor: "var(--color-background)",
+                        backgroundColor: isHandoverOpen
+                          ? "var(--color-secondary)"
+                          : "var(--color-background)",
                         borderColor:
                           "color-mix(in srgb, var(--color-primary) 45%, transparent)",
+                        color: "var(--color-text)",
                       }}
                     >
-                      {copiedKey === `handover:${item.slug}`
-                        ? "Pesan Serah Terima Tersalin!"
-                        : "Salin Pesan Serah Terima"}
+                      {isHandoverOpen
+                        ? "Tutup Pesan Klien"
+                        : "Kirim Slug & Sandi"}
                     </button>
 
                     <button
                       type="button"
-                      onClick={() =>
-                        isEditing ? setEditingSlug(null) : startEditing(item)
-                      }
+                      onClick={() => {
+                        setHandoverSlug(null);
+                        if (isEditing) {
+                          setEditingSlug(null);
+                        } else {
+                          startEditing(item);
+                        }
+                      }}
                       className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
                       style={{
                         backgroundColor: isEditing
@@ -695,6 +869,102 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                       </button>
                     )}
                   </div>
+
+                  {isHandoverOpen ? (
+                    <div
+                      id={`handover-panel-${item.id}`}
+                      className="mt-4 space-y-3.5 rounded-2xl border p-4"
+                      style={{
+                        backgroundColor:
+                          "color-mix(in srgb, var(--color-secondary) 42%, var(--color-background))",
+                        borderColor: "var(--color-primary)",
+                      }}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-xs font-semibold">
+                          Pesan Kirim Slug &amp; Sandi untuk Klien
+                        </p>
+                        <span className="text-[11px] opacity-75">
+                          Sandi tidak disimpan ke browser (hilang saat refresh)
+                        </span>
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor={`handover-pass-${item.id}`}
+                          className="block text-xs font-medium"
+                        >
+                          Sandi Klien (untuk diisikan ke pesan)
+                        </label>
+                        <input
+                          id={`handover-pass-${item.id}`}
+                          type="text"
+                          maxLength={200}
+                          value={sessionPasswords[item.slug] ?? ""}
+                          onChange={(event) => {
+                            const nextVal = event.target.value;
+                            setSessionPasswords((prev) => ({
+                              ...prev,
+                              [item.slug]: nextVal,
+                            }));
+                          }}
+                          placeholder={
+                            item.hasPassword
+                              ? "Ketik sandi pasangan untuk dimasukkan ke pesan"
+                              : "Login pasangan belum aktif (atur sandi di Ubah Slug / Sandi)"
+                          }
+                          className={inputClassName}
+                          style={inputStyle}
+                        />
+                      </div>
+
+                      <div>
+                        <p className="mb-1.5 text-xs font-medium">
+                          Pratinjau Pesan Siap Kirim
+                        </p>
+                        <pre
+                          className="overflow-x-auto whitespace-pre-wrap break-words rounded-xl border p-3.5 font-sans text-xs leading-relaxed"
+                          style={{
+                            backgroundColor: "var(--color-background)",
+                            borderColor:
+                              "color-mix(in srgb, var(--color-primary) 30%, transparent)",
+                          }}
+                        >
+                          {renderedHandover}
+                        </pre>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => void handleCopyHandoverMessage(item)}
+                          className="inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-80"
+                          style={{
+                            backgroundColor: "var(--color-primary)",
+                            color: "var(--color-background)",
+                          }}
+                        >
+                          {copiedKey === `handover:${item.slug}`
+                            ? "Pesan Tersalin!"
+                            : "Salin Pesan"}
+                        </button>
+
+                        <a
+                          href={whatsappShareHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-semibold transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
+                          style={{
+                            backgroundColor: "var(--color-background)",
+                            borderColor: "var(--color-primary)",
+                            color: "var(--color-primary)",
+                          }}
+                        >
+                          Buka di WhatsApp
+                        </a>
+                      </div>
+                    </div>
+                  ) : null}
 
                   {isEditing ? (
                     <div

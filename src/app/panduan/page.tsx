@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ClientGuide } from "@/components/admin/ClientGuide";
+import { SiteFooter } from "@/components/landing/SiteFooter";
 
 export const metadata: Metadata = {
   title: "Panduan Pemilik Undangan | Framea Wedding Invitation",
@@ -70,31 +71,7 @@ export default function ClientGuidePage() {
         <ClientGuide />
       </main>
 
-      <footer
-        className="border-t"
-        style={{
-          borderColor:
-            "color-mix(in srgb, var(--color-primary) 14%, transparent)",
-        }}
-      >
-        <div className="mx-auto flex w-full max-w-4xl flex-wrap items-center justify-between gap-3 px-5 py-4 text-xs opacity-75 sm:px-8">
-          <span>Framea Wedding Invitation</span>
-          <div className="flex flex-wrap items-center gap-4">
-            <Link
-              href="/login"
-              className="inline-flex min-h-11 items-center underline-offset-2 hover:underline"
-            >
-              Masuk Pemilik
-            </Link>
-            <Link
-              href="/"
-              className="inline-flex min-h-11 items-center underline-offset-2 hover:underline"
-            >
-              Kembali ke Beranda
-            </Link>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import {
 } from "@/components/landing/EditorialArtwork";
 import { LandingHeaderNav } from "@/components/landing/LandingHeaderNav";
 import { LandingShowcase } from "@/components/landing/LandingShowcase";
+import { SiteFooter } from "@/components/landing/SiteFooter";
 import { buildWhatsAppOrderUrl, PACKAGE_PRICING } from "@/lib/marketing";
 
 export const metadata: Metadata = {
@@ -553,32 +554,7 @@ export default function FrameaLandingPage() {
         </section>
       </main>
 
-      <footer
-        className="border-t"
-        style={{
-          borderColor:
-            "color-mix(in srgb, var(--color-primary) 14%, transparent)",
-        }}
-      >
-        <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-3 px-5 py-4 text-xs opacity-75 sm:px-8">
-          <span className="font-medium">Framea Wedding Invitation</span>
-          <div className="flex flex-wrap items-center gap-4">
-            <Link
-              href="/contoh"
-              className="inline-flex min-h-11 items-center underline-offset-2 hover:underline"
-            >
-              Contoh Undangan
-            </Link>
-            <Link
-              href="/login"
-              className="inline-flex min-h-11 items-center underline-offset-2 hover:underline"
-            >
-              Masuk Pemilik
-            </Link>
-            <span>Tautan undangan klien bersifat privat</span>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

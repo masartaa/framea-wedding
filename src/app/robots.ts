@@ -8,6 +8,9 @@ export default function robots(): MetadataRoute.Robots {
       allow: [
         "/$",
         "/contoh",
+        "/syarat-ketentuan",
+        "/privasi",
+        "/pengembalian-dana",
         "/opengraph-image",
         "/sitemap.xml",
         "/icon.svg",
