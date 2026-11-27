@@ -73,7 +73,7 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
     null
   );
   const [deletingSlug, setDeletingSlug] = useState<string | null>(null);
-  const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [notice, setNotice] = useState<{
     type: "success" | "error";
     message: string;
@@ -287,10 +287,44 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
     const loginUrl = `${origin}/login?slug=${encodeURIComponent(targetSlug)}`;
     const ok = await copyText(loginUrl);
     if (ok) {
-      setCopiedSlug(targetSlug);
+      const key = `login:${targetSlug}`;
+      setCopiedKey(key);
       window.setTimeout(() => {
-        setCopiedSlug((prev) => (prev === targetSlug ? null : prev));
-      }, 2000);
+        setCopiedKey((prev) => (prev === key ? null : prev));
+      }, 2200);
+    }
+  };
+
+  const handleCopyHandoverMessage = async (item: InvitationSummary) => {
+    const origin =
+      typeof window !== "undefined" ? window.location.origin : "";
+    const publicUrl = `${origin}/${item.slug}`;
+    const loginUrl = `${origin}/login?slug=${encodeURIComponent(item.slug)}`;
+    const guideUrl = `${origin}/panduan`;
+    const message = [
+      `Halo Kak, undangan pernikahan digital untuk *${item.label}* sudah aktif dan siap dikelola.`,
+      "",
+      `Tautan Undangan Publik:`,
+      publicUrl,
+      "",
+      `Login Panel Pemilik:`,
+      loginUrl,
+      `Slug: ${item.slug}`,
+      "(Gunakan sandi yang kami kirimkan terpisah)",
+      "",
+      `Panduan Cara Edit, Tambah Tamu & Sebar WA:`,
+      guideUrl,
+      "",
+      "Di dalam panel pemilik juga tersedia tab Panduan jika butuh langkah cepat.",
+    ].join("\n");
+
+    const ok = await copyText(message);
+    if (ok) {
+      const key = `handover:${item.slug}`;
+      setCopiedKey(key);
+      window.setTimeout(() => {
+        setCopiedKey((prev) => (prev === key ? null : prev));
+      }, 2200);
     }
   };
 
@@ -575,9 +609,24 @@ export function InvitationsHub({ initialInvitations }: InvitationsHubProps) {
                           "color-mix(in srgb, var(--color-primary) 45%, transparent)",
                       }}
                     >
-                      {copiedSlug === item.slug
+                      {copiedKey === `login:${item.slug}`
                         ? "Link Login Tersalin!"
                         : "Salin Link Login Klien"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => void handleCopyHandoverMessage(item)}
+                      className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-medium transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
+                      style={{
+                        backgroundColor: "var(--color-background)",
+                        borderColor:
+                          "color-mix(in srgb, var(--color-primary) 45%, transparent)",
+                      }}
+                    >
+                      {copiedKey === `handover:${item.slug}`
+                        ? "Pesan Serah Terima Tersalin!"
+                        : "Salin Pesan Serah Terima"}
                     </button>
 
                     <button

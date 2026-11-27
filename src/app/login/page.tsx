@@ -120,12 +120,19 @@ export default async function ClientLoginPage() {
           <LoginForm mode="couple" />
 
           <div
-            className="mt-7 border-t pt-5 text-center"
+            className="mt-7 flex flex-wrap items-center justify-center gap-3 border-t pt-5 text-center"
             style={{
               borderColor:
                 "color-mix(in srgb, var(--color-primary) 14%, transparent)",
             }}
           >
+            <Link
+              href="/panduan"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-medium underline-offset-4 transition-opacity hover:underline"
+              style={{ color: "var(--color-accent)" }}
+            >
+              Baca Panduan Pemilik
+            </Link>
             <Link
               href="/"
               className="inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm underline-offset-4 opacity-80 transition-opacity hover:underline hover:opacity-100"

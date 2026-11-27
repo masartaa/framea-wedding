@@ -21,6 +21,7 @@ import {
 } from "@/lib/config-schema";
 import { formatEventDateFull } from "@/lib/format";
 import { isManagedMediaUrl } from "@/lib/media-utils";
+import { ClientGuide } from "./ClientGuide";
 import { EventsManager } from "./EventsManager";
 import { GiftManager } from "./GiftManager";
 import { GuestsManager } from "./GuestsManager";
@@ -43,7 +44,8 @@ type ActiveTab =
   | "tamu"
   | "rsvp"
   | "ucapan"
-  | "pratinjau";
+  | "pratinjau"
+  | "panduan";
 
 interface ContentManagerProps {
   invitationSlug: string;
@@ -78,6 +80,7 @@ const TABS: ReadonlyArray<{
   { id: "rsvp", label: "RSVP", sectionId: "rsvp" },
   { id: "ucapan", label: "Ucapan", sectionId: "ucapan" },
   { id: "pratinjau", label: "Pratinjau" },
+  { id: "panduan", label: "Panduan" },
 ];
 
 function normalizeConfigWithEvents(config: SiteConfig): SiteConfig {
@@ -290,7 +293,9 @@ export function ContentManager({
   const formattedUpdated = formatUpdatedAt(updatedAt);
   const activeSectionCount = draft.sections.filter((s) => s.enabled).length;
   const isDirectActionTab =
-    effectiveActiveTab === "tamu" || effectiveActiveTab === "ucapan";
+    effectiveActiveTab === "tamu" ||
+    effectiveActiveTab === "ucapan" ||
+    effectiveActiveTab === "panduan";
 
   const clearFieldError = (key: string) => {
     setFieldErrors((prev) => {
@@ -597,19 +602,43 @@ export function ContentManager({
           </div>
 
           <div className="flex flex-col items-start gap-2 sm:items-end">
-            <Link
-              href={`/${invitationSlug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-semibold transition-opacity hover:opacity-85 active:opacity-75"
-              style={{
-                backgroundColor: "var(--color-secondary)",
-                borderColor:
-                  "color-mix(in srgb, var(--color-primary) 45%, transparent)",
-              }}
-            >
-              Buka /{invitationSlug}
-            </Link>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => selectTab("panduan")}
+                aria-pressed={effectiveActiveTab === "panduan"}
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-semibold transition-colors hover:bg-[var(--color-secondary)] active:opacity-80"
+                style={{
+                  backgroundColor:
+                    effectiveActiveTab === "panduan"
+                      ? "var(--color-primary)"
+                      : "var(--color-background)",
+                  borderColor:
+                    effectiveActiveTab === "panduan"
+                      ? "var(--color-primary)"
+                      : "color-mix(in srgb, var(--color-primary) 45%, transparent)",
+                  color:
+                    effectiveActiveTab === "panduan"
+                      ? "var(--color-background)"
+                      : "var(--color-text)",
+                }}
+              >
+                Panduan
+              </button>
+              <Link
+                href={`/${invitationSlug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 text-xs font-semibold transition-opacity hover:opacity-85 active:opacity-75"
+                style={{
+                  backgroundColor: "var(--color-secondary)",
+                  borderColor:
+                    "color-mix(in srgb, var(--color-primary) 45%, transparent)",
+                }}
+              >
+                Buka /{invitationSlug}
+              </Link>
+            </div>
             <div className="text-left text-xs sm:text-right">
               <p className="opacity-75">
                 Sumber:{" "}
@@ -1379,6 +1408,26 @@ export function ContentManager({
       ) : null}
 
       {effectiveActiveTab === "pratinjau" ? <InvitationPreview config={draft} /> : null}
+
+      {effectiveActiveTab === "panduan" ? (
+        <ClientGuide
+          invitationSlug={invitationSlug}
+          onJumpToTab={(tab) => selectTab(tab)}
+          disabledTabs={
+            new Set(
+              TABS.filter(
+                (
+                  tab
+                ): tab is {
+                  id: Exclude<ActiveTab, "panduan">;
+                  label: string;
+                  sectionId?: SectionId;
+                } => tab.id !== "panduan" && isTabDisabled(tab.id)
+              ).map((tab) => tab.id)
+            )
+          }
+        />
+      ) : null}
       </div>
 
       {!isDirectActionTab ? (

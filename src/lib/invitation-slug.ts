@@ -6,6 +6,7 @@ export const RESERVED_INVITATION_SLUGS = new Set([
   "contoh",
   "login",
   "logout",
+  "panduan",
   "robots.txt",
   "sitemap.xml",
   "favicon.ico",
