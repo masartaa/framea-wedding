@@ -76,6 +76,62 @@ export function isVercelBlobUrl(url: string): boolean {
   }
 }
 
+export function getConfiguredR2PublicUrl(): string | null {
+  const raw = process.env.NEXT_PUBLIC_R2_PUBLIC_URL?.trim() ?? "";
+  if (!raw) {
+    return null;
+  }
+  try {
+    const parsed = new URL(raw);
+    if (
+      parsed.protocol !== "https:" ||
+      parsed.username ||
+      parsed.password ||
+      !parsed.hostname
+    ) {
+      return null;
+    }
+    const cleanPath = parsed.pathname.replace(/\/+$/, "");
+    return `${parsed.origin}${cleanPath}`;
+  } catch {
+    return null;
+  }
+}
+
+const RAW_TRAVERSAL_REGEX = /(?:^|\/)(?:\.\.?|%2e(?:%2e)?)(?:\/|[?#]|$)|\\|%5c/i;
+
+export function isR2MediaUrl(url: string): boolean {
+  if (RAW_TRAVERSAL_REGEX.test(url)) {
+    return false;
+  }
+  try {
+    const parsed = new URL(url);
+    if (
+      parsed.protocol !== "https:" ||
+      parsed.username ||
+      parsed.password ||
+      parsed.pathname.includes("\\") ||
+      parsed.pathname.includes("..")
+    ) {
+      return false;
+    }
+    const configuredBase = getConfiguredR2PublicUrl();
+    if (configuredBase) {
+      const normalized = `${parsed.origin}${parsed.pathname}`;
+      if (normalized.startsWith(`${configuredBase}/`)) {
+        return true;
+      }
+    }
+    return parsed.hostname.endsWith(".r2.dev");
+  } catch {
+    return false;
+  }
+}
+
+export function isManagedMediaUrl(url: string): boolean {
+  return isR2MediaUrl(url) || isVercelBlobUrl(url);
+}
+
 export interface CropAreaPixels {
   sx: number;
   sy: number;

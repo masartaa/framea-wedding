@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isManagedMediaUrl } from "@/lib/media-utils";
 
 const hexColorRegex = /^#[0-9A-Fa-f]{6}$/;
 const MAX_URL_LENGTH = 2048;
@@ -19,15 +20,7 @@ export function isTrustedMediaUrl(value: string): boolean {
   if (isSafeLocalPath(value)) {
     return true;
   }
-  try {
-    const parsed = new URL(value);
-    return (
-      parsed.protocol === "https:" &&
-      parsed.hostname.endsWith(".blob.vercel-storage.com")
-    );
-  } catch {
-    return false;
-  }
+  return isManagedMediaUrl(value);
 }
 
 function isSafeHttpsUrl(value: string): boolean {
@@ -51,7 +44,7 @@ const optionalMediaUrlSchema = z
   .max(MAX_URL_LENGTH, "URL media terlalu panjang.")
   .refine(
     isTrustedMediaUrl,
-    "URL media harus berupa berkas Vercel Blob (https://*.blob.vercel-storage.com) atau path lokal yang aman."
+    "URL media harus berupa berkas penyimpanan yang diizinkan (Cloudflare R2, Vercel Blob) atau path lokal yang aman."
   );
 
 const optionalExternalHttpsUrlSchema = z

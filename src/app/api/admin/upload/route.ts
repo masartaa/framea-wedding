@@ -1,4 +1,3 @@
-import { del, put } from "@vercel/blob";
 import { and, eq, sql } from "drizzle-orm";
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
@@ -9,7 +8,7 @@ import { normalizeInvitationSlug } from "@/lib/invitation-slug";
 import {
   ALLOWED_AUDIO_MIME_TYPES,
   ALLOWED_IMAGE_MIME_TYPES,
-  isVercelBlobUrl,
+  isManagedMediaUrl,
   MAX_AUDIO_BYTES,
   MAX_IMAGE_BYTES,
 } from "@/lib/media-utils";
@@ -18,6 +17,12 @@ import {
   getClientIp,
   recordUploadSubmission,
 } from "@/lib/rate-limit";
+import {
+  deleteMediaObjects,
+  getFriendlyStorageError,
+  isMediaStorageConfigured,
+  uploadMediaObject,
+} from "@/lib/storage";
 
 const MAX_MEDIA_FILES_PER_INVITATION = 30;
 
@@ -116,30 +121,6 @@ function sanitizeBaseName(filename: string): string {
   return slug || "media";
 }
 
-function isBlobConfigured(): boolean {
-  return Boolean(
-    process.env.BLOB_READ_WRITE_TOKEN ||
-      process.env.BLOB_STORE_ID ||
-      process.env.VERCEL_OIDC_TOKEN
-  );
-}
-
-function getFriendlyBlobError(error: unknown): string {
-  const raw = error instanceof Error ? error.message.toLowerCase() : "";
-  if (raw.includes("private")) {
-    return "Blob Store berstatus Private. Gunakan Blob Store dengan akses Public agar media dapat ditampilkan di undangan.";
-  }
-  if (
-    raw.includes("token") ||
-    raw.includes("access") ||
-    raw.includes("oidc") ||
-    raw.includes("unauthorized")
-  ) {
-    return "Autentikasi Vercel Blob gagal. Pastikan Blob Store Public terhubung ke proyek Vercel ini lalu Redeploy.";
-  }
-  return "Gagal mengunggah berkas ke penyimpanan. Silakan coba lagi.";
-}
-
 export async function POST(request: NextRequest) {
   const auth = await requireAdminSession();
   if (!auth.ok) {
@@ -167,11 +148,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!isBlobConfigured()) {
+  if (!isMediaStorageConfigured()) {
     return NextResponse.json(
       {
-        error:
-          "Penyimpanan media belum dikonfigurasi. Hubungkan Vercel Blob Store (BLOB_STORE_ID / BLOB_READ_WRITE_TOKEN) di Vercel atau .env.local.",
+        error: "Penyimpanan media belum dikonfigurasi oleh pengelola server.",
       },
       {
         status: 503,
@@ -356,10 +336,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const blob = await put(pathname, Buffer.from(arrayBuffer), {
-      access: "public",
+    const uploaded = await uploadMediaObject({
+      pathname,
+      body: Buffer.from(arrayBuffer),
       contentType: normalizedContentType,
-      addRandomSuffix: true,
     });
 
     await recordUploadSubmission(clientIp);
@@ -374,7 +354,7 @@ export async function POST(request: NextRequest) {
           .values({
             invitationId: resolvedInvitationId,
             kind: dbMediaKind,
-            url: blob.url,
+            url: uploaded.url,
             sortOrder,
           })
           .returning({ id: media.id });
@@ -391,7 +371,7 @@ export async function POST(request: NextRequest) {
         ok: true,
         id: insertedId,
         kind,
-        url: blob.url,
+        url: uploaded.url,
       },
       {
         status: 200,
@@ -400,10 +380,10 @@ export async function POST(request: NextRequest) {
     );
   } catch (error: unknown) {
     const message =
-      error instanceof Error ? error.message : "Gagal mengunggah ke Blob.";
-    console.error(`Gagal unggah media ke Vercel Blob: ${message}`);
+      error instanceof Error ? error.message : "Gagal mengunggah media.";
+    console.error(`Gagal unggah media ke penyimpanan: ${message}`);
     return NextResponse.json(
-      { error: getFriendlyBlobError(error) },
+      { error: getFriendlyStorageError(error) },
       {
         status: 500,
         headers: { "Cache-Control": "no-store" },
@@ -443,9 +423,12 @@ export async function DELETE(request: NextRequest) {
   }
 
   const { url } = parsed.data;
-  if (!isVercelBlobUrl(url)) {
+  if (!isManagedMediaUrl(url)) {
     return NextResponse.json(
-      { error: "Hanya berkas milik Vercel Blob yang dapat dihapus." },
+      {
+        error:
+          "Hanya berkas milik penyimpanan media yang dikonfigurasi (Cloudflare R2 / Vercel Blob) yang dapat dihapus.",
+      },
       {
         status: 400,
         headers: { "Cache-Control": "no-store" },
@@ -483,8 +466,8 @@ export async function DELETE(request: NextRequest) {
   }
 
   try {
-    if (isBlobConfigured()) {
-      await del(url);
+    if (isMediaStorageConfigured()) {
+      await deleteMediaObjects([url]);
     }
 
     if (process.env.DATABASE_URL) {

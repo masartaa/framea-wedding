@@ -1,4 +1,3 @@
-import { del } from "@vercel/blob";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
@@ -13,7 +12,8 @@ import {
   INVITATIONS_LIST_CACHE_TAG,
   updateInvitationMeta,
 } from "@/lib/invitations";
-import { isVercelBlobUrl } from "@/lib/media-utils";
+import { isManagedMediaUrl } from "@/lib/media-utils";
+import { deleteMediaObjects, isMediaStorageConfigured } from "@/lib/storage";
 
 const patchMetaSchema = z.object({
   label: z
@@ -51,14 +51,6 @@ function isUniqueViolationError(error: unknown): boolean {
   return (
     typeof err.message === "string" &&
     err.message.toLowerCase().includes("duplicate key")
-  );
-}
-
-function isBlobConfigured(): boolean {
-  return Boolean(
-    process.env.BLOB_READ_WRITE_TOKEN ||
-      process.env.BLOB_STORE_ID ||
-      process.env.VERCEL_OIDC_TOKEN
   );
 }
 
@@ -194,12 +186,15 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
       );
     }
 
-    if (isBlobConfigured()) {
-      const blobUrls = deleted.mediaUrls.filter((url) => isVercelBlobUrl(url));
-      if (blobUrls.length > 0) {
-        await del(blobUrls).catch((blobErr: unknown) => {
-          const msg = blobErr instanceof Error ? blobErr.message : "Blob error";
-          console.warn(`Gagal membersihkan blob saat hapus undangan: ${msg}`);
+    if (isMediaStorageConfigured()) {
+      const managedUrls = deleted.mediaUrls.filter((url) =>
+        isManagedMediaUrl(url)
+      );
+      if (managedUrls.length > 0) {
+        await deleteMediaObjects(managedUrls).catch((storageErr: unknown) => {
+          const msg =
+            storageErr instanceof Error ? storageErr.message : "Storage error";
+          console.warn(`Gagal membersihkan media saat hapus undangan: ${msg}`);
         });
       }
     }

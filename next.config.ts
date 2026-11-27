@@ -2,12 +2,41 @@ import type { NextConfig } from "next";
 
 const isProd = process.env.NODE_ENV === "production";
 
+function getR2PublicHostInfo(): { origin: string; hostname: string } | null {
+  const raw = process.env.NEXT_PUBLIC_R2_PUBLIC_URL?.trim() ?? "";
+  if (!raw) {
+    return null;
+  }
+  try {
+    const parsed = new URL(raw);
+    if (
+      parsed.protocol !== "https:" ||
+      parsed.username ||
+      parsed.password ||
+      !parsed.hostname
+    ) {
+      return null;
+    }
+    return { origin: parsed.origin, hostname: parsed.hostname };
+  } catch {
+    return null;
+  }
+}
+
+const r2HostInfo = getR2PublicHostInfo();
+const extraMediaOrigins = [
+  "https://*.r2.dev",
+  ...(r2HostInfo && !r2HostInfo.hostname.endsWith(".r2.dev")
+    ? [r2HostInfo.origin]
+    : []),
+].join(" ");
+
 const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isProd ? "" : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com https://*.blob.vercel-storage.com",
-  "media-src 'self' blob: https://*.public.blob.vercel-storage.com https://*.blob.vercel-storage.com",
+  `img-src 'self' data: blob: https://*.public.blob.vercel-storage.com https://*.blob.vercel-storage.com ${extraMediaOrigins}`,
+  `media-src 'self' blob: https://*.public.blob.vercel-storage.com https://*.blob.vercel-storage.com ${extraMediaOrigins}`,
   "font-src 'self' data:",
   "connect-src 'self'",
   "object-src 'none'",
@@ -50,6 +79,18 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "*.blob.vercel-storage.com",
       },
+      {
+        protocol: "https",
+        hostname: "*.r2.dev",
+      },
+      ...(r2HostInfo && !r2HostInfo.hostname.endsWith(".r2.dev")
+        ? [
+            {
+              protocol: "https" as const,
+              hostname: r2HostInfo.hostname,
+            },
+          ]
+        : []),
     ],
   },
   async headers() {

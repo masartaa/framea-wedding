@@ -440,8 +440,8 @@ export function MediaManager({
         </h2>
         <p className="mt-0.5 text-sm opacity-75">
           Setiap foto dapat dipotong (crop) dan diposisikan sesuai bingkai
-          tampilannya sebelum dikompres dan diunggah ke Vercel Blob (maks. 2 MB
-          per foto).
+          tampilannya sebelum dikompres dan diunggah ke penyimpanan media (maks.
+          2 MB per foto).
         </p>
       </div>
 
