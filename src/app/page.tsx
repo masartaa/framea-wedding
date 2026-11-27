@@ -274,12 +274,12 @@ export default function FrameaLandingPage() {
                       04
                     </span>
                     <h3 className="mt-1.5 text-base font-semibold">
-                      RSVP, ucapan &amp; pesan WhatsApp
+                      Tanda Kasih, RSVP &amp; pesan WhatsApp
                     </h3>
                     <p className="mt-1.5 text-sm leading-relaxed opacity-75">
-                      Rekap konfirmasi kehadiran dan jumlah tamu otomatis di
-                      dashboard, moderasi ucapan, serta salin pesan WhatsApp
-                      personal per tamu.
+                      Amplop digital (rekening, QRIS, alamat kado dengan salin
+                      cepat), rekap RSVP dan moderasi ucapan di dashboard, serta
+                      template pesan WhatsApp personal per tamu.
                     </p>
                   </div>
                 </div>

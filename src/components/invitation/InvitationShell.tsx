@@ -17,6 +17,7 @@ import { BackgroundDecoration } from "./BackgroundDecoration";
 import { Countdown } from "./Countdown";
 import { Cover } from "./Cover";
 import { GallerySection } from "./GallerySection";
+import { GiftSection } from "./GiftSection";
 import { HeroPhotoFrame } from "./HeroPhotoFrame";
 import { MusicPlayer, type MusicPlayerHandle } from "./MusicPlayer";
 import { Ornament } from "./Ornament";
@@ -110,6 +111,15 @@ export function InvitationShell({
             photoUrls={config.media.galleryPhotoUrls}
             ornaments={config.theme.ornaments}
             transition={config.theme.layout.galleryTransition ?? "fade"}
+          />
+        );
+      case "hadiah":
+        return (
+          <GiftSection
+            key="hadiah"
+            giftConfig={config.gift}
+            ornaments={config.theme.ornaments}
+            previewMode={previewMode}
           />
         );
       case "rsvp":

@@ -124,6 +124,7 @@ export const sectionIdSchema = z.enum([
   "kisah",
   "acara",
   "galeri",
+  "hadiah",
   "rsvp",
   "ucapan",
 ]);
@@ -185,6 +186,80 @@ export const DEFAULT_RSVP_CONFIG = {
   introText:
     "Mohon konfirmasi kehadiran Bapak/Ibu/Saudara/i agar kami dapat mempersiapkan penyambutan dengan baik.",
   maxGuests: 5,
+};
+
+export const giftAccountSchema = z.object({
+  id: z.string().trim().min(1).max(40),
+  bankName: z
+    .string()
+    .trim()
+    .min(1, "Nama bank atau e-wallet wajib diisi.")
+    .max(40, "Nama bank/e-wallet maksimal 40 karakter."),
+  accountNumber: z
+    .string()
+    .trim()
+    .min(1, "Nomor rekening atau nomor e-wallet wajib diisi.")
+    .max(40, "Nomor rekening maksimal 40 karakter."),
+  accountHolder: z
+    .string()
+    .trim()
+    .min(1, "Nama pemilik rekening wajib diisi.")
+    .max(80, "Nama pemilik maksimal 80 karakter."),
+});
+
+export const giftQrisSchema = z.object({
+  imageUrl: optionalMediaUrlSchema.optional().default(""),
+  label: z
+    .string()
+    .trim()
+    .max(60, "Label QRIS maksimal 60 karakter.")
+    .optional()
+    .default(""),
+});
+
+export const giftShippingSchema = z.object({
+  recipientName: z
+    .string()
+    .trim()
+    .max(80, "Nama penerima maksimal 80 karakter.")
+    .optional()
+    .default(""),
+  phone: z
+    .string()
+    .trim()
+    .max(30, "Nomor telepon maksimal 30 karakter.")
+    .optional()
+    .default(""),
+  address: z
+    .string()
+    .trim()
+    .max(300, "Alamat pengiriman maksimal 300 karakter.")
+    .optional()
+    .default(""),
+  note: z
+    .string()
+    .trim()
+    .max(120, "Catatan pengiriman maksimal 120 karakter.")
+    .optional()
+    .default(""),
+});
+
+export const DEFAULT_GIFT_CONFIG = {
+  title: "Tanda Kasih",
+  introText:
+    "Doa restu Bapak/Ibu/Saudara/i merupakan karunia terindah bagi kami. Namun jika berkenan memberikan tanda kasih, dapat disampaikan melalui tautan di bawah ini.",
+  buttonLabel: "Kirim Tanda Kasih",
+  accounts: [] as Array<z.infer<typeof giftAccountSchema>>,
+  qris: {
+    imageUrl: "",
+    label: "",
+  },
+  shipping: {
+    recipientName: "",
+    phone: "",
+    address: "",
+    note: "",
+  },
 };
 
 function isValidInstagramInput(value: string): boolean {
@@ -366,6 +441,36 @@ export const siteConfigSchema = z.object({
     })
     .optional()
     .default(DEFAULT_RSVP_CONFIG),
+  gift: z
+    .object({
+      title: z
+        .string()
+        .trim()
+        .min(1, "Judul Tanda Kasih wajib diisi.")
+        .max(80, "Judul Tanda Kasih maksimal 80 karakter."),
+      introText: z
+        .string()
+        .trim()
+        .max(350, "Teks pengantar Tanda Kasih maksimal 350 karakter."),
+      buttonLabel: z
+        .string()
+        .trim()
+        .min(1, "Teks tombol wajib diisi.")
+        .max(40, "Teks tombol maksimal 40 karakter.")
+        .optional()
+        .default("Kirim Tanda Kasih"),
+      accounts: z
+        .array(giftAccountSchema)
+        .max(4, "Maksimal 4 rekening atau e-wallet.")
+        .optional()
+        .default([]),
+      qris: giftQrisSchema.optional().default({ imageUrl: "", label: "" }),
+      shipping: giftShippingSchema
+        .optional()
+        .default({ recipientName: "", phone: "", address: "", note: "" }),
+    })
+    .optional()
+    .default(DEFAULT_GIFT_CONFIG),
   media: z.object({
     heroPhotoUrl: optionalMediaUrlSchema,
     galleryPhotoUrls: z
@@ -422,6 +527,7 @@ export const siteConfigSchema = z.object({
 export type SiteConfig = z.infer<typeof siteConfigSchema>;
 export type EventItem = z.infer<typeof eventItemSchema>;
 export type StoryItem = z.infer<typeof storyItemSchema>;
+export type GiftAccountItem = z.infer<typeof giftAccountSchema>;
 export type ThemeColors = SiteConfig["theme"]["colors"];
 export type SectionItem = SiteConfig["sections"][number];
 export type SectionId = SectionItem["id"];
@@ -432,6 +538,7 @@ export const ALL_SECTION_IDS: ReadonlyArray<SectionId> = [
   "kisah",
   "acara",
   "galeri",
+  "hadiah",
   "rsvp",
   "ucapan",
 ];
@@ -520,6 +627,11 @@ export const SECTION_LABELS: Record<
     label: "Galeri Slideshow",
     description: "Koleksi maksimal 6 foto dalam slideshow interaktif dan lightbox.",
   },
+  hadiah: {
+    label: "Tanda Kasih (Hadiah)",
+    description:
+      "Rekening bank/e-wallet, gambar QRIS, dan alamat kirim kado fisik dengan tombol salin.",
+  },
   rsvp: {
     label: "Konfirmasi Kehadiran (RSVP)",
     description:
@@ -586,6 +698,7 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   },
   story: DEFAULT_STORY_CONFIG,
   rsvp: DEFAULT_RSVP_CONFIG,
+  gift: DEFAULT_GIFT_CONFIG,
   media: {
     heroPhotoUrl: "",
     galleryPhotoUrls: [],
@@ -621,6 +734,7 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
     { id: "kisah", enabled: true },
     { id: "acara", enabled: true },
     { id: "galeri", enabled: true },
+    { id: "hadiah", enabled: true },
     { id: "rsvp", enabled: true },
     { id: "ucapan", enabled: true },
   ],

@@ -22,6 +22,7 @@ import {
 import { formatEventDateFull } from "@/lib/format";
 import { isManagedMediaUrl } from "@/lib/media-utils";
 import { EventsManager } from "./EventsManager";
+import { GiftManager } from "./GiftManager";
 import { GuestsManager } from "./GuestsManager";
 import { InvitationPreview } from "./InvitationPreview";
 import { MediaManager } from "./MediaManager";
@@ -36,6 +37,7 @@ type ActiveTab =
   | "mempelai"
   | "kisah"
   | "media"
+  | "hadiah"
   | "section"
   | "tema"
   | "tamu"
@@ -69,6 +71,7 @@ const TABS: ReadonlyArray<{
   { id: "mempelai", label: "Mempelai", sectionId: "mempelai" },
   { id: "kisah", label: "Kisah", sectionId: "kisah" },
   { id: "media", label: "Media" },
+  { id: "hadiah", label: "Hadiah", sectionId: "hadiah" },
   { id: "tema", label: "Tema" },
   { id: "section", label: "Section" },
   { id: "tamu", label: "Tamu" },
@@ -119,6 +122,9 @@ function getTabForFieldPath(path: string): ActiveTab {
   if (path.startsWith("story")) {
     return "kisah";
   }
+  if (path.startsWith("gift")) {
+    return "hadiah";
+  }
   if (path.startsWith("rsvp")) {
     return "rsvp";
   }
@@ -152,6 +158,7 @@ function collectManagedMediaUrls(config: SiteConfig): Set<string> {
     config.couple.bride.photoUrl,
     ...config.media.galleryPhotoUrls,
     ...config.story.items.map((item) => item.photoUrl ?? ""),
+    config.gift?.qris?.imageUrl ?? "",
   ];
   return new Set(urls.filter((url) => isManagedMediaUrl(url)));
 }
@@ -1197,6 +1204,18 @@ export function ContentManager({
               media: { ...prev.media, musicUrl, musicPreset },
             }))
           }
+        />
+      ) : null}
+
+      {effectiveActiveTab === "hadiah" ? (
+        <GiftManager
+          invitationSlug={invitationSlug}
+          gift={draft.gift}
+          fieldErrors={fieldErrors}
+          onChangeGift={(nextGift) =>
+            setDraft((prev) => ({ ...prev, gift: nextGift }))
+          }
+          onClearError={clearFieldError}
         />
       ) : null}
 

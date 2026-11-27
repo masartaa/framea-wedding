@@ -16,7 +16,13 @@ export const ALLOWED_AUDIO_MIME_TYPES = [
   "audio/ogg",
 ] as const;
 
-export type MediaKind = "hero" | "mempelai" | "galeri" | "kisah" | "musik";
+export type MediaKind =
+  | "hero"
+  | "mempelai"
+  | "galeri"
+  | "kisah"
+  | "hadiah"
+  | "musik";
 
 export type MusicPresetId =
   | ""

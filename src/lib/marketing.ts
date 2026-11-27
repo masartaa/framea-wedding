@@ -150,6 +150,36 @@ export const DEMO_INVITATION_CONFIG: SiteConfig = {
       "Coba kirim konfirmasi kehadiran di formulir ini. Data pada halaman contoh hanya tampil sebagai simulasi di browser Anda.",
     maxGuests: 5,
   },
+  gift: {
+    title: "Tanda Kasih",
+    introText:
+      "Doa restu Bapak/Ibu/Saudara/i merupakan karunia terindah bagi kami. Namun jika berkenan memberikan tanda kasih, dapat melalui rekening atau alamat contoh di bawah ini.",
+    buttonLabel: "Kirim Tanda Kasih",
+    accounts: [
+      {
+        id: "contoh-bca",
+        bankName: "Bank BCA (Contoh)",
+        accountNumber: "1234567890",
+        accountHolder: "Raka Pratama (Contoh)",
+      },
+      {
+        id: "contoh-ewallet",
+        bankName: "GoPay / DANA (Contoh)",
+        accountNumber: "081200000000",
+        accountHolder: "Nadya Lestari (Contoh)",
+      },
+    ],
+    qris: {
+      imageUrl: "",
+      label: "",
+    },
+    shipping: {
+      recipientName: "Raka & Nadya (Contoh)",
+      phone: "0812-0000-0000",
+      address: "Jl. Contoh Pengiriman Kado No. 12, Semarang, Jawa Tengah",
+      note: "Data alamat ini hanya contoh tampilan fitur kirim kado.",
+    },
+  },
   media: {
     heroPhotoUrl: "",
     galleryPhotoUrls: [],
@@ -179,6 +209,7 @@ export const DEMO_INVITATION_CONFIG: SiteConfig = {
     { id: "kisah", enabled: true },
     { id: "acara", enabled: true },
     { id: "galeri", enabled: true },
+    { id: "hadiah", enabled: true },
     { id: "rsvp", enabled: true },
     { id: "ucapan", enabled: true },
   ],
